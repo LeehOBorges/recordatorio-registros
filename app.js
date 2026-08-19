@@ -1,37 +1,76 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    VERSÃO 0.1 — CÓDIGO COMPLETO
-   MEDICAMENTOS / SUPLEMENTOS E VITAMINAS
-   REGISTRO DE HORÁRIO + LINHA DO TEMPO + DIÁRIO
+
+   MÓDULOS:
+   - Refeições
+   - Glicemia
+   - Insulina
+   - Atividade física
+   - Medicamentos / suplementos / vitaminas
+   - Consultas
+   - Diário
+   - Linha do tempo
+   - Lixeira
+   - Backup e restauração
 ========================================================= */
 
-const STORAGE_KEY = "recordatorio_registros_v01";
-const GLUCOSE_SETTINGS_KEY = "recordatorio_glicemia_config_v01";
-const MEDICATION_SETTINGS_KEY = "recordatorio_medicamentos_config_v01";
+
+const STORAGE_KEY =
+  "recordatorio_registros_v01";
+
+const GLUCOSE_SETTINGS_KEY =
+  "recordatorio_glicemia_config_v01";
+
+const MEDICATION_SETTINGS_KEY =
+  "recordatorio_medicamentos_config_v01";
+
+
+/* =========================================================
+   CONFIGURAÇÃO PADRÃO DAS GLICEMIAS
+========================================================= */
 
 const defaultGlucoseOptions = {
+
   fasting: true,
+
   breakfast1: true,
   breakfast2: true,
+
   morningSnack1: true,
   morningSnack2: true,
+
   lunch1: true,
   lunch2: true,
+
   afternoonSnack1: true,
   afternoonSnack2: true,
+
   dinner1: true,
   dinner2: true,
+
   supper1: true,
   supper2: true
 };
 
-let database = loadDatabase();
-let glucoseSettings = loadGlucoseSettings();
-let medications = loadMedications();
 
-let selectedDate = new Date();
-let editingId = null;
-let currentRecordType = null;
+let database =
+  loadDatabase();
+
+let glucoseSettings =
+  loadGlucoseSettings();
+
+let medications =
+  loadMedications();
+
+let selectedDate =
+  new Date();
+
+let editingId =
+  null;
+
+let currentRecordType =
+  null;
 
 
 /* =========================================================
@@ -39,44 +78,71 @@ let currentRecordType = null;
 ========================================================= */
 
 function loadDatabase() {
+
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+
+    const stored =
+      localStorage.getItem(
+        STORAGE_KEY
+      );
+
 
     if (!stored) {
+
       return {
         records: [],
         trash: []
       };
+
     }
 
-    const parsed = JSON.parse(stored);
+
+    const parsed =
+      JSON.parse(stored);
+
 
     return {
-      records: Array.isArray(parsed.records)
-        ? parsed.records
-        : [],
 
-      trash: Array.isArray(parsed.trash)
-        ? parsed.trash
-        : []
+      records:
+        Array.isArray(parsed.records)
+          ? parsed.records
+          : [],
+
+      trash:
+        Array.isArray(parsed.trash)
+          ? parsed.trash
+          : []
+
     };
+
 
   } catch (error) {
-    console.error("Erro ao carregar banco:", error);
+
+    console.error(
+      "Erro ao carregar banco:",
+      error
+    );
+
 
     return {
+
       records: [],
       trash: []
+
     };
+
   }
+
 }
 
 
 function saveDatabase() {
+
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify(database)
   );
+
 }
 
 
@@ -85,40 +151,64 @@ function saveDatabase() {
 ========================================================= */
 
 function loadGlucoseSettings() {
+
   try {
-    const stored = localStorage.getItem(
-      GLUCOSE_SETTINGS_KEY
-    );
+
+    const stored =
+      localStorage.getItem(
+        GLUCOSE_SETTINGS_KEY
+      );
+
 
     if (!stored) {
-      return { ...defaultGlucoseOptions };
+
+      return {
+        ...defaultGlucoseOptions
+      };
+
     }
 
-    const parsed = JSON.parse(stored);
+
+    const parsed =
+      JSON.parse(stored);
+
 
     return {
+
       ...defaultGlucoseOptions,
-      ...(parsed && typeof parsed === "object"
+
+      ...(parsed &&
+      typeof parsed === "object"
         ? parsed
         : {})
+
     };
 
+
   } catch (error) {
+
     console.error(
       "Erro ao carregar configurações de glicemia:",
       error
     );
 
-    return { ...defaultGlucoseOptions };
+
+    return {
+      ...defaultGlucoseOptions
+    };
+
   }
+
 }
 
 
 function saveGlucoseSettings() {
+
   localStorage.setItem(
     GLUCOSE_SETTINGS_KEY,
     JSON.stringify(glucoseSettings)
   );
+
 }
 
 
@@ -127,49 +217,72 @@ function saveGlucoseSettings() {
 ========================================================= */
 
 function loadMedications() {
+
   try {
-    const stored = localStorage.getItem(
-      MEDICATION_SETTINGS_KEY
-    );
+
+    const stored =
+      localStorage.getItem(
+        MEDICATION_SETTINGS_KEY
+      );
+
 
     if (!stored) {
+
       return [];
+
     }
 
-    const parsed = JSON.parse(stored);
+
+    const parsed =
+      JSON.parse(stored);
+
 
     return Array.isArray(parsed)
       ? parsed
       : [];
 
+
   } catch (error) {
+
     console.error(
       "Erro ao carregar medicamentos:",
       error
     );
 
+
     return [];
+
   }
+
 }
 
 
 function saveMedications() {
+
   localStorage.setItem(
     MEDICATION_SETTINGS_KEY,
     JSON.stringify(medications)
   );
+
 }
 
 
 function generateMedicationId() {
+
   return (
+
     "med_" +
+
     Date.now().toString(36) +
+
     "_" +
+
     Math.random()
       .toString(36)
       .substring(2)
+
   );
+
 }
 
 
@@ -177,10 +290,25 @@ function generateMedicationId() {
    ELEMENTOS
 ========================================================= */
 
-const modal = document.getElementById("recordModal");
-const form = document.getElementById("recordForm");
-const formFields = document.getElementById("formFields");
-const modalTitle = document.getElementById("modalTitle");
+const modal =
+  document.getElementById(
+    "recordModal"
+  );
+
+const form =
+  document.getElementById(
+    "recordForm"
+  );
+
+const formFields =
+  document.getElementById(
+    "formFields"
+  );
+
+const modalTitle =
+  document.getElementById(
+    "modalTitle"
+  );
 
 
 /* =========================================================
@@ -188,12 +316,17 @@ const modalTitle = document.getElementById("modalTitle");
 ========================================================= */
 
 function generateId() {
+
   return (
+
     Date.now().toString(36) +
+
     Math.random()
       .toString(36)
       .substring(2)
+
   );
+
 }
 
 
@@ -202,40 +335,66 @@ function generateId() {
 ========================================================= */
 
 function formatDateKey(date) {
-  const year = date.getFullYear();
 
-  const month = String(
-    date.getMonth() + 1
-  ).padStart(2, "0");
+  const year =
+    date.getFullYear();
 
-  const day = String(
-    date.getDate()
-  ).padStart(2, "0");
+
+  const month =
+    String(
+      date.getMonth() + 1
+    ).padStart(2, "0");
+
+
+  const day =
+    String(
+      date.getDate()
+    ).padStart(2, "0");
+
 
   return `${year}-${month}-${day}`;
+
 }
 
 
 function formatDisplayDate(date) {
+
   return date.toLocaleDateString(
     "pt-BR",
     {
+
       weekday: "long",
+
       day: "2-digit",
+
       month: "long"
+
     }
   );
+
 }
 
 
 function currentTime() {
-  const now = new Date();
+
+  const now =
+    new Date();
+
 
   return (
-    String(now.getHours()).padStart(2, "0") +
+
+    String(
+      now.getHours()
+    ).padStart(2, "0") +
+
     ":" +
-    String(now.getMinutes()).padStart(2, "0")
+
+    String(
+      now.getMinutes()
+    ).padStart(2, "0")
+
   );
+
 }
 
 
@@ -244,12 +403,36 @@ function currentTime() {
 ========================================================= */
 
 function escapeHTML(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+
+  return String(
+    value ?? ""
+  )
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
 }
 
 
@@ -258,13 +441,21 @@ function escapeHTML(value) {
 ========================================================= */
 
 function renderDate() {
+
   const element =
-    document.getElementById("currentDate");
+    document.getElementById(
+      "currentDate"
+    );
+
 
   if (!element) return;
 
+
   element.textContent =
-    formatDisplayDate(selectedDate);
+    formatDisplayDate(
+      selectedDate
+    );
+
 }
 
 
@@ -273,18 +464,31 @@ function renderDate() {
 ========================================================= */
 
 function getTodayRecords() {
+
   const dateKey =
-    formatDateKey(selectedDate);
+    formatDateKey(
+      selectedDate
+    );
+
 
   return database.records
-    .filter(record =>
-      record.date === dateKey
+
+    .filter(
+      record =>
+        record.date === dateKey
     )
-    .sort((a, b) =>
-      String(a.time || "").localeCompare(
-        String(b.time || "")
-      )
+
+    .sort(
+      (a, b) =>
+        String(
+          a.time || ""
+        ).localeCompare(
+          String(
+            b.time || ""
+          )
+        )
     );
+
 }
 
 
@@ -293,64 +497,116 @@ function getTodayRecords() {
 ========================================================= */
 
 function renderDashboard() {
+
   renderDate();
 
-  const records = getTodayRecords();
 
-  const meals = records.filter(
-    record => record.type === "meal"
-  );
+  const records =
+    getTodayRecords();
 
-  const glucose = records.filter(
-    record => record.type === "glucose"
-  );
 
-  const insulin = records.filter(
-    record => record.type === "insulin"
-  );
+  const meals =
+    records.filter(
+      record =>
+        record.type === "meal"
+    );
 
-  const activities = records.filter(
-    record => record.type === "activity"
-  );
+
+  const glucose =
+    records.filter(
+      record =>
+        record.type === "glucose"
+    );
+
+
+  const insulin =
+    records.filter(
+      record =>
+        record.type === "insulin"
+    );
+
+
+  const activities =
+    records.filter(
+      record =>
+        record.type === "activity"
+    );
+
 
   const mealCount =
-    document.getElementById("mealCount");
+    document.getElementById(
+      "mealCount"
+    );
+
 
   if (mealCount) {
-    mealCount.textContent = meals.length;
+
+    mealCount.textContent =
+      meals.length;
+
   }
+
 
   const glucoseCount =
-    document.getElementById("glucoseCount");
+    document.getElementById(
+      "glucoseCount"
+    );
+
 
   if (glucoseCount) {
-    glucoseCount.textContent = glucose.length;
+
+    glucoseCount.textContent =
+      glucose.length;
+
   }
+
 
   const insulinCount =
-    document.getElementById("insulinCount");
+    document.getElementById(
+      "insulinCount"
+    );
+
 
   if (insulinCount) {
-    insulinCount.textContent = insulin.length;
+
+    insulinCount.textContent =
+      insulin.length;
+
   }
+
 
   const totalMinutes =
     activities.reduce(
       (total, record) =>
-        total + Number(record.duration || 0),
+        total +
+        Number(
+          record.duration || 0
+        ),
       0
     );
 
+
   const activityTotal =
-    document.getElementById("activityTotal");
+    document.getElementById(
+      "activityTotal"
+    );
+
 
   if (activityTotal) {
+
     activityTotal.textContent =
       `${totalMinutes} min`;
+
   }
 
-  renderTimeline(records);
+
+  renderTimeline(
+    records
+  );
+
+
   renderMedicationHome();
+
 }
 
 
@@ -359,27 +615,46 @@ function renderDashboard() {
 ========================================================= */
 
 function renderTimeline(records) {
+
   const timeline =
-    document.getElementById("timeline");
+    document.getElementById(
+      "timeline"
+    );
+
 
   if (!timeline) return;
 
+
   if (records.length === 0) {
+
     timeline.innerHTML = `
+
       <div class="empty-state">
+
         Nenhum registro neste dia.
+
         <br><br>
-        Use os botões acima para começar.
+
+        Use os botões acima
+        para começar.
+
       </div>
+
     `;
 
     return;
+
   }
 
+
   timeline.innerHTML =
+
     records
-      .map(createTimelineItem)
+      .map(
+        createTimelineItem
+      )
       .join("");
+
 }
 
 
@@ -387,139 +662,247 @@ function renderTimeline(records) {
    ITEM DA LINHA DO TEMPO
 ========================================================= */
 
-function createTimelineItem(record) {
+function createTimelineItem(
+  record
+) {
 
   const icons = {
+
     meal: "🍽️",
+
     glucose: "🩸",
+
     insulin: "💉",
+
     activity: "🏋️",
-    medication: "💊"
+
+    medication: "💊",
+
+    appointment: "👩‍⚕️"
+
   };
 
+
   let title = "";
+
   let detail = "";
 
-  if (record.type === "meal") {
+
+  if (
+    record.type ===
+    "meal"
+  ) {
 
     title =
       record.mealType ||
       "Refeição";
 
+
     detail =
       record.food ||
       "Refeição registrada";
 
+
     if (record.quantity) {
+
       detail +=
         ` · ${record.quantity}`;
+
     }
+
   }
 
-  else if (record.type === "glucose") {
+
+  else if (
+    record.type ===
+    "glucose"
+  ) {
 
     title =
       `${record.value} mg/dL`;
 
+
     detail =
       record.kind ||
       "Glicemia";
+
   }
 
-  else if (record.type === "insulin") {
+
+  else if (
+    record.type ===
+    "insulin"
+  ) {
 
     title =
       `${record.dose} U`;
+
 
     detail =
       record.insulin ||
       "Insulina";
 
+
     if (record.application) {
+
       detail +=
         ` · ${record.application}`;
+
     }
+
   }
 
-  else if (record.type === "activity") {
+
+  else if (
+    record.type ===
+    "activity"
+  ) {
 
     title =
       record.activity ||
       "Atividade";
 
+
     detail =
       `${record.duration || 0} min`;
 
+
     if (record.intensity) {
+
       detail +=
         ` · ${record.intensity}`;
+
     }
+
   }
 
-  /* =======================================================
-     MEDICAMENTO — NOVO
-  ======================================================= */
 
-  else if (record.type === "medication") {
+  else if (
+    record.type ===
+    "medication"
+  ) {
 
     title =
       record.medicationName ||
       "Medicamento / suplemento / vitamina";
 
+
     detail =
       "Tomado";
+
 
     if (record.period) {
 
       const periodLabels = {
+
         morning: "Manhã",
+
         afternoon: "Tarde",
+
         night: "Noite"
+
       };
+
 
       detail +=
         ` · ${
-          periodLabels[record.period] ||
+          periodLabels[
+            record.period
+          ] ||
           record.period
         }`;
+
     }
+
+  }
+
+
+  else if (
+    record.type ===
+    "appointment"
+  ) {
+
+    title =
+      record.specialty ||
+      "Consulta";
+
+
+    detail =
+      "Consulta agendada";
+
+
+    if (record.professional) {
+
+      detail +=
+        ` · ${record.professional}`;
+
+    }
+
   }
 
 
   return `
+
     <div class="timeline-item">
 
       <div class="timeline-icon">
-        ${icons[record.type] || "📝"}
+
+        ${
+          icons[
+            record.type
+          ] ||
+          "📝"
+        }
+
       </div>
+
 
       <div class="timeline-content">
 
         <div class="timeline-title">
-          ${escapeHTML(record.time)}
+
+          ${escapeHTML(
+            record.time || ""
+          )}
+
           ·
-          ${escapeHTML(title)}
+
+          ${escapeHTML(
+            title
+          )}
+
         </div>
 
+
         <div class="timeline-detail">
-          ${escapeHTML(detail)}
+
+          ${escapeHTML(
+            detail
+          )}
+
         </div>
 
       </div>
+
 
       <div class="timeline-actions">
 
         <button
           type="button"
-          onclick="editRecord('${escapeHTML(record.id)}')"
+          onclick="editRecord('${escapeHTML(
+            record.id
+          )}')"
           title="Editar"
         >
           ✏️
         </button>
 
+
         <button
           type="button"
-          onclick="deleteRecord('${escapeHTML(record.id)}')"
+          onclick="deleteRecord('${escapeHTML(
+            record.id
+          )}')"
           title="Excluir"
         >
           🗑️
@@ -528,7 +911,9 @@ function createTimelineItem(record) {
       </div>
 
     </div>
+
   `;
+
 }
 
 
@@ -536,61 +921,132 @@ function createTimelineItem(record) {
    OPÇÕES DE GLICEMIA
 ========================================================= */
 
-function getGlucoseOptions(record = null) {
+function getGlucoseOptions(
+  record = null
+) {
 
   const definitions = [
 
-    ["fasting", "Jejum"],
+    [
+      "fasting",
+      "Jejum"
+    ],
 
-    ["breakfast1", "1h após o café da manhã"],
+    [
+      "breakfast1",
+      "1h após o café da manhã"
+    ],
 
-    ["breakfast2", "2h após o café da manhã"],
+    [
+      "breakfast2",
+      "2h após o café da manhã"
+    ],
 
-    ["morningSnack1", "1h após o lanche da manhã"],
+    [
+      "morningSnack1",
+      "1h após o lanche da manhã"
+    ],
 
-    ["morningSnack2", "2h após o lanche da manhã"],
+    [
+      "morningSnack2",
+      "2h após o lanche da manhã"
+    ],
 
-    ["lunch1", "1h após o almoço"],
+    [
+      "lunch1",
+      "1h após o almoço"
+    ],
 
-    ["lunch2", "2h após o almoço"],
+    [
+      "lunch2",
+      "2h após o almoço"
+    ],
 
-    ["afternoonSnack1", "1h após o lanche da tarde"],
+    [
+      "afternoonSnack1",
+      "1h após o lanche da tarde"
+    ],
 
-    ["afternoonSnack2", "2h após o lanche da tarde"],
+    [
+      "afternoonSnack2",
+      "2h após o lanche da tarde"
+    ],
 
-    ["dinner1", "1h após o jantar"],
+    [
+      "dinner1",
+      "1h após o jantar"
+    ],
 
-    ["dinner2", "2h após o jantar"],
+    [
+      "dinner2",
+      "2h após o jantar"
+    ],
 
-    ["supper1", "1h após a ceia"],
+    [
+      "supper1",
+      "1h após a ceia"
+    ],
 
-    ["supper2", "2h após a ceia"]
+    [
+      "supper2",
+      "2h após a ceia"
+    ]
+
   ];
 
-  const options = definitions
-    .filter(item =>
-      glucoseSettings[item[0]]
-    )
-    .map(item => ({
-      value: item[1],
-      label: item[1]
-    }));
+
+  const options =
+    definitions
+
+      .filter(
+        item =>
+          glucoseSettings[
+            item[0]
+          ]
+      )
+
+      .map(
+        item => ({
+
+          value:
+            item[1],
+
+          label:
+            item[1]
+
+        })
+      );
+
 
   if (
+
     record &&
+
     record.kind &&
+
     !options.some(
       option =>
-        option.value === record.kind
+        option.value ===
+        record.kind
     )
+
   ) {
+
     options.unshift({
-      value: record.kind,
-      label: record.kind
+
+      value:
+        record.kind,
+
+      label:
+        record.kind
+
     });
+
   }
 
+
   return options;
+
 }
 
 
@@ -603,41 +1059,61 @@ function openRecordForm(
   record = null
 ) {
 
-  currentRecordType = type;
-  editingId = record ? record.id : null;
+  currentRecordType =
+    type;
+
+  editingId =
+    record
+      ? record.id
+      : null;
+
 
   const titles = {
-    meal: record
-      ? "Editar refeição"
-      : "Nova refeição",
 
-    glucose: record
-      ? "Editar glicemia"
-      : "Nova glicemia",
+    meal:
+      record
+        ? "Editar refeição"
+        : "Nova refeição",
 
-    insulin: record
-      ? "Editar insulina"
-      : "Nova aplicação",
+    glucose:
+      record
+        ? "Editar glicemia"
+        : "Nova glicemia",
 
-    activity: record
-      ? "Editar atividade"
-      : "Nova atividade"
+    insulin:
+      record
+        ? "Editar insulina"
+        : "Nova aplicação",
+
+    activity:
+      record
+        ? "Editar atividade"
+        : "Nova atividade"
+
   };
 
+
   if (modalTitle) {
+
     modalTitle.textContent =
       titles[type];
+
   }
+
 
   const date =
     record
       ? record.date
-      : formatDateKey(selectedDate);
+      : formatDateKey(
+          selectedDate
+        );
+
 
   const time =
     record
       ? record.time
       : currentTime();
+
 
   let html = `
 
@@ -650,11 +1126,14 @@ function openRecordForm(
       <input
         id="recordDate"
         type="date"
-        value="${escapeHTML(date)}"
+        value="${escapeHTML(
+          date
+        )}"
         required
       >
 
     </div>
+
 
     <div class="form-group">
 
@@ -665,15 +1144,21 @@ function openRecordForm(
       <input
         id="recordTime"
         type="time"
-        value="${escapeHTML(time)}"
+        value="${escapeHTML(
+          time
+        )}"
         required
       >
 
     </div>
+
   `;
 
 
-  if (type === "meal") {
+  if (
+    type ===
+    "meal"
+  ) {
 
     html += `
 
@@ -686,16 +1171,27 @@ function openRecordForm(
         <select id="mealType">
 
           <option>Café da manhã</option>
-          <option>Lanche da manhã</option>
+
+          <option>
+            Lanche da manhã
+          </option>
+
           <option>Almoço</option>
-          <option>Lanche da tarde</option>
+
+          <option>
+            Lanche da tarde
+          </option>
+
           <option>Jantar</option>
+
           <option>Ceia</option>
+
           <option>Outra</option>
 
         </select>
 
       </div>
+
 
       <div class="form-group">
 
@@ -711,6 +1207,7 @@ function openRecordForm(
 
       </div>
 
+
       <div class="form-group">
 
         <label for="quantity">
@@ -725,6 +1222,7 @@ function openRecordForm(
 
       </div>
 
+
       <div class="form-group">
 
         <label for="note">
@@ -737,29 +1235,53 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
-  if (type === "glucose") {
+  if (
+    type ===
+    "glucose"
+  ) {
 
     const options =
-      getGlucoseOptions(record);
+      getGlucoseOptions(
+        record
+      );
+
 
     const optionsHTML =
-      options.map(option => `
-        <option
-          value="${escapeHTML(option.value)}"
-          ${
-            record &&
-            record.kind === option.value
-              ? "selected"
-              : ""
-          }
-        >
-          ${escapeHTML(option.label)}
-        </option>
-      `).join("");
+      options
+
+        .map(
+          option => `
+
+            <option
+              value="${escapeHTML(
+                option.value
+              )}"
+              ${
+                record &&
+                record.kind ===
+                  option.value
+                  ? "selected"
+                  : ""
+              }
+            >
+
+              ${escapeHTML(
+                option.label
+              )}
+
+            </option>
+
+          `
+        )
+
+        .join("");
+
 
     html += `
 
@@ -779,6 +1301,7 @@ function openRecordForm(
 
       </div>
 
+
       <div class="form-group">
 
         <label for="glucoseKind">
@@ -786,10 +1309,13 @@ function openRecordForm(
         </label>
 
         <select id="glucoseKind">
+
           ${optionsHTML}
+
         </select>
 
       </div>
+
 
       <div class="form-group">
 
@@ -803,11 +1329,16 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
-  if (type === "insulin") {
+  if (
+    type ===
+    "insulin"
+  ) {
 
     html += `
 
@@ -825,6 +1356,7 @@ function openRecordForm(
 
       </div>
 
+
       <div class="form-group">
 
         <label for="insulinDose">
@@ -841,6 +1373,7 @@ function openRecordForm(
 
       </div>
 
+
       <div class="form-group">
 
         <label for="application">
@@ -849,14 +1382,26 @@ function openRecordForm(
 
         <select id="application">
 
-          <option>Em jejum</option>
-          <option>Antes do almoço</option>
-          <option>À noite</option>
-          <option>Outra</option>
+          <option>
+            Em jejum
+          </option>
+
+          <option>
+            Antes do almoço
+          </option>
+
+          <option>
+            À noite
+          </option>
+
+          <option>
+            Outra
+          </option>
 
         </select>
 
       </div>
+
 
       <div class="form-group">
 
@@ -870,11 +1415,16 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
-  if (type === "activity") {
+  if (
+    type ===
+    "activity"
+  ) {
 
     html += `
 
@@ -886,16 +1436,34 @@ function openRecordForm(
 
         <select id="activityType">
 
-          <option>Musculação</option>
-          <option>Caminhada</option>
-          <option>Corrida</option>
-          <option>Bicicleta</option>
-          <option>Alongamento</option>
-          <option>Outra</option>
+          <option>
+            Musculação
+          </option>
+
+          <option>
+            Caminhada
+          </option>
+
+          <option>
+            Corrida
+          </option>
+
+          <option>
+            Bicicleta
+          </option>
+
+          <option>
+            Alongamento
+          </option>
+
+          <option>
+            Outra
+          </option>
 
         </select>
 
       </div>
+
 
       <div class="form-group">
 
@@ -912,6 +1480,7 @@ function openRecordForm(
 
       </div>
 
+
       <div class="form-group">
 
         <label for="intensity">
@@ -921,12 +1490,19 @@ function openRecordForm(
         <select id="intensity">
 
           <option>Leve</option>
-          <option>Moderada</option>
-          <option>Intensa</option>
+
+          <option>
+            Moderada
+          </option>
+
+          <option>
+            Intensa
+          </option>
 
         </select>
 
       </div>
+
 
       <div class="form-group">
 
@@ -940,21 +1516,35 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
   if (formFields) {
-    formFields.innerHTML = html;
+
+    formFields.innerHTML =
+      html;
+
   }
+
 
   if (record) {
-    fillEditFields(record);
+
+    fillEditFields(
+      record
+    );
+
   }
 
+
   if (modal) {
+
     modal.showModal();
+
   }
+
 }
 
 
@@ -962,39 +1552,121 @@ function openRecordForm(
    PREENCHER EDIÇÃO
 ========================================================= */
 
-function fillEditFields(record) {
+function fillEditFields(
+  record
+) {
 
-  const setValue = (id, value) => {
+  const setValue =
+    (
+      id,
+      value
+    ) => {
 
-    const element =
-      document.getElementById(id);
+      const element =
+        document.getElementById(
+          id
+        );
 
-    if (element) {
-      element.value = value ?? "";
-    }
-  };
 
-  setValue("recordDate", record.date);
-  setValue("recordTime", record.time);
+      if (element) {
 
-  setValue("mealType", record.mealType);
-  setValue("food", record.food);
-  setValue("quantity", record.quantity);
-  setValue("note", record.note);
+        element.value =
+          value ?? "";
 
-  setValue("glucoseValue", record.value);
-  setValue("glucoseKind", record.kind);
-  setValue("glucoseNote", record.note);
+      }
 
-  setValue("insulinName", record.insulin);
-  setValue("insulinDose", record.dose);
-  setValue("application", record.application);
-  setValue("insulinNote", record.note);
+    };
 
-  setValue("activityType", record.activity);
-  setValue("duration", record.duration);
-  setValue("intensity", record.intensity);
-  setValue("activityNote", record.note);
+
+  setValue(
+    "recordDate",
+    record.date
+  );
+
+  setValue(
+    "recordTime",
+    record.time
+  );
+
+
+  setValue(
+    "mealType",
+    record.mealType
+  );
+
+  setValue(
+    "food",
+    record.food
+  );
+
+  setValue(
+    "quantity",
+    record.quantity
+  );
+
+  setValue(
+    "note",
+    record.note
+  );
+
+
+  setValue(
+    "glucoseValue",
+    record.value
+  );
+
+  setValue(
+    "glucoseKind",
+    record.kind
+  );
+
+  setValue(
+    "glucoseNote",
+    record.note
+  );
+
+
+  setValue(
+    "insulinName",
+    record.insulin
+  );
+
+  setValue(
+    "insulinDose",
+    record.dose
+  );
+
+  setValue(
+    "application",
+    record.application
+  );
+
+  setValue(
+    "insulinNote",
+    record.note
+  );
+
+
+  setValue(
+    "activityType",
+    record.activity
+  );
+
+  setValue(
+    "duration",
+    record.duration
+  );
+
+  setValue(
+    "intensity",
+    record.intensity
+  );
+
+  setValue(
+    "activityNote",
+    record.note
+  );
+
 }
 
 
@@ -1010,15 +1682,28 @@ if (form) {
 
       event.preventDefault();
 
+
       const dateElement =
-        document.getElementById("recordDate");
+        document.getElementById(
+          "recordDate"
+        );
+
 
       const timeElement =
-        document.getElementById("recordTime");
+        document.getElementById(
+          "recordTime"
+        );
 
-      if (!dateElement || !timeElement) {
+
+      if (
+        !dateElement ||
+        !timeElement
+      ) {
+
         return;
+
       }
+
 
       const record = {
 
@@ -1037,97 +1722,125 @@ if (form) {
 
         updatedAt:
           new Date().toISOString()
+
       };
 
 
-      if (currentRecordType === "meal") {
+      if (
+        currentRecordType ===
+        "meal"
+      ) {
 
         record.mealType =
           document.getElementById(
             "mealType"
           ).value;
 
+
         record.food =
           document.getElementById(
             "food"
           ).value.trim();
+
 
         record.quantity =
           document.getElementById(
             "quantity"
           ).value.trim();
 
+
         record.note =
           document.getElementById(
             "note"
           ).value.trim();
+
       }
 
 
-      if (currentRecordType === "glucose") {
+      if (
+        currentRecordType ===
+        "glucose"
+      ) {
 
         record.value =
           document.getElementById(
             "glucoseValue"
           ).value;
 
+
         record.kind =
           document.getElementById(
             "glucoseKind"
           ).value;
 
+
         record.note =
           document.getElementById(
             "glucoseNote"
           ).value.trim();
+
       }
 
 
-      if (currentRecordType === "insulin") {
+      if (
+        currentRecordType ===
+        "insulin"
+      ) {
 
         record.insulin =
           document.getElementById(
             "insulinName"
           ).value.trim();
 
+
         record.dose =
           document.getElementById(
             "insulinDose"
           ).value;
+
 
         record.application =
           document.getElementById(
             "application"
           ).value;
 
+
         record.note =
           document.getElementById(
             "insulinNote"
           ).value.trim();
+
       }
 
 
-      if (currentRecordType === "activity") {
+      if (
+        currentRecordType ===
+        "activity"
+      ) {
 
         record.activity =
           document.getElementById(
             "activityType"
           ).value;
 
+
         record.duration =
           document.getElementById(
             "duration"
           ).value;
+
 
         record.intensity =
           document.getElementById(
             "intensity"
           ).value;
 
+
         record.note =
           document.getElementById(
             "activityNote"
           ).value.trim();
+
       }
 
 
@@ -1136,15 +1849,21 @@ if (form) {
         const index =
           database.records.findIndex(
             item =>
-              item.id === editingId
+              item.id ===
+              editingId
           );
+
 
         if (index !== -1) {
 
           database.records[index] = {
+
             ...database.records[index],
+
             ...record
+
           };
+
         }
 
       } else {
@@ -1152,23 +1871,38 @@ if (form) {
         record.createdAt =
           new Date().toISOString();
 
-        database.records.push(record);
+
+        database.records.push(
+          record
+        );
+
       }
 
 
       saveDatabase();
 
+
       if (modal) {
+
         modal.close();
+
       }
 
-      editingId = null;
-      currentRecordType = null;
+
+      editingId =
+        null;
+
+      currentRecordType =
+        null;
+
 
       renderDashboard();
+
       renderDiary();
+
     }
   );
+
 }
 
 
@@ -1180,37 +1914,61 @@ function editRecord(id) {
 
   const record =
     database.records.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
+
 
   if (!record) return;
 
-  /*
-     Registros de medicamentos são administrados
-     pelo próprio cadastro.
-  */
 
-  if (record.type === "medication") {
+  if (
+    record.type ===
+    "medication"
+  ) {
 
     const medication =
       medications.find(
         item =>
-          item.id === record.medicationId
+          item.id ===
+          record.medicationId
       );
 
+
     if (medication) {
+
       openEditMedicationForm(
         medication.id
       );
+
     }
 
+
     return;
+
   }
+
+
+  if (
+    record.type ===
+    "appointment"
+  ) {
+
+    openAppointmentForm(
+      record.id
+    );
+
+
+    return;
+
+  }
+
 
   openRecordForm(
     record.type,
     record
   );
+
 }
 
 
@@ -1222,33 +1980,49 @@ function deleteRecord(id) {
 
   const record =
     database.records.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
 
+
   if (!record) return;
+
 
   const confirmed =
     confirm(
       "Mover este registro para a lixeira?"
     );
 
+
   if (!confirmed) return;
 
+
   database.trash.push({
+
     ...record,
+
     deletedAt:
       new Date().toISOString()
+
   });
+
 
   database.records =
     database.records.filter(
-      item => item.id !== id
+      item =>
+        item.id !== id
     );
+
 
   saveDatabase();
 
+
   renderDashboard();
+
   renderDiary();
+
+  renderAppointments();
+
 }
 
 
@@ -1263,6 +2037,7 @@ function renderMedicationHome() {
       "medicationHomePanel"
     );
 
+
   if (!container) {
 
     const quickActions =
@@ -1270,26 +2045,36 @@ function renderMedicationHome() {
         ".quick-actions"
       );
 
+
     if (!quickActions) return;
 
+
     container =
-      document.createElement("section");
+      document.createElement(
+        "section"
+      );
+
 
     container.id =
       "medicationHomePanel";
 
+
     container.className =
       "card";
+
 
     quickActions.insertAdjacentElement(
       "afterend",
       container
     );
+
   }
 
 
   const dateKey =
-    formatDateKey(selectedDate);
+    formatDateKey(
+      selectedDate
+    );
 
 
   let html = `
@@ -1316,6 +2101,7 @@ function renderMedicationHome() {
 
       </div>
 
+
       <button
         type="button"
         id="manageMedicationsButton"
@@ -1325,16 +2111,21 @@ function renderMedicationHome() {
       </button>
 
     </div>
+
   `;
 
 
-  if (medications.length === 0) {
+  if (
+    medications.length ===
+    0
+  ) {
 
     html += `
 
       <div class="empty-state">
 
-        Nenhum medicamento ou vitamina cadastrado.
+        Nenhum medicamento
+        ou vitamina cadastrado.
 
         <br><br>
 
@@ -1343,119 +2134,172 @@ function renderMedicationHome() {
           id="addFirstMedicationButton"
           class="primary-button"
         >
-          + Adicionar medicamento, suplemento ou vitamina
+          + Adicionar medicamento,
+          suplemento ou vitamina
         </button>
 
       </div>
+
     `;
 
-    container.innerHTML = html;
+
+    container.innerHTML =
+      html;
+
 
     attachMedicationHomeEvents();
 
+
     return;
+
   }
 
 
   const periods = [
 
     {
-      key: "morning",
-      label: "🌅 Manhã"
+      key:
+        "morning",
+
+      label:
+        "🌅 Manhã"
     },
 
     {
-      key: "afternoon",
-      label: "☀️ Tarde"
+      key:
+        "afternoon",
+
+      label:
+        "☀️ Tarde"
     },
 
     {
-      key: "night",
-      label: "🌙 Noite"
+      key:
+        "night",
+
+      label:
+        "🌙 Noite"
     }
+
   ];
 
 
-  periods.forEach(period => {
+  periods.forEach(
+    period => {
 
-    const periodMedications =
-      medications.filter(
-        medication =>
-          medication.active !== false &&
-          medication.period === period.key
-      );
-
-    if (periodMedications.length === 0) {
-      return;
-    }
-
-
-    html += `
-      <div style="margin-top:18px;">
-        <h3>${period.label}</h3>
-    `;
+      const periodMedications =
+        medications.filter(
+          medication =>
+            medication.active !==
+              false &&
+            medication.period ===
+              period.key
+        );
 
 
-    periodMedications.forEach(
-      medication => {
+      if (
+        periodMedications.length ===
+        0
+      ) {
 
-        const taken =
-          isMedicationTaken(
-            medication.id,
-            dateKey
-          );
+        return;
+
+      }
 
 
-        html += `
+      html += `
 
-          <label
-            style="
-              display:flex;
-              align-items:center;
-              gap:12px;
-              padding:12px 0;
-              cursor:pointer;
-              border-bottom:1px solid rgba(0,0,0,.08);
-            "
-          >
+        <div
+          style="
+            margin-top:18px;
+          "
+        >
 
-            <input
-              type="checkbox"
-              class="medication-check"
-              data-medication-id="${escapeHTML(
-                medication.id
-              )}"
-              ${taken ? "checked" : ""}
-            >
+          <h3>
+            ${period.label}
+          </h3>
 
-            <span
+      `;
+
+
+      periodMedications.forEach(
+        medication => {
+
+          const taken =
+            isMedicationTaken(
+              medication.id,
+              dateKey
+            );
+
+
+          html += `
+
+            <label
               style="
-                flex:1;
-                ${
-                  taken
-                    ? "text-decoration:line-through;opacity:.55;"
-                    : ""
-                }
+                display:flex;
+                align-items:center;
+                gap:12px;
+                padding:12px 0;
+                cursor:pointer;
+                border-bottom:
+                  1px solid
+                  rgba(0,0,0,.08);
               "
             >
-              ${escapeHTML(
-                medication.name
-              )}
-            </span>
 
-          </label>
-        `;
-      }
-    );
+              <input
+                type="checkbox"
+                class="medication-check"
+                data-medication-id="${escapeHTML(
+                  medication.id
+                )}"
+                ${
+                  taken
+                    ? "checked"
+                    : ""
+                }
+              >
 
 
-    html += `</div>`;
-  });
+              <span
+                style="
+                  flex:1;
+                  ${
+                    taken
+                      ? "text-decoration:line-through;opacity:.55;"
+                      : ""
+                  }
+                "
+              >
+
+                ${escapeHTML(
+                  medication.name
+                )}
+
+              </span>
+
+            </label>
+
+          `;
+
+        }
+      );
 
 
-  container.innerHTML = html;
+      html += `
+        </div>
+      `;
+
+    }
+  );
+
+
+  container.innerHTML =
+    html;
+
 
   attachMedicationHomeEvents();
+
 }
 
 
@@ -1470,6 +2314,7 @@ function attachMedicationHomeEvents() {
       "manageMedicationsButton"
     );
 
+
   const add =
     document.getElementById(
       "addFirstMedicationButton"
@@ -1482,6 +2327,7 @@ function attachMedicationHomeEvents() {
       "click",
       openMedicationManager
     );
+
   }
 
 
@@ -1493,12 +2339,15 @@ function attachMedicationHomeEvents() {
 
         openMedicationManager();
 
+
         setTimeout(
           openAddMedicationForm,
           50
         );
+
       }
     );
+
   }
 
 
@@ -1506,20 +2355,26 @@ function attachMedicationHomeEvents() {
     .querySelectorAll(
       ".medication-check"
     )
-    .forEach(checkbox => {
+    .forEach(
+      checkbox => {
 
-      checkbox.addEventListener(
-        "change",
-        () => {
+        checkbox.addEventListener(
+          "change",
+          () => {
 
-          toggleMedicationTaken(
-            checkbox.dataset.medicationId,
-            checkbox.checked
-          );
-        }
-      );
+            toggleMedicationTaken(
+              checkbox.dataset
+                .medicationId,
 
-    });
+              checkbox.checked
+            );
+
+          }
+        );
+
+      }
+    );
+
 }
 
 
@@ -1534,11 +2389,20 @@ function isMedicationTaken(
 
   return database.records.some(
     record =>
-      record.type === "medication" &&
-      record.medicationId === medicationId &&
-      record.date === dateKey &&
-      record.taken === true
+
+      record.type ===
+        "medication" &&
+
+      record.medicationId ===
+        medicationId &&
+
+      record.date ===
+        dateKey &&
+
+      record.taken ===
+        true
   );
+
 }
 
 
@@ -1552,12 +2416,18 @@ function toggleMedicationTaken(
 ) {
 
   const dateKey =
-    formatDateKey(selectedDate);
+    formatDateKey(
+      selectedDate
+    );
+
 
   const medication =
     medications.find(
-      item => item.id === medicationId
+      item =>
+        item.id ===
+        medicationId
     );
+
 
   if (!medication) return;
 
@@ -1565,9 +2435,15 @@ function toggleMedicationTaken(
   const existingIndex =
     database.records.findIndex(
       record =>
-        record.type === "medication" &&
-        record.medicationId === medicationId &&
-        record.date === dateKey
+
+        record.type ===
+          "medication" &&
+
+        record.medicationId ===
+          medicationId &&
+
+        record.date ===
+          dateKey
     );
 
 
@@ -1577,7 +2453,12 @@ function toggleMedicationTaken(
 
       id:
         existingIndex !== -1
-          ? database.records[existingIndex].id
+
+          ? database
+              .records[
+                existingIndex
+              ].id
+
           : generateId(),
 
       type:
@@ -1603,43 +2484,71 @@ function toggleMedicationTaken(
 
       createdAt:
         existingIndex !== -1
-          ? database.records[existingIndex].createdAt ||
-            new Date().toISOString()
-          : new Date().toISOString(),
+
+          ? database
+              .records[
+                existingIndex
+              ].createdAt ||
+              new Date()
+                .toISOString()
+
+          : new Date()
+              .toISOString(),
 
       updatedAt:
-        new Date().toISOString()
+        new Date()
+          .toISOString()
+
     };
 
 
-    if (existingIndex !== -1) {
+    if (
+      existingIndex !== -1
+    ) {
 
-      database.records[existingIndex] = {
-        ...database.records[existingIndex],
+      database.records[
+        existingIndex
+      ] = {
+
+        ...database.records[
+          existingIndex
+        ],
+
         ...record
+
       };
 
     } else {
 
-      database.records.push(record);
+      database.records.push(
+        record
+      );
+
     }
 
   } else {
 
-    if (existingIndex !== -1) {
+    if (
+      existingIndex !== -1
+    ) {
 
       database.records.splice(
         existingIndex,
         1
       );
+
     }
+
   }
 
 
   saveDatabase();
 
+
   renderDashboard();
+
   renderDiary();
+
 }
 
 
@@ -1654,20 +2563,31 @@ function openMedicationManager() {
       "medicationManager"
     );
 
+
   if (!manager) {
 
     manager =
-      document.createElement("dialog");
+      document.createElement(
+        "dialog"
+      );
+
 
     manager.id =
       "medicationManager";
 
-    document.body.appendChild(manager);
+
+    document.body.appendChild(
+      manager
+    );
+
   }
+
 
   renderMedicationManager();
 
+
   manager.showModal();
+
 }
 
 
@@ -1681,6 +2601,7 @@ function renderMedicationManager() {
     document.getElementById(
       "medicationManager"
     );
+
 
   if (!manager) return;
 
@@ -1707,8 +2628,10 @@ function renderMedicationManager() {
       >
 
         <h2>
-          💊 Medicamentos / Suplementos e Vitaminas
+          💊 Medicamentos /
+          Suplementos e Vitaminas
         </h2>
+
 
         <button
           type="submit"
@@ -1719,10 +2642,13 @@ function renderMedicationManager() {
 
       </div>
 
+
       <p>
-        Cadastre cada item separadamente e escolha
-        o período em que ele é tomado.
+        Cadastre cada item separadamente
+        e escolha o período em que ele
+        é tomado.
       </p>
+
 
       <button
         type="button"
@@ -1730,12 +2656,15 @@ function renderMedicationManager() {
         class="primary-button"
         style="margin:16px 0;"
       >
-        + Adicionar medicamento, suplemento ou vitamina
+        + Adicionar medicamento,
+        suplemento ou vitamina
       </button>
+
 
       <div id="medicationList"></div>
 
     </form>
+
   `;
 
 
@@ -1745,22 +2674,33 @@ function renderMedicationManager() {
     );
 
 
-  if (medications.length === 0) {
+  if (
+    medications.length ===
+    0
+  ) {
 
     list.innerHTML = `
+
       <div class="empty-state">
-        Nenhum medicamento ou vitamina cadastrado.
+
+        Nenhum medicamento
+        ou vitamina cadastrado.
+
       </div>
+
     `;
 
   } else {
 
     list.innerHTML =
       medications
+
         .map(
           createMedicationManagerItem
         )
+
         .join("");
+
   }
 
 
@@ -1778,36 +2718,47 @@ function renderMedicationManager() {
     .querySelectorAll(
       "[data-edit-medication]"
     )
-    .forEach(button => {
+    .forEach(
+      button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+        button.addEventListener(
+          "click",
+          () => {
 
-          openEditMedicationForm(
-            button.dataset.editMedication
-          );
-        }
-      );
-    });
+            openEditMedicationForm(
+              button.dataset
+                .editMedication
+            );
+
+          }
+        );
+
+      }
+    );
 
 
   manager
     .querySelectorAll(
       "[data-delete-medication]"
     )
-    .forEach(button => {
+    .forEach(
+      button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+        button.addEventListener(
+          "click",
+          () => {
 
-          deleteMedication(
-            button.dataset.deleteMedication
-          );
-        }
-      );
-    });
+            deleteMedication(
+              button.dataset
+                .deleteMedication
+            );
+
+          }
+        );
+
+      }
+    );
+
 }
 
 
@@ -1821,9 +2772,15 @@ function createMedicationManagerItem(
 
   const periodLabels = {
 
-    morning: "Manhã",
-    afternoon: "Tarde",
-    night: "Noite"
+    morning:
+      "Manhã",
+
+    afternoon:
+      "Tarde",
+
+    night:
+      "Noite"
+
   };
 
 
@@ -1846,10 +2803,13 @@ function createMedicationManagerItem(
         <div>
 
           <strong>
+
             ${escapeHTML(
               medication.name
             )}
+
           </strong>
+
 
           <div
             style="
@@ -1857,15 +2817,26 @@ function createMedicationManagerItem(
               opacity:.7;
             "
           >
+
             ${escapeHTML(
               periodLabels[
                 medication.period
               ] ||
               medication.period
             )}
+
+            ${
+              medication.time
+                ? ` · ${escapeHTML(
+                    medication.time
+                  )}`
+                : ""
+            }
+
           </div>
 
         </div>
+
 
         <div
           style="
@@ -1884,6 +2855,7 @@ function createMedicationManagerItem(
             ✏️
           </button>
 
+
           <button
             type="button"
             data-delete-medication="${escapeHTML(
@@ -1899,7 +2871,9 @@ function createMedicationManagerItem(
       </div>
 
     </div>
+
   `;
+
 }
 
 
@@ -1908,7 +2882,9 @@ function createMedicationManagerItem(
 ========================================================= */
 
 function openAddMedicationForm() {
+
   renderMedicationForm();
+
 }
 
 
@@ -1916,16 +2892,24 @@ function openAddMedicationForm() {
    EDITAR MEDICAMENTO
 ========================================================= */
 
-function openEditMedicationForm(id) {
+function openEditMedicationForm(
+  id
+) {
 
   const medication =
     medications.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
+
 
   if (!medication) return;
 
-  renderMedicationForm(medication);
+
+  renderMedicationForm(
+    medication
+  );
+
 }
 
 
@@ -1942,11 +2926,14 @@ function renderMedicationForm(
       "medicationManager"
     );
 
+
   if (!manager) return;
 
 
   const isEditing =
-    Boolean(medication);
+    Boolean(
+      medication
+    );
 
 
   manager.innerHTML = `
@@ -1968,12 +2955,15 @@ function renderMedicationForm(
       >
 
         <h2>
+
           ${
             isEditing
               ? "Editar medicamento / suplemento / vitamina"
               : "Novo medicamento / suplemento / vitamina"
           }
+
         </h2>
+
 
         <button
           type="button"
@@ -1997,7 +2987,9 @@ function renderMedicationForm(
           type="text"
           value="${
             medication
-              ? escapeHTML(medication.name)
+              ? escapeHTML(
+                  medication.name
+                )
               : ""
           }"
           placeholder="Ex.: Vitamina D"
@@ -2022,7 +3014,8 @@ function renderMedicationForm(
             value="morning"
             ${
               medication &&
-              medication.period === "morning"
+              medication.period ===
+                "morning"
                 ? "selected"
                 : ""
             }
@@ -2030,11 +3023,13 @@ function renderMedicationForm(
             🌅 Manhã
           </option>
 
+
           <option
             value="afternoon"
             ${
               medication &&
-              medication.period === "afternoon"
+              medication.period ===
+                "afternoon"
                 ? "selected"
                 : ""
             }
@@ -2042,11 +3037,13 @@ function renderMedicationForm(
             ☀️ Tarde
           </option>
 
+
           <option
             value="night"
             ${
               medication &&
-              medication.period === "night"
+              medication.period ===
+                "night"
                 ? "selected"
                 : ""
             }
@@ -2071,7 +3068,9 @@ function renderMedicationForm(
           value="${
             medication &&
             medication.time
-              ? escapeHTML(medication.time)
+              ? escapeHTML(
+                  medication.time
+                )
               : ""
           }"
           required
@@ -2096,6 +3095,7 @@ function renderMedicationForm(
           Cancelar
         </button>
 
+
         <button
           type="submit"
           class="primary-button"
@@ -2106,6 +3106,7 @@ function renderMedicationForm(
       </div>
 
     </form>
+
   `;
 
 
@@ -2165,8 +3166,13 @@ function renderMedicationForm(
             .value;
 
 
-        if (!name || !time) {
+        if (
+          !name ||
+          !time
+        ) {
+
           return;
+
         }
 
 
@@ -2182,9 +3188,13 @@ function renderMedicationForm(
 
           if (index !== -1) {
 
-            medications[index] = {
+            medications[
+              index
+            ] = {
 
-              ...medications[index],
+              ...medications[
+                index
+              ],
 
               name:
                 name,
@@ -2197,25 +3207,28 @@ function renderMedicationForm(
 
               active:
                 true
+
             };
+
           }
 
-          /*
-             Atualiza também registros
-             já realizados desse item.
-          */
 
           database.records =
             database.records.map(
               record => {
 
                 if (
-                  record.type === "medication" &&
+
+                  record.type ===
+                    "medication" &&
+
                   record.medicationId ===
                     medication.id
+
                 ) {
 
                   return {
+
                     ...record,
 
                     medicationName:
@@ -2223,10 +3236,14 @@ function renderMedicationForm(
 
                     period:
                       period
+
                   };
+
                 }
 
+
                 return record;
+
               }
             );
 
@@ -2248,18 +3265,26 @@ function renderMedicationForm(
 
             active:
               true
+
           });
+
         }
 
 
         saveMedications();
+
         saveDatabase();
 
+
         renderMedicationManager();
+
         renderMedicationHome();
+
         renderDashboard();
+
       }
     );
+
 }
 
 
@@ -2267,12 +3292,16 @@ function renderMedicationForm(
    EXCLUIR MEDICAMENTO
 ========================================================= */
 
-function deleteMedication(id) {
+function deleteMedication(
+  id
+) {
 
   const medication =
     medications.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
+
 
   if (!medication) return;
 
@@ -2282,12 +3311,14 @@ function deleteMedication(id) {
       `Excluir "${medication.name}" da lista de medicamentos / suplementos e vitaminas?`
     );
 
+
   if (!confirmed) return;
 
 
   medications =
     medications.filter(
-      item => item.id !== id
+      item =>
+        item.id !== id
     );
 
 
@@ -2295,18 +3326,1185 @@ function deleteMedication(id) {
     database.records.filter(
       record =>
         !(
-          record.type === "medication" &&
-          record.medicationId === id
+          record.type ===
+            "medication" &&
+
+          record.medicationId ===
+            id
         )
     );
 
 
   saveMedications();
+
   saveDatabase();
 
+
   renderMedicationManager();
+
   renderMedicationHome();
+
   renderDashboard();
+
+}
+
+
+/* =========================================================
+   CONSULTAS
+========================================================= */
+
+function getAppointments() {
+
+  return database.records
+
+    .filter(
+      record =>
+        record.type ===
+        "appointment"
+    )
+
+    .sort(
+      (a, b) => {
+
+        const dateA =
+          `${a.date} ${
+            a.time || ""
+          }`;
+
+
+        const dateB =
+          `${b.date} ${
+            b.time || ""
+          }`;
+
+
+        return dateA.localeCompare(
+          dateB
+        );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   LOCALIZAR TELA DE CONSULTAS
+========================================================= */
+
+function getAppointmentsScreen() {
+
+  let screen =
+    document.getElementById(
+      "appointmentsScreen"
+    );
+
+
+  if (screen) {
+
+    return screen;
+
+  }
+
+
+  const navigationButton =
+    Array.from(
+      document.querySelectorAll(
+        ".navigation-item"
+      )
+    ).find(
+      button => {
+
+        const text =
+          button.textContent
+            .replace(
+              /\s+/g,
+              " "
+            )
+            .trim()
+            .toLowerCase();
+
+
+        return text.includes(
+          "consultas"
+        );
+
+      }
+    );
+
+
+  if (!navigationButton) {
+
+    return null;
+
+  }
+
+
+  const targetId =
+    navigationButton.dataset
+      .screen;
+
+
+  if (!targetId) {
+
+    return null;
+
+  }
+
+
+  screen =
+    document.getElementById(
+      targetId
+    );
+
+
+  return screen || null;
+
+}
+
+
+/* =========================================================
+   GARANTIR ÁREA DE CONTEÚDO
+========================================================= */
+
+function getAppointmentsContent() {
+
+  const screen =
+    getAppointmentsScreen();
+
+
+  if (!screen) {
+
+    return null;
+
+  }
+
+
+  let container =
+    document.getElementById(
+      "appointmentsContent"
+    );
+
+
+  if (!container) {
+
+    container =
+      document.createElement(
+        "div"
+      );
+
+
+    container.id =
+      "appointmentsContent";
+
+
+    screen.appendChild(
+      container
+    );
+
+  }
+
+
+  return container;
+
+}
+
+
+/* =========================================================
+   RENDERIZAR CONSULTAS
+========================================================= */
+
+function renderAppointments() {
+
+  const container =
+    getAppointmentsContent();
+
+
+  if (!container) {
+
+    return;
+
+  }
+
+
+  const appointments =
+    getAppointments();
+
+
+  const today =
+    formatDateKey(
+      new Date()
+    );
+
+
+  const future =
+    appointments.filter(
+      appointment =>
+        appointment.date >=
+        today
+    );
+
+
+  const past =
+    appointments.filter(
+      appointment =>
+        appointment.date <
+        today
+    );
+
+
+  let html = `
+
+    <div
+      class="card"
+      style="
+        margin-bottom:16px;
+      "
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:12px;
+          flex-wrap:wrap;
+        "
+      >
+
+        <div>
+
+          <h2>
+            📅 Consultas
+          </h2>
+
+          <p>
+            Organize suas consultas
+            e mantenha o histórico
+            dos atendimentos.
+          </p>
+
+        </div>
+
+
+        <button
+          type="button"
+          id="addAppointmentButton"
+          class="primary-button"
+        >
+          + Nova consulta
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  if (
+    future.length ===
+    0
+  ) {
+
+    html += `
+
+      <section class="card">
+
+        <h3>
+          Próximas consultas
+        </h3>
+
+
+        <div class="empty-state">
+
+          Nenhuma consulta
+          agendada.
+
+        </div>
+
+      </section>
+
+    `;
+
+  } else {
+
+    html += `
+
+      <section class="card">
+
+        <h3>
+          📅 Próximas consultas
+        </h3>
+
+        <p>
+          Consultas futuras
+          e agendadas.
+        </p>
+
+
+        ${future
+          .map(
+            createAppointmentItem
+          )
+          .join("")}
+
+      </section>
+
+    `;
+
+  }
+
+
+  if (
+    past.length >
+    0
+  ) {
+
+    html += `
+
+      <section
+        class="card"
+        style="
+          margin-top:16px;
+        "
+      >
+
+        <h3>
+          🗂️ Consultas anteriores
+        </h3>
+
+        <p>
+          Histórico dos
+          atendimentos realizados.
+        </p>
+
+
+        ${past
+          .slice()
+          .reverse()
+          .map(
+            createAppointmentItem
+          )
+          .join("")}
+
+      </section>
+
+    `;
+
+  }
+
+
+  container.innerHTML =
+    html;
+
+
+  const addButton =
+    document.getElementById(
+      "addAppointmentButton"
+    );
+
+
+  if (addButton) {
+
+    addButton.addEventListener(
+      "click",
+      () =>
+        openAppointmentForm()
+    );
+
+  }
+
+
+  container
+    .querySelectorAll(
+      "[data-edit-appointment]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            openAppointmentForm(
+              button.dataset
+                .editAppointment
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  container
+    .querySelectorAll(
+      "[data-delete-appointment]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            deleteAppointment(
+              button.dataset
+                .deleteAppointment
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   ITEM DA CONSULTA
+========================================================= */
+
+function createAppointmentItem(
+  appointment
+) {
+
+  let formattedDate =
+    appointment.date;
+
+
+  if (
+    appointment.date
+  ) {
+
+    const date =
+      new Date(
+        `${appointment.date}T00:00:00`
+      );
+
+
+    if (
+      !Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      formattedDate =
+        date.toLocaleDateString(
+          "pt-BR"
+        );
+
+    }
+
+  }
+
+
+  return `
+
+    <div
+      class="timeline-item"
+      style="
+        margin-bottom:12px;
+      "
+    >
+
+      <div class="timeline-icon">
+        👩‍⚕️
+      </div>
+
+
+      <div class="timeline-content">
+
+        <div class="timeline-title">
+
+          ${escapeHTML(
+            appointment.specialty ||
+            "Consulta"
+          )}
+
+        </div>
+
+
+        <div class="timeline-detail">
+
+          📅 ${escapeHTML(
+            formattedDate
+          )}
+
+          ${
+            appointment.time
+              ? ` · ⏰ ${escapeHTML(
+                  appointment.time
+                )}`
+              : ""
+          }
+
+        </div>
+
+
+        ${
+          appointment.professional
+            ? `
+
+              <div class="timeline-detail">
+
+                👤 ${escapeHTML(
+                  appointment.professional
+                )}
+
+              </div>
+
+            `
+            : ""
+        }
+
+
+        ${
+          appointment.location
+            ? `
+
+              <div class="timeline-detail">
+
+                📍 ${escapeHTML(
+                  appointment.location
+                )}
+
+              </div>
+
+            `
+            : ""
+        }
+
+
+        ${
+          appointment.reason
+            ? `
+
+              <div class="timeline-detail">
+
+                <strong>
+                  Motivo:
+                </strong>
+
+                ${escapeHTML(
+                  appointment.reason
+                )}
+
+              </div>
+
+            `
+            : ""
+        }
+
+
+        ${
+          appointment.notes
+            ? `
+
+              <div
+                class="timeline-detail"
+                style="
+                  margin-top:4px;
+                "
+              >
+
+                ${escapeHTML(
+                  appointment.notes
+                )}
+
+              </div>
+
+            `
+            : ""
+        }
+
+      </div>
+
+
+      <div class="timeline-actions">
+
+        <button
+          type="button"
+          data-edit-appointment="${escapeHTML(
+            appointment.id
+          )}"
+          title="Editar"
+        >
+          ✏️
+        </button>
+
+
+        <button
+          type="button"
+          data-delete-appointment="${escapeHTML(
+            appointment.id
+          )}"
+          title="Excluir"
+        >
+          🗑️
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   FORMULÁRIO DE CONSULTA
+========================================================= */
+
+function openAppointmentForm(
+  appointmentId = null
+) {
+
+  const existing =
+    appointmentId
+
+      ? database.records.find(
+          record =>
+
+            record.id ===
+              appointmentId &&
+
+            record.type ===
+              "appointment"
+        )
+
+      : null;
+
+
+  let appointmentModal =
+    document.getElementById(
+      "appointmentModal"
+    );
+
+
+  if (!appointmentModal) {
+
+    appointmentModal =
+      document.createElement(
+        "dialog"
+      );
+
+
+    appointmentModal.id =
+      "appointmentModal";
+
+
+    document.body.appendChild(
+      appointmentModal
+    );
+
+  }
+
+
+  appointmentModal.innerHTML = `
+
+    <form
+      id="appointmentForm"
+      style="
+        padding:24px;
+        min-width:min(90vw,520px);
+        max-height:85vh;
+        overflow:auto;
+      "
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:12px;
+        "
+      >
+
+        <h2>
+
+          ${
+            existing
+              ? "Editar consulta"
+              : "Nova consulta"
+          }
+
+        </h2>
+
+
+        <button
+          type="button"
+          id="closeAppointmentModal"
+          class="icon-button"
+        >
+          ✕
+        </button>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="appointmentDate">
+          Data
+        </label>
+
+        <input
+          id="appointmentDate"
+          type="date"
+          value="${
+            existing
+              ? escapeHTML(
+                  existing.date
+                )
+              : formatDateKey(
+                  selectedDate
+                )
+          }"
+          required
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="appointmentTime">
+          Horário
+        </label>
+
+        <input
+          id="appointmentTime"
+          type="time"
+          value="${
+            existing
+              ? escapeHTML(
+                  existing.time ||
+                  ""
+                )
+              : ""
+          }"
+          required
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="appointmentSpecialty">
+          Especialidade
+        </label>
+
+        <input
+          id="appointmentSpecialty"
+          type="text"
+          value="${
+            existing
+              ? escapeHTML(
+                  existing.specialty ||
+                  ""
+                )
+              : ""
+          }"
+          placeholder="Ex.: Obstetra"
+          required
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="appointmentProfessional">
+          Profissional
+        </label>
+
+        <input
+          id="appointmentProfessional"
+          type="text"
+          value="${
+            existing
+              ? escapeHTML(
+                  existing.professional ||
+                  ""
+                )
+              : ""
+          }"
+          placeholder="Nome do médico ou profissional"
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="appointmentLocation">
+          Local
+        </label>
+
+        <input
+          id="appointmentLocation"
+          type="text"
+          value="${
+            existing
+              ? escapeHTML(
+                  existing.location ||
+                  ""
+                )
+              : ""
+          }"
+          placeholder="Clínica, consultório, hospital..."
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="appointmentReason">
+          Motivo da consulta
+        </label>
+
+        <input
+          id="appointmentReason"
+          type="text"
+          value="${
+            existing
+              ? escapeHTML(
+                  existing.reason ||
+                  ""
+                )
+              : ""
+          }"
+          placeholder="Ex.: acompanhamento"
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="appointmentNotes">
+          Observações
+        </label>
+
+        <textarea
+          id="appointmentNotes"
+          placeholder="Anotações importantes"
+        >${
+          existing
+            ? escapeHTML(
+                existing.notes ||
+                ""
+              )
+            : ""
+        }</textarea>
+
+      </div>
+
+
+      <div
+        style="
+          display:flex;
+          gap:8px;
+          margin-top:20px;
+        "
+      >
+
+        <button
+          type="button"
+          id="cancelAppointmentButton"
+          class="secondary-button"
+        >
+          Cancelar
+        </button>
+
+
+        <button
+          type="submit"
+          class="primary-button"
+        >
+          Salvar consulta
+        </button>
+
+      </div>
+
+    </form>
+
+  `;
+
+
+  appointmentModal.showModal();
+
+
+  document
+    .getElementById(
+      "closeAppointmentModal"
+    )
+    ?.addEventListener(
+      "click",
+      () =>
+        appointmentModal.close()
+    );
+
+
+  document
+    .getElementById(
+      "cancelAppointmentButton"
+    )
+    ?.addEventListener(
+      "click",
+      () =>
+        appointmentModal.close()
+    );
+
+
+  document
+    .getElementById(
+      "appointmentForm"
+    )
+    .addEventListener(
+      "submit",
+      event => {
+
+        event.preventDefault();
+
+
+        const date =
+          document
+            .getElementById(
+              "appointmentDate"
+            )
+            .value;
+
+
+        const time =
+          document
+            .getElementById(
+              "appointmentTime"
+            )
+            .value;
+
+
+        const specialty =
+          document
+            .getElementById(
+              "appointmentSpecialty"
+            )
+            .value
+            .trim();
+
+
+        const professional =
+          document
+            .getElementById(
+              "appointmentProfessional"
+            )
+            .value
+            .trim();
+
+
+        const location =
+          document
+            .getElementById(
+              "appointmentLocation"
+            )
+            .value
+            .trim();
+
+
+        const reason =
+          document
+            .getElementById(
+              "appointmentReason"
+            )
+            .value
+            .trim();
+
+
+        const notes =
+          document
+            .getElementById(
+              "appointmentNotes"
+            )
+            .value
+            .trim();
+
+
+        if (
+          !date ||
+          !time ||
+          !specialty
+        ) {
+
+          alert(
+            "Preencha a data, o horário e a especialidade."
+          );
+
+
+          return;
+
+        }
+
+
+        const record = {
+
+          id:
+            existing
+              ? existing.id
+              : generateId(),
+
+          type:
+            "appointment",
+
+          date:
+            date,
+
+          time:
+            time,
+
+          specialty:
+            specialty,
+
+          professional:
+            professional,
+
+          location:
+            location,
+
+          reason:
+            reason,
+
+          notes:
+            notes,
+
+          updatedAt:
+            new Date().toISOString()
+
+        };
+
+
+        if (existing) {
+
+          const index =
+            database.records.findIndex(
+              item =>
+                item.id ===
+                existing.id
+            );
+
+
+          if (index !== -1) {
+
+            database.records[
+              index
+            ] = {
+
+              ...database.records[
+                index
+              ],
+
+              ...record
+
+            };
+
+          }
+
+        } else {
+
+          record.createdAt =
+            new Date().toISOString();
+
+
+          database.records.push(
+            record
+          );
+
+        }
+
+
+        saveDatabase();
+
+
+        appointmentModal.close();
+
+
+        renderAppointments();
+
+        renderDashboard();
+
+        renderDiary();
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   EXCLUIR CONSULTA
+========================================================= */
+
+function deleteAppointment(
+  id
+) {
+
+  const appointment =
+    database.records.find(
+      record =>
+
+        record.id ===
+          id &&
+
+        record.type ===
+          "appointment"
+    );
+
+
+  if (!appointment) return;
+
+
+  const confirmed =
+    confirm(
+      "Mover esta consulta para a lixeira?"
+    );
+
+
+  if (!confirmed) return;
+
+
+  database.trash.push({
+
+    ...appointment,
+
+    deletedAt:
+      new Date().toISOString()
+
+  });
+
+
+  database.records =
+    database.records.filter(
+      record =>
+        record.id !== id
+    );
+
+
+  saveDatabase();
+
+
+  renderAppointments();
+
+  renderDashboard();
+
+  renderDiary();
+
 }
 
 
@@ -2318,18 +4516,23 @@ document
   .querySelectorAll(
     "[data-record-type]"
   )
-  .forEach(button => {
+  .forEach(
+    button => {
 
-    button.addEventListener(
-      "click",
-      () => {
+      button.addEventListener(
+        "click",
+        () => {
 
-        openRecordForm(
-          button.dataset.recordType
-        );
-      }
-    );
-  });
+          openRecordForm(
+            button.dataset
+              .recordType
+          );
+
+        }
+      );
+
+    }
+  );
 
 
 /* =========================================================
@@ -2341,6 +4544,7 @@ const closeModal =
     "closeModal"
   );
 
+
 if (closeModal) {
 
   closeModal.addEventListener(
@@ -2348,10 +4552,14 @@ if (closeModal) {
     () => {
 
       if (modal) {
+
         modal.close();
+
       }
+
     }
   );
+
 }
 
 
@@ -2360,6 +4568,7 @@ const cancelButton =
     "cancelButton"
   );
 
+
 if (cancelButton) {
 
   cancelButton.addEventListener(
@@ -2367,10 +4576,14 @@ if (cancelButton) {
     () => {
 
       if (modal) {
+
         modal.close();
+
       }
+
     }
   );
+
 }
 
 
@@ -2383,6 +4596,7 @@ const previousDay =
     "previousDay"
   );
 
+
 if (previousDay) {
 
   previousDay.addEventListener(
@@ -2390,12 +4604,16 @@ if (previousDay) {
     () => {
 
       selectedDate.setDate(
-        selectedDate.getDate() - 1
+        selectedDate.getDate() -
+          1
       );
 
+
       renderDashboard();
+
     }
   );
+
 }
 
 
@@ -2408,6 +4626,7 @@ const nextDay =
     "nextDay"
   );
 
+
 if (nextDay) {
 
   nextDay.addEventListener(
@@ -2415,12 +4634,16 @@ if (nextDay) {
     () => {
 
       selectedDate.setDate(
-        selectedDate.getDate() + 1
+        selectedDate.getDate() +
+          1
       );
 
+
       renderDashboard();
+
     }
   );
+
 }
 
 
@@ -2435,42 +4658,67 @@ function renderDiary() {
       "diaryContent"
     );
 
+
   if (!container) return;
 
 
-  if (database.records.length === 0) {
+  if (
+    database.records.length ===
+    0
+  ) {
 
     container.innerHTML = `
+
       <div class="empty-state">
-        Nenhum registro encontrado.
+
+        Nenhum registro
+        encontrado.
+
       </div>
+
     `;
 
+
     return;
+
   }
 
 
   const sortedRecords =
-    [...database.records].sort(
+    [
+      ...database.records
+    ].sort(
       (a, b) => {
 
         const dateA =
-          `${a.date} ${a.time || ""}`;
+          `${a.date} ${
+            a.time || ""
+          }`;
+
 
         const dateB =
-          `${b.date} ${b.time || ""}`;
+          `${b.date} ${
+            b.time || ""
+          }`;
+
 
         return dateB.localeCompare(
           dateA
         );
+
       }
     );
 
 
   container.innerHTML =
     sortedRecords
-      .map(createDiaryItem)
+
+      .map(
+        createDiaryItem
+      )
+
       .join("");
+
 }
 
 
@@ -2478,102 +4726,197 @@ function renderDiary() {
    ITEM DO DIÁRIO
 ========================================================= */
 
-function createDiaryItem(record) {
+function createDiaryItem(
+  record
+) {
 
   const icons = {
 
     meal: "🍽️",
+
     glucose: "🩸",
+
     insulin: "💉",
+
     activity: "🏋️",
-    medication: "💊"
+
+    medication: "💊",
+
+    appointment: "👩‍⚕️"
+
   };
 
 
   let title = "";
+
   let detail = "";
 
 
-  if (record.type === "meal") {
+  if (
+    record.type ===
+    "meal"
+  ) {
 
     title =
       record.mealType ||
       "Refeição";
 
+
     detail =
       record.food ||
       "Refeição registrada";
+
+
+    if (record.quantity) {
+
+      detail +=
+        ` · ${record.quantity}`;
+
+    }
+
   }
 
 
-  else if (record.type === "glucose") {
+  else if (
+    record.type ===
+    "glucose"
+  ) {
 
     title =
       `${record.value} mg/dL`;
 
+
     detail =
       record.kind ||
       "Glicemia";
+
   }
 
 
-  else if (record.type === "insulin") {
+  else if (
+    record.type ===
+    "insulin"
+  ) {
 
     title =
       `${record.dose} U`;
+
 
     detail =
       record.insulin ||
       "Insulina";
 
+
     if (record.application) {
 
       detail +=
         ` · ${record.application}`;
+
     }
+
   }
 
 
-  else if (record.type === "activity") {
+  else if (
+    record.type ===
+    "activity"
+  ) {
 
     title =
       record.activity ||
       "Atividade";
 
+
     detail =
       `${record.duration || 0} min`;
+
 
     if (record.intensity) {
 
       detail +=
         ` · ${record.intensity}`;
+
     }
+
   }
 
 
-  else if (record.type === "medication") {
+  else if (
+    record.type ===
+    "medication"
+  ) {
 
     title =
       record.medicationName ||
       "Medicamento / suplemento / vitamina";
 
+
     detail =
       "Tomado";
+
 
     if (record.period) {
 
       const periods = {
-        morning: "Manhã",
-        afternoon: "Tarde",
-        night: "Noite"
+
+        morning:
+          "Manhã",
+
+        afternoon:
+          "Tarde",
+
+        night:
+          "Noite"
+
       };
+
 
       detail +=
         ` · ${
-          periods[record.period] ||
+          periods[
+            record.period
+          ] ||
           record.period
         }`;
+
     }
+
+  }
+
+
+  else if (
+    record.type ===
+    "appointment"
+  ) {
+
+    title =
+      record.specialty ||
+      "Consulta";
+
+
+    detail =
+      "Consulta";
+
+
+    if (
+      record.professional
+    ) {
+
+      detail +=
+        ` · ${record.professional}`;
+
+    }
+
+
+    if (
+      record.location
+    ) {
+
+      detail +=
+        ` · ${record.location}`;
+
+    }
+
   }
 
 
@@ -2581,34 +4924,60 @@ function createDiaryItem(record) {
 
     <div
       class="timeline-item"
-      style="margin-bottom:12px;"
+      style="
+        margin-bottom:12px;
+      "
     >
 
       <div class="timeline-icon">
+
         ${
-          icons[record.type] ||
+          icons[
+            record.type
+          ] ||
           "📝"
         }
+
       </div>
+
 
       <div class="timeline-content">
 
         <div class="timeline-title">
-          ${escapeHTML(record.date)}
+
+          ${escapeHTML(
+            record.date
+          )}
+
           ·
-          ${escapeHTML(record.time || "")}
+
+          ${escapeHTML(
+            record.time || ""
+          )}
+
         </div>
 
+
         <div class="timeline-detail">
-          ${escapeHTML(title)}
+
+          ${escapeHTML(
+            title
+          )}
+
           ·
-          ${escapeHTML(detail)}
+
+          ${escapeHTML(
+            detail
+          )}
+
         </div>
 
       </div>
 
     </div>
+
   `;
+
 }
 
 
@@ -2623,29 +4992,43 @@ function renderTrash() {
       "trashContent"
     );
 
+
   if (!container) return;
 
 
   if (
     !database.trash ||
-    database.trash.length === 0
+    database.trash.length ===
+      0
   ) {
 
     container.innerHTML = `
+
       <div class="empty-state">
+
         A lixeira está vazia.
+
       </div>
+
     `;
 
+
     return;
+
   }
 
 
   const sortedTrash =
-    [...database.trash].sort(
+    [
+      ...database.trash
+    ].sort(
       (a, b) =>
-        new Date(b.deletedAt) -
-        new Date(a.deletedAt)
+        new Date(
+          b.deletedAt
+        ) -
+        new Date(
+          a.deletedAt
+        )
     );
 
 
@@ -2670,11 +5053,13 @@ function renderTrash() {
 
     </div>
 
-    ${
-      sortedTrash
-        .map(createTrashItem)
-        .join("")
-    }
+
+    ${sortedTrash
+      .map(
+        createTrashItem
+      )
+      .join("")}
+
   `;
 
 
@@ -2683,12 +5068,16 @@ function renderTrash() {
       "emptyTrashButton"
     );
 
+
   if (button) {
+
     button.addEventListener(
       "click",
       emptyTrash
     );
+
   }
+
 }
 
 
@@ -2696,70 +5085,136 @@ function renderTrash() {
    ITEM DA LIXEIRA
 ========================================================= */
 
-function createTrashItem(record) {
+function createTrashItem(
+  record
+) {
 
   const icons = {
+
     meal: "🍽️",
+
     glucose: "🩸",
+
     insulin: "💉",
+
     activity: "🏋️",
-    medication: "💊"
+
+    medication: "💊",
+
+    appointment: "👩‍⚕️"
+
   };
 
 
   let title = "";
+
   let detail = "";
 
 
-  if (record.type === "meal") {
+  if (
+    record.type ===
+    "meal"
+  ) {
 
     title =
       record.mealType ||
       "Refeição";
 
+
     detail =
       record.food ||
       "Refeição registrada";
+
   }
 
-  else if (record.type === "glucose") {
+
+  else if (
+    record.type ===
+    "glucose"
+  ) {
 
     title =
       `${record.value} mg/dL`;
 
+
     detail =
       record.kind ||
       "Glicemia";
+
   }
 
-  else if (record.type === "insulin") {
+
+  else if (
+    record.type ===
+    "insulin"
+  ) {
 
     title =
       `${record.dose} U`;
 
+
     detail =
       record.insulin ||
       "Insulina";
+
   }
 
-  else if (record.type === "activity") {
+
+  else if (
+    record.type ===
+    "activity"
+  ) {
 
     title =
       record.activity ||
       "Atividade";
 
+
     detail =
       `${record.duration || 0} min`;
+
   }
 
-  else if (record.type === "medication") {
+
+  else if (
+    record.type ===
+    "medication"
+  ) {
 
     title =
       record.medicationName ||
       "Medicamento / suplemento / vitamina";
 
+
     detail =
       "Tomado";
+
+  }
+
+
+  else if (
+    record.type ===
+    "appointment"
+  ) {
+
+    title =
+      record.specialty ||
+      "Consulta";
+
+
+    detail =
+      "Consulta";
+
+
+    if (
+      record.professional
+    ) {
+
+      detail +=
+        ` · ${record.professional}`;
+
+    }
+
   }
 
 
@@ -2767,47 +5222,83 @@ function createTrashItem(record) {
 
     <div
       class="timeline-item"
-      style="margin-bottom:12px;"
+      style="
+        margin-bottom:12px;
+      "
     >
 
       <div class="timeline-icon">
-        ${icons[record.type] || "📝"}
+
+        ${
+          icons[
+            record.type
+          ] ||
+          "📝"
+        }
+
       </div>
+
 
       <div class="timeline-content">
 
         <div class="timeline-title">
-          ${escapeHTML(record.time || "")}
+
+          ${escapeHTML(
+            record.time || ""
+          )}
+
           ·
-          ${escapeHTML(title)}
+
+          ${escapeHTML(
+            title
+          )}
+
         </div>
 
+
         <div class="timeline-detail">
-          ${escapeHTML(detail)}
+
+          ${escapeHTML(
+            detail
+          )}
+
         </div>
+
 
         <div
           class="timeline-detail"
-          style="margin-top:4px;"
+          style="
+            margin-top:4px;
+          "
         >
-          ${escapeHTML(record.date || "")}
+
+          ${escapeHTML(
+            record.date || ""
+          )}
+
         </div>
 
       </div>
+
 
       <div class="timeline-actions">
 
         <button
           type="button"
-          onclick="restoreRecord('${escapeHTML(record.id)}')"
+          onclick="restoreRecord('${escapeHTML(
+            record.id
+          )}')"
           title="Restaurar"
         >
           ↩️
         </button>
 
+
         <button
           type="button"
-          onclick="permanentlyDeleteRecord('${escapeHTML(record.id)}')"
+          onclick="permanentlyDeleteRecord('${escapeHTML(
+            record.id
+          )}')"
           title="Excluir definitivamente"
         >
           ❌
@@ -2816,7 +5307,9 @@ function createTrashItem(record) {
       </div>
 
     </div>
+
   `;
+
 }
 
 
@@ -2824,43 +5317,63 @@ function createTrashItem(record) {
    RESTAURAR
 ========================================================= */
 
-function restoreRecord(id) {
+function restoreRecord(
+  id
+) {
 
   const index =
     database.trash.findIndex(
-      item => item.id === id
+      item =>
+        item.id === id
     );
+
 
   if (index === -1) return;
 
 
   const record =
-    database.trash[index];
+    database.trash[
+      index
+    ];
+
 
   const restoredRecord = {
+
     ...record
+
   };
 
+
   delete restoredRecord.deletedAt;
+
 
   database.records.push(
     restoredRecord
   );
+
 
   database.trash.splice(
     index,
     1
   );
 
+
   saveDatabase();
 
+
   renderTrash();
+
   renderDashboard();
+
   renderDiary();
+
+  renderAppointments();
+
 
   alert(
     "Registro restaurado."
   );
+
 }
 
 
@@ -2868,24 +5381,31 @@ function restoreRecord(id) {
    EXCLUIR DEFINITIVAMENTE
 ========================================================= */
 
-function permanentlyDeleteRecord(id) {
+function permanentlyDeleteRecord(
+  id
+) {
 
   const confirmed =
     confirm(
       "Excluir este registro definitivamente? Esta ação não poderá ser desfeita."
     );
 
+
   if (!confirmed) return;
 
 
   database.trash =
     database.trash.filter(
-      item => item.id !== id
+      item =>
+        item.id !== id
     );
+
 
   saveDatabase();
 
+
   renderTrash();
+
 }
 
 
@@ -2897,9 +5417,12 @@ function emptyTrash() {
 
   if (
     !database.trash ||
-    database.trash.length === 0
+    database.trash.length ===
+      0
   ) {
+
     return;
+
   }
 
 
@@ -2908,14 +5431,18 @@ function emptyTrash() {
       "Esvaziar toda a lixeira? Todos esses registros serão excluídos definitivamente."
     );
 
+
   if (!confirmed) return;
 
 
   database.trash = [];
 
+
   saveDatabase();
 
+
   renderTrash();
+
 }
 
 
@@ -2930,36 +5457,77 @@ function renderGlucoseSettings() {
       "settingsPanel"
     );
 
+
   if (!container) return;
 
 
   const items = [
 
-    ["fasting", "Jejum"],
+    [
+      "fasting",
+      "Jejum"
+    ],
 
-    ["breakfast1", "1h após o café da manhã"],
+    [
+      "breakfast1",
+      "1h após o café da manhã"
+    ],
 
-    ["breakfast2", "2h após o café da manhã"],
+    [
+      "breakfast2",
+      "2h após o café da manhã"
+    ],
 
-    ["morningSnack1", "1h após o lanche da manhã"],
+    [
+      "morningSnack1",
+      "1h após o lanche da manhã"
+    ],
 
-    ["morningSnack2", "2h após o lanche da manhã"],
+    [
+      "morningSnack2",
+      "2h após o lanche da manhã"
+    ],
 
-    ["lunch1", "1h após o almoço"],
+    [
+      "lunch1",
+      "1h após o almoço"
+    ],
 
-    ["lunch2", "2h após o almoço"],
+    [
+      "lunch2",
+      "2h após o almoço"
+    ],
 
-    ["afternoonSnack1", "1h após o lanche da tarde"],
+    [
+      "afternoonSnack1",
+      "1h após o lanche da tarde"
+    ],
 
-    ["afternoonSnack2", "2h após o lanche da tarde"],
+    [
+      "afternoonSnack2",
+      "2h após o lanche da tarde"
+    ],
 
-    ["dinner1", "1h após o jantar"],
+    [
+      "dinner1",
+      "1h após o jantar"
+    ],
 
-    ["dinner2", "2h após o jantar"],
+    [
+      "dinner2",
+      "2h após o jantar"
+    ],
 
-    ["supper1", "1h após a ceia"],
+    [
+      "supper1",
+      "1h após a ceia"
+    ],
 
-    ["supper2", "2h após a ceia"]
+    [
+      "supper2",
+      "2h após a ceia"
+    ]
+
   ];
 
 
@@ -2969,16 +5537,21 @@ function renderGlucoseSettings() {
       Configurações
     </h2>
 
+
     <div class="card">
 
       <h3>
         Medições de glicemia
       </h3>
 
+
       <p>
-        Ative somente os momentos em que você deseja
-        que apareçam no registro de glicemia.
+        Ative somente os momentos
+        em que você deseja que
+        apareçam no registro de
+        glicemia.
       </p>
+
 
       <div
         style="
@@ -2988,40 +5561,52 @@ function renderGlucoseSettings() {
           margin-top:16px;
         "
       >
+
   `;
 
 
-  items.forEach(item => {
+  items.forEach(
+    item => {
 
-    html += `
+      html += `
 
-      <label
-        style="
-          display:flex;
-          align-items:center;
-          gap:10px;
-          cursor:pointer;
-        "
-      >
-
-        <input
-          type="checkbox"
-          class="glucose-setting-checkbox"
-          data-glucose-key="${item[0]}"
-          ${
-            glucoseSettings[item[0]]
-              ? "checked"
-              : ""
-          }
+        <label
+          style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+            cursor:pointer;
+          "
         >
 
-        <span>
-          ${escapeHTML(item[1])}
-        </span>
+          <input
+            type="checkbox"
+            class="glucose-setting-checkbox"
+            data-glucose-key="${item[0]}"
+            ${
+              glucoseSettings[
+                item[0]
+              ]
+                ? "checked"
+                : ""
+            }
+          >
 
-      </label>
-    `;
-  });
+
+          <span>
+
+            ${escapeHTML(
+              item[1]
+            )}
+
+          </span>
+
+        </label>
+
+      `;
+
+    }
+  );
 
 
   html += `
@@ -3029,32 +5614,44 @@ function renderGlucoseSettings() {
       </div>
 
     </div>
+
   `;
 
 
-  container.innerHTML = html;
+  container.innerHTML =
+    html;
 
 
   container
     .querySelectorAll(
       ".glucose-setting-checkbox"
     )
-    .forEach(checkbox => {
+    .forEach(
+      checkbox => {
 
-      checkbox.addEventListener(
-        "change",
-        () => {
+        checkbox.addEventListener(
+          "change",
+          () => {
 
-          const key =
-            checkbox.dataset.glucoseKey;
+            const key =
+              checkbox.dataset
+                .glucoseKey;
 
-          glucoseSettings[key] =
-            checkbox.checked;
 
-          saveGlucoseSettings();
-        }
-      );
-    });
+            glucoseSettings[
+              key
+            ] =
+              checkbox.checked;
+
+
+            saveGlucoseSettings();
+
+          }
+        );
+
+      }
+    );
+
 }
 
 
@@ -3069,18 +5666,28 @@ function renderMoreScreen() {
       "trashPanel"
     );
 
+
   const settingsPanel =
     document.getElementById(
       "settingsPanel"
     );
 
+
   if (trashPanel) {
-    trashPanel.hidden = true;
+
+    trashPanel.hidden =
+      true;
+
   }
 
+
   if (settingsPanel) {
-    settingsPanel.hidden = true;
+
+    settingsPanel.hidden =
+      true;
+
   }
+
 }
 
 
@@ -3093,6 +5700,7 @@ const openTrashButton =
     "openTrashButton"
   );
 
+
 if (openTrashButton) {
 
   openTrashButton.addEventListener(
@@ -3104,22 +5712,34 @@ if (openTrashButton) {
           "trashPanel"
         );
 
+
       const settingsPanel =
         document.getElementById(
           "settingsPanel"
         );
 
+
       if (trashPanel) {
-        trashPanel.hidden = false;
+
+        trashPanel.hidden =
+          false;
+
       }
+
 
       if (settingsPanel) {
-        settingsPanel.hidden = true;
+
+        settingsPanel.hidden =
+          true;
+
       }
 
+
       renderTrash();
+
     }
   );
+
 }
 
 
@@ -3132,6 +5752,7 @@ const settingsButton =
     "settingsButton"
   );
 
+
 if (settingsButton) {
 
   settingsButton.addEventListener(
@@ -3143,23 +5764,34 @@ if (settingsButton) {
           "trashPanel"
         );
 
+
       const settingsPanel =
         document.getElementById(
           "settingsPanel"
         );
 
+
       if (trashPanel) {
-        trashPanel.hidden = true;
+
+        trashPanel.hidden =
+          true;
+
       }
+
 
       if (settingsPanel) {
 
-        settingsPanel.hidden = false;
+        settingsPanel.hidden =
+          false;
+
 
         renderGlucoseSettings();
+
       }
+
     }
   );
+
 }
 
 
@@ -3172,62 +5804,113 @@ const navigationItems =
     ".navigation-item"
   );
 
+
 const appScreens =
   document.querySelectorAll(
     ".app-screen"
   );
 
 
-navigationItems.forEach(button => {
+navigationItems.forEach(
+  button => {
 
-  button.addEventListener(
-    "click",
-    () => {
+    button.addEventListener(
+      "click",
+      () => {
 
-      const targetScreen =
-        button.dataset.screen;
-
-      if (!targetScreen) return;
-
-
-      appScreens.forEach(screen => {
-
-        screen.hidden =
-          screen.id !== targetScreen;
-      });
+        const targetScreen =
+          button.dataset
+            .screen;
 
 
-      navigationItems.forEach(item => {
+        if (!targetScreen)
+          return;
 
-        item.classList.remove(
+
+        appScreens.forEach(
+          screen => {
+
+            screen.hidden =
+              screen.id !==
+              targetScreen;
+
+          }
+        );
+
+
+        navigationItems.forEach(
+          item => {
+
+            item.classList.remove(
+              "active"
+            );
+
+          }
+        );
+
+
+        button.classList.add(
           "active"
         );
-      });
 
 
-      button.classList.add(
-        "active"
-      );
+        if (
+          targetScreen ===
+          "diaryScreen"
+        ) {
+
+          renderDiary();
+
+        }
 
 
-      if (
-        targetScreen ===
-        "diaryScreen"
-      ) {
-        renderDiary();
+        if (
+          targetScreen ===
+          "moreScreen"
+        ) {
+
+          renderMoreScreen();
+
+        }
+
+
+        const targetElement =
+          document.getElementById(
+            targetScreen
+          );
+
+
+        if (
+          targetElement
+        ) {
+
+          const text =
+            button.textContent
+              .replace(
+                /\s+/g,
+                " "
+              )
+              .trim()
+              .toLowerCase();
+
+
+          if (
+            text.includes(
+              "consultas"
+            )
+          ) {
+
+            renderAppointments();
+
+          }
+
+        }
+
       }
+    );
 
-
-      if (
-        targetScreen ===
-        "moreScreen"
-      ) {
-        renderMoreScreen();
-      }
-
-    }
-  );
-});
+  }
+);
 
 
 /* =========================================================
@@ -3243,34 +5926,39 @@ document.addEventListener(
         "button"
       );
 
+
     if (!button) return;
 
 
     const text =
       button.textContent
-        .replace(/\s+/g, " ")
+        .replace(
+          /\s+/g,
+          " "
+        )
         .trim()
         .toLowerCase();
 
 
-    /*
-       Garante que somente o botão correto
-       seja usado.
-    */
-
     if (
+
       text.includes(
         "medicamentos / suplementos e vitaminas"
       ) ||
+
       text.includes(
         "medicamentos/suplementos e vitaminas"
       )
+
     ) {
 
       event.preventDefault();
 
+
       openMedicationManager();
+
     }
+
   }
 );
 
@@ -3284,12 +5972,14 @@ const backupButton =
     "backupButton"
   );
 
+
 if (backupButton) {
 
   backupButton.addEventListener(
     "click",
     createBackup
   );
+
 }
 
 
@@ -3304,7 +5994,8 @@ function createBackup() {
       "0.1",
 
     createdAt:
-      new Date().toISOString(),
+      new Date()
+        .toISOString(),
 
     data: {
 
@@ -3313,6 +6004,7 @@ function createBackup() {
 
       trash:
         database.trash
+
     },
 
     glucoseSettings:
@@ -3320,6 +6012,7 @@ function createBackup() {
 
     medications:
       medications
+
   };
 
 
@@ -3333,32 +6026,51 @@ function createBackup() {
         )
       ],
       {
+
         type:
           "application/json"
+
       }
     );
 
 
   const url =
-    URL.createObjectURL(blob);
+    URL.createObjectURL(
+      blob
+    );
+
 
   const link =
-    document.createElement("a");
+    document.createElement(
+      "a"
+    );
 
-  link.href = url;
+
+  link.href =
+    url;
+
 
   link.download =
     `Recordatorio_Backup_${formatDateKey(
       new Date()
     )}.json`;
 
-  document.body.appendChild(link);
+
+  document.body.appendChild(
+    link
+  );
+
 
   link.click();
 
+
   link.remove();
 
-  URL.revokeObjectURL(url);
+
+  URL.revokeObjectURL(
+    url
+  );
+
 }
 
 
@@ -3366,7 +6078,9 @@ function createBackup() {
    RESTAURAÇÃO
 ========================================================= */
 
-function restoreBackupFile(file) {
+function restoreBackupFile(
+  file
+) {
 
   if (!file) return;
 
@@ -3386,13 +6100,19 @@ function restoreBackupFile(file) {
           );
 
 
-        if (!validateBackup(backup)) {
+        if (
+          !validateBackup(
+            backup
+          )
+        ) {
 
           alert(
             "Este arquivo não é um backup válido do Recordatório + Registros."
           );
 
+
           return;
+
         }
 
 
@@ -3401,16 +6121,21 @@ function restoreBackupFile(file) {
             "Restaurar este backup substituirá os registros atuais do aplicativo. Deseja continuar?"
           );
 
-        if (!confirmed) return;
+
+        if (!confirmed)
+          return;
 
 
         database = {
 
           records:
-            backup.data.records,
+            backup.data
+              .records,
 
           trash:
-            backup.data.trash
+            backup.data
+              .trash
+
         };
 
 
@@ -3419,6 +6144,7 @@ function restoreBackupFile(file) {
           ...defaultGlucoseOptions,
 
           ...backup.glucoseSettings
+
         };
 
 
@@ -3426,21 +6152,32 @@ function restoreBackupFile(file) {
           Array.isArray(
             backup.medications
           )
+
             ? backup.medications
+
             : [];
 
 
         saveDatabase();
+
         saveGlucoseSettings();
+
         saveMedications();
 
+
         renderDashboard();
+
         renderDiary();
+
         renderTrash();
+
+        renderAppointments();
+
 
         alert(
           "Backup restaurado com sucesso."
         );
+
 
       } catch (error) {
 
@@ -3449,14 +6186,20 @@ function restoreBackupFile(file) {
           error
         );
 
+
         alert(
           "Não foi possível ler este arquivo de backup."
         );
+
       }
+
     };
 
 
-  reader.readAsText(file);
+  reader.readAsText(
+    file
+  );
+
 }
 
 
@@ -3464,20 +6207,24 @@ function restoreBackupFile(file) {
    VALIDAR BACKUP
 ========================================================= */
 
-function validateBackup(backup) {
+function validateBackup(
+  backup
+) {
 
   return Boolean(
 
     backup &&
 
-    typeof backup === "object" &&
+    typeof backup ===
+      "object" &&
 
     backup.application ===
       "Recordatório + Registros" &&
 
     backup.data &&
 
-    typeof backup.data === "object" &&
+    typeof backup.data ===
+      "object" &&
 
     Array.isArray(
       backup.data.records
@@ -3491,7 +6238,9 @@ function validateBackup(backup) {
 
     typeof backup.glucoseSettings ===
       "object"
+
   );
+
 }
 
 
@@ -3503,6 +6252,7 @@ const restoreBackupButton =
   document.getElementById(
     "restoreBackupButton"
   );
+
 
 const restoreBackupInput =
   document.getElementById(
@@ -3516,11 +6266,17 @@ if (restoreBackupButton) {
     "click",
     () => {
 
-      if (restoreBackupInput) {
+      if (
+        restoreBackupInput
+      ) {
+
         restoreBackupInput.click();
+
       }
+
     }
   );
+
 }
 
 
@@ -3534,11 +6290,18 @@ if (restoreBackupInput) {
         event.target.files &&
         event.target.files[0];
 
-      restoreBackupFile(file);
 
-      event.target.value = "";
+      restoreBackupFile(
+        file
+      );
+
+
+      event.target.value =
+        "";
+
     }
   );
+
 }
 
 
@@ -3547,5 +6310,9 @@ if (restoreBackupInput) {
 ========================================================= */
 
 renderDashboard();
+
 renderDiary();
+
 renderTrash();
+
+renderAppointments();

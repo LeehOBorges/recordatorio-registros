@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#A85C5C"
+  >
+
+  <meta
+    name="description"
+    content="Recordatório alimentar, glicêmico e de insulina"
+  >
+
+  <meta
+    name="mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="default"
+  >
+
+  <meta
+    name="apple-mobile-web-app-title"
+    content="Recordatório"
+  >
+
+  <title>Recordatório + Registros</title>
+
+
+  <!-- =====================================================
+       MANIFESTO DO APLICATIVO
+  ====================================================== -->
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
+
+
+  <!-- =====================================================
+       ESTILOS
+  ====================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+</head>
+
+
+<body>
+
+
+  <!-- =====================================================
+       TELA HOJE
+  ====================================================== -->
+
+  <section
+    id="todayScreen"
+    class="app-screen"
+  >
+
+    <header class="topbar">
+
+      <div>
+
+        <p class="eyebrow">
+          RECORDATÓRIO + REGISTROS
+        </p>
+
+        <h1>
+          Hoje
+        </h1>
+
+      </div>
+
+
+      <button
+        class="icon-button"
+        id="backupButton"
+        type="button"
+        aria-label="Fazer backup"
+        title="Fazer backup"
+      >
+        💾
+      </button>
+
+    </header>
+
+
+    <main>
+
+
+      <!-- =================================================
+           DATA
+      ================================================== -->
+
+      <section class="date-card card">
+
+        <button
+          id="previousDay"
+          class="date-arrow"
+          type="button"
+          aria-label="Dia anterior"
+        >
+          ‹
+        </button>
+
+
+        <div>
+
+          <strong id="currentDate">
+            Hoje
+          </strong>
+
+        </div>
+
+
+        <button
+          id="nextDay"
+          class="date-arrow"
+          type="button"
+          aria-label="Próximo dia"
+        >
+          ›
+        </button>
+
+      </section>
+
+
+      <!-- =================================================
+           RESUMO
+      ================================================== -->
+
+      <section class="summary-grid">
+
+
+        <article class="card summary-card">
+
+          <span>
+            🍽️ Refeições
+          </span>
+
+          <strong id="mealCount">
+            0
+          </strong>
+
+        </article>
+
+
+        <article class="card summary-card">
+
+          <span>
+            🩸 Glicemias
+          </span>
+
+          <strong id="glucoseCount">
+            0
+          </strong>
+
+        </article>
+
+
+        <article class="card summary-card">
+
+          <span>
+            💉 Insulina
+          </span>
+
+          <strong id="insulinCount">
+            0
+          </strong>
+
+        </article>
+
+
+        <article class="card summary-card">
+
+          <span>
+            🏋️ Atividade
+          </span>
+
+          <strong id="activityTotal">
+            0 min
+          </strong>
+
+        </article>
+
+
+      </section>
+
+
+      <!-- =================================================
+           AÇÕES RÁPIDAS
+      ================================================== -->
+
+      <section class="quick-actions">
+
+
+        <!-- REFEIÇÃO -->
+
+        <button
+          class="quick-button"
+          type="button"
+          data-record-type="meal"
+        >
+
+          <span>
+            🍽️
+          </span>
+
+          Refeição
+
+        </button>
+
+
+        <!-- GLICEMIA -->
+
+        <button
+          class="quick-button"
+          type="button"
+          data-record-type="glucose"
+        >
+
+          <span>
+            🩸
+          </span>
+
+          Glicemia
+
+        </button>
+
+
+        <!-- INSULINA -->
+
+        <button
+          class="quick-button"
+          type="button"
+          data-record-type="insulin"
+        >
+
+          <span>
+            💉
+          </span>
+
+          Insulina
+
+        </button>
+
+
+        <!-- ATIVIDADE -->
+
+        <button
+          class="quick-button"
+          type="button"
+          data-record-type="activity"
+        >
+
+          <span>
+            🏋️
+          </span>
+
+          Atividade
+
+        </button>
+
+
+        <!-- =================================================
+             MEDICAMENTOS / SUPLEMENTOS E VITAMINAS
+        ================================================== -->
+
+        <button
+          class="quick-button"
+          type="button"
+          id="medicationsButton"
+        >
+
+          <span>
+            💊
+          </span>
+
+          Medicamentos / Suplementos e Vitaminas
+
+        </button>
+
+
+      </section>
+
+
+      <!-- =================================================
+           LINHA DO TEMPO
+      ================================================== -->
+
+      <section class="card timeline-card">
+
+        <div class="section-header">
+
+          <h2>
+            Linha do tempo
+          </h2>
+
+        </div>
+
+
+        <div id="timeline"></div>
+
+      </section>
+
+
+      <!-- =================================================
+           MEDICAMENTOS / SUPLEMENTOS E VITAMINAS
+      ================================================== -->
+
+      <section
+        id="medicationsPanel"
+        class="card"
+        hidden
+      >
+
+        <div class="section-header">
+
+          <h2>
+            💊 Medicamentos / Suplementos e Vitaminas
+          </h2>
+
+        </div>
+
+
+        <p>
+          Marque cada item conforme você tomar.
+        </p>
+
+
+        <div
+          id="medicationsList"
+          style="
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            margin-top:16px;
+          "
+        >
+
+          <div class="empty-state">
+
+            Nenhum medicamento ou vitamina cadastrado.
+
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          id="addMedicationButton"
+          class="primary-button"
+          style="margin-top:16px;"
+        >
+
+          + Adicionar medicamento, suplemento ou vitamina
+
+        </button>
+
+
+      </section>
+
+
+    </main>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       TELA DIÁRIO
+  ====================================================== -->
+
+  <section
+    id="diaryScreen"
+    class="app-screen"
+    hidden
+  >
+
+    <header class="topbar">
+
+      <div>
+
+        <p class="eyebrow">
+          RECORDATÓRIO + REGISTROS
+        </p>
+
+        <h1>
+          Diário
+        </h1>
+
+      </div>
+
+    </header>
+
+
+    <main>
+
+      <section class="card">
+
+        <h2>
+          Histórico
+        </h2>
+
+
+        <div id="diaryContent">
+
+          <div class="empty-state">
+
+            Nenhum registro encontrado.
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       TELA ANÁLISES
+  ====================================================== -->
+
+  <section
+    id="analysisScreen"
+    class="app-screen"
+    hidden
+  >
+
+    <header class="topbar">
+
+      <div>
+
+        <p class="eyebrow">
+          RECORDATÓRIO + REGISTROS
+        </p>
+
+        <h1>
+          Análises
+        </h1>
+
+      </div>
+
+    </header>
+
+
+    <main>
+
+      <section class="card">
+
+        <h2>
+          Análises
+        </h2>
+
+
+        <div class="empty-state">
+
+          Esta área será desenvolvida nas próximas etapas.
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       TELA CONSULTA
+  ====================================================== -->
+
+  <section
+    id="consultationScreen"
+    class="app-screen"
+    hidden
+  >
+
+    <header class="topbar">
+
+      <div>
+
+        <p class="eyebrow">
+          RECORDATÓRIO + REGISTROS
+        </p>
+
+        <h1>
+          Consulta
+        </h1>
+
+      </div>
+
+    </header>
+
+
+    <main>
+
+      <section class="card">
+
+        <h2>
+          Consulta
+        </h2>
+
+
+        <div class="empty-state">
+
+          Esta área será desenvolvida nas próximas etapas.
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       TELA MAIS
+  ====================================================== -->
+
+  <section
+    id="moreScreen"
+    class="app-screen"
+    hidden
+  >
+
+    <header class="topbar">
+
+      <div>
+
+        <p class="eyebrow">
+          RECORDATÓRIO + REGISTROS
+        </p>
+
+        <h1>
+          Mais
+        </h1>
+
+      </div>
+
+    </header>
+
+
+    <main>
+
+
+      <!-- OPÇÕES -->
+
+      <section class="card">
+
+        <h2>
+          Opções
+        </h2>
+
+
+        <button
+          type="button"
+          id="openTrashButton"
+          class="quick-button"
+        >
+
+          🗑️ Lixeira
+
+        </button>
+
+
+        <button
+          type="button"
+          id="settingsButton"
+          class="quick-button"
+        >
+
+          ⚙️ Configurações
+
+        </button>
+
+      </section>
+
+
+
+      <!-- LIXEIRA -->
+
+      <section
+        id="trashPanel"
+        class="card"
+        hidden
+      >
+
+        <div class="section-header">
+
+          <h2>
+            🗑️ Lixeira
+          </h2>
+
+        </div>
+
+
+        <div id="trashContent">
+
+          <div class="empty-state">
+
+            A lixeira está vazia.
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- CONFIGURAÇÕES -->
+
+      <section
+        id="settingsPanel"
+        class="card"
+        hidden
+      >
+
+        <div class="section-header">
+
+          <h2>
+            ⚙️ Configurações
+          </h2>
+
+        </div>
+
+
+        <div class="empty-state">
+
+          Esta área será desenvolvida nas próximas etapas.
+
+        </div>
+
+      </section>
+
+
+    </main>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       NAVEGAÇÃO INFERIOR
+  ====================================================== -->
+
+  <nav class="bottom-navigation">
+
+
+    <button
+      class="navigation-item active"
+      type="button"
+      data-screen="todayScreen"
+    >
+
+      <span>
+        🏠
+      </span>
+
+      <small>
+        Hoje
+      </small>
+
+    </button>
+
+
+    <button
+      class="navigation-item"
+      type="button"
+      data-screen="diaryScreen"
+    >
+
+      <span>
+        📖
+      </span>
+
+      <small>
+        Diário
+      </small>
+
+    </button>
+
+
+    <button
+      class="navigation-item"
+      type="button"
+      data-screen="analysisScreen"
+    >
+
+      <span>
+        📊
+      </span>
+
+      <small>
+        Análises
+      </small>
+
+    </button>
+
+
+    <button
+      class="navigation-item"
+      type="button"
+      data-screen="consultationScreen"
+    >
+
+      <span>
+        🩺
+      </span>
+
+      <small>
+        Consulta
+      </small>
+
+    </button>
+
+
+    <button
+      class="navigation-item"
+      type="button"
+      data-screen="moreScreen"
+    >
+
+      <span>
+        ☰
+      </span>
+
+      <small>
+        Mais
+      </small>
+
+    </button>
+
+
+  </nav>
+
+
+
+  <!-- =====================================================
+       MODAL DE REGISTRO
+  ====================================================== -->
+
+  <dialog id="recordModal">
+
+    <form
+      id="recordForm"
+      class="modal"
+    >
+
+      <div class="modal-header">
+
+        <h2 id="modalTitle">
+          Novo registro
+        </h2>
+
+
+        <button
+          type="button"
+          id="closeModal"
+          class="icon-button"
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+
+      </div>
+
+
+      <div id="formFields"></div>
+
+
+      <div class="modal-actions">
+
+
+        <button
+          type="button"
+          id="cancelButton"
+          class="secondary-button"
+        >
+          Cancelar
+        </button>
+
+
+        <button
+          type="submit"
+          class="primary-button"
+        >
+          Salvar
+        </button>
+
+
+      </div>
+
+    </form>
+
+  </dialog>
+
+
+
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
+
+  <script src="app.js"></script>
+
+
+  <!-- =====================================================
+       SERVICE WORKER / FUNCIONAMENTO COMO PWA
+  ====================================================== -->
+
+  <script>
+
+    if (
+      "serviceWorker" in navigator
+    ) {
+
+      window.addEventListener(
+        "load",
+        () => {
+
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then(
+              registration => {
+
+                console.log(
+                  "Service Worker registrado:",
+                  registration.scope
+                );
+
+              }
+            )
+            .catch(
+              error => {
+
+                console.error(
+                  "Erro ao registrar Service Worker:",
+                  error
+                );
+
+              }
+            );
+
+        }
+      );
+
+    }
+
+  </script>
+
+
+</body>
+
+</html>

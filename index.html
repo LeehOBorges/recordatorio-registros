@@ -1653,6 +1653,14 @@
         SUPABASE_PUBLISHABLE_KEY
       );
 
+    /*
+     * Torna o cliente disponível para os módulos
+     * externos, inclusive sincronizacao.js.
+     */
+    window.supabaseClient =
+      supabaseClient;
+
+
     const loginScreen =
       document.getElementById(
         "loginScreen"
@@ -2252,20 +2260,25 @@
   </script>
 
   <!-- =====================================================
-       JAVASCRIPT PRINCIPAL DO APLICATIVO
+       JAVASCRIPT PRINCIPAL
   ====================================================== -->
 
   <script src="app.js"></script>
-<script src="sincronizacao.js"></script>
 
   <!-- =====================================================
-       MÓDULO SEPARADO DE RELATÓRIOS E PDF
+       MÓDULO DE RELATÓRIOS E PDF
   ====================================================== -->
 
   <script src="relatorios.js"></script>
 
   <!-- =====================================================
-       SERVICE WORKER / PWA
+       MÓDULO DE SINCRONIZAÇÃO
+  ====================================================== -->
+
+  <script src="sincronizacao.js"></script>
+
+  <!-- =====================================================
+       SERVICE WORKER
   ====================================================== -->
 
   <script>

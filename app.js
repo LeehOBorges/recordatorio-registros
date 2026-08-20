@@ -597,7 +597,7 @@ function renderDashboard() {
 
   renderMedicationHome();
 
-  renderConsultationsHome();
+  renderMedicationHome();
 }
 
 

@@ -82,10 +82,8 @@
     }
 
     .login-container {
-
       width: 100%;
       max-width: 420px;
-
     }
 
     .login-card {
@@ -105,19 +103,13 @@
     }
 
     .login-brand {
-
       text-align: center;
-
       margin-bottom: 28px;
-
     }
 
     .login-brand-icon {
-
       font-size: 42px;
-
       margin-bottom: 10px;
-
     }
 
     .login-brand-title {
@@ -145,9 +137,7 @@
     }
 
     .login-form-group {
-
       margin-bottom: 16px;
-
     }
 
     .login-form-group label {
@@ -263,15 +253,11 @@
     }
 
     .login-message.error {
-
       color: #a33f3f;
-
     }
 
     .login-message.success {
-
       color: #42724b;
-
     }
 
     #resetPasswordPanel {
@@ -287,9 +273,7 @@
     }
 
     #resetPasswordPanel.visible {
-
       display: block;
-
     }
 
     .reset-title {
@@ -382,9 +366,7 @@
     }
 
     #changePasswordScreen.visible {
-
       display: flex;
-
     }
 
     .change-password-container {
@@ -482,15 +464,138 @@
 
     }
 
+    /* ================================
+       RELATÓRIOS
+    ================================= */
+
+    #reportsScreen {
+      padding-bottom: 100px;
+    }
+
+    .reports-intro {
+
+      color: #777;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+      margin-top: 0;
+
+    }
+
+    .report-field {
+
+      margin-bottom: 18px;
+
+    }
+
+    .report-field label {
+
+      display: block;
+
+      margin-bottom: 7px;
+
+      font-size: 14px;
+
+      font-weight: 600;
+
+      color: #444;
+
+    }
+
+    .report-field input,
+    .report-field select {
+
+      width: 100%;
+
+      box-sizing: border-box;
+
+      padding: 13px 14px;
+
+      border: 1px solid #ddd;
+
+      border-radius: 12px;
+
+      font-size: 16px;
+
+      background: #fff;
+
+    }
+
+    .report-button {
+
+      width: 100%;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      padding: 14px;
+
+      margin-top: 8px;
+
+      font-size: 16px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+    }
+
+    .report-button.primary {
+
+      background: #A85C5C;
+
+      color: white;
+
+    }
+
+    .report-button.secondary {
+
+      background: #f0dddd;
+
+      color: #7f4444;
+
+    }
+
+    .report-preview {
+
+      margin-top: 20px;
+
+      min-height: 100px;
+
+    }
+
+    .report-preview h3 {
+
+      color: #7f4444;
+
+      margin-top: 0;
+
+    }
+
+    .report-preview-item {
+
+      padding: 12px 0;
+
+      border-bottom: 1px solid #eee;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+    }
+
   </style>
 
 </head>
 
 <body>
 
-  <section
-    id="loginScreen"
-  >
+  <!-- LOGIN -->
+
+  <section id="loginScreen">
 
     <div class="login-container">
 
@@ -570,9 +675,7 @@
 
         </form>
 
-        <div
-          id="resetPasswordPanel"
-        >
+        <div id="resetPasswordPanel">
 
           <h2 class="reset-title">
             Recuperar senha
@@ -628,9 +731,9 @@
 
   </section>
 
-  <section
-    id="changePasswordScreen"
-  >
+  <!-- ALTERAÇÃO DE SENHA -->
+
+  <section id="changePasswordScreen">
 
     <div class="change-password-container">
 
@@ -691,10 +794,11 @@
 
   </section>
 
-  <div
-    id="appContent"
-    hidden
-  >
+  <!-- APLICATIVO -->
+
+  <div id="appContent" hidden>
+
+    <!-- HOJE -->
 
     <section
       id="todayScreen"
@@ -819,9 +923,7 @@
             data-record-type="meal"
           >
 
-            <span>
-              🍽️
-            </span>
+            <span>🍽️</span>
 
             Refeição
 
@@ -833,9 +935,7 @@
             data-record-type="glucose"
           >
 
-            <span>
-              🩸
-            </span>
+            <span>🩸</span>
 
             Glicemia
 
@@ -847,9 +947,7 @@
             data-record-type="insulin"
           >
 
-            <span>
-              💉
-            </span>
+            <span>💉</span>
 
             Insulina
 
@@ -861,9 +959,7 @@
             data-record-type="activity"
           >
 
-            <span>
-              🏋️
-            </span>
+            <span>🏋️</span>
 
             Atividade
 
@@ -875,9 +971,7 @@
             id="medicationsButton"
           >
 
-            <span>
-              💊
-            </span>
+            <span>💊</span>
 
             Medicamentos / Suplementos e Vitaminas
 
@@ -889,9 +983,7 @@
             id="consultationQuickButton"
           >
 
-            <span>
-              🩺
-            </span>
+            <span>🩺</span>
 
             Consultas
 
@@ -966,6 +1058,8 @@
 
     </section>
 
+    <!-- DIÁRIO -->
+
     <section
       id="diaryScreen"
       class="app-screen"
@@ -999,9 +1093,7 @@
           <div id="diaryContent">
 
             <div class="empty-state">
-
               Nenhum registro encontrado.
-
             </div>
 
           </div>
@@ -1011,6 +1103,8 @@
       </main>
 
     </section>
+
+    <!-- ANÁLISES -->
 
     <section
       id="analysisScreen"
@@ -1054,6 +1148,8 @@
 
     </section>
 
+    <!-- CONSULTAS -->
+
     <section
       id="consultationScreen"
       class="app-screen"
@@ -1092,6 +1188,8 @@
 
     </section>
 
+    <!-- MAIS -->
+
     <section
       id="moreScreen"
       class="app-screen"
@@ -1127,9 +1225,7 @@
             id="openTrashButton"
             class="quick-button"
           >
-
             🗑️ Lixeira
-
           </button>
 
           <button
@@ -1137,21 +1233,15 @@
             id="settingsButton"
             class="quick-button"
           >
-
             ⚙️ Configurações
-
           </button>
-
-          <!-- NOVO BOTÃO DE RELATÓRIOS -->
 
           <button
             type="button"
             id="reportsButton"
             class="quick-button"
           >
-
             📊 Relatórios
-
           </button>
 
         </section>
@@ -1173,9 +1263,7 @@
           <div id="trashContent">
 
             <div class="empty-state">
-
               A lixeira está vazia.
-
             </div>
 
           </div>
@@ -1208,6 +1296,154 @@
 
     </section>
 
+    <!-- RELATÓRIOS -->
+
+    <section
+      id="reportsScreen"
+      class="app-screen"
+      hidden
+    >
+
+      <header class="topbar">
+
+        <div>
+
+          <p class="eyebrow">
+            RECORDATÓRIO + REGISTROS
+          </p>
+
+          <h1>
+            Relatórios
+          </h1>
+
+        </div>
+
+      </header>
+
+      <main>
+
+        <section class="card">
+
+          <h2>
+            📊 Gerar relatório
+          </h2>
+
+          <p class="reports-intro">
+            Escolha o período e o tipo de informação que deseja
+            consultar.
+          </p>
+
+          <div class="report-field">
+
+            <label for="reportStartDate">
+              Data inicial
+            </label>
+
+            <input
+              id="reportStartDate"
+              type="date"
+            >
+
+          </div>
+
+          <div class="report-field">
+
+            <label for="reportEndDate">
+              Data final
+            </label>
+
+            <input
+              id="reportEndDate"
+              type="date"
+            >
+
+          </div>
+
+          <div class="report-field">
+
+            <label for="reportType">
+              Tipo de relatório
+            </label>
+
+            <select id="reportType">
+
+              <option value="all">
+                Todos os registros
+              </option>
+
+              <option value="meal">
+                Refeições
+              </option>
+
+              <option value="glucose">
+                Glicemias
+              </option>
+
+              <option value="insulin">
+                Insulina
+              </option>
+
+              <option value="activity">
+                Atividades
+              </option>
+
+              <option value="medication">
+                Medicamentos / Suplementos
+              </option>
+
+              <option value="consultation">
+                Consultas
+              </option>
+
+            </select>
+
+          </div>
+
+          <button
+            type="button"
+            id="previewReportButton"
+            class="report-button primary"
+          >
+            👁️ Visualizar relatório
+          </button>
+
+          <button
+            type="button"
+            id="downloadReportButton"
+            class="report-button secondary"
+          >
+            📄 Baixar PDF
+          </button>
+
+        </section>
+
+        <section
+          id="reportPreview"
+          class="card report-preview"
+        >
+
+          <h3>
+            Prévia do relatório
+          </h3>
+
+          <div
+            id="reportPreviewContent"
+            class="empty-state"
+          >
+
+            Escolha o período e clique em
+            "Visualizar relatório".
+
+          </div>
+
+        </section>
+
+      </main>
+
+    </section>
+
+    <!-- NAVEGAÇÃO -->
+
     <nav class="bottom-navigation">
 
       <button
@@ -1216,13 +1452,9 @@
         data-screen="todayScreen"
       >
 
-        <span>
-          🏠
-        </span>
+        <span>🏠</span>
 
-        <small>
-          Hoje
-        </small>
+        <small>Hoje</small>
 
       </button>
 
@@ -1232,13 +1464,9 @@
         data-screen="diaryScreen"
       >
 
-        <span>
-          📖
-        </span>
+        <span>📖</span>
 
-        <small>
-          Diário
-        </small>
+        <small>Diário</small>
 
       </button>
 
@@ -1248,13 +1476,9 @@
         data-screen="analysisScreen"
       >
 
-        <span>
-          📊
-        </span>
+        <span>📊</span>
 
-        <small>
-          Análises
-        </small>
+        <small>Análises</small>
 
       </button>
 
@@ -1264,19 +1488,17 @@
         data-screen="moreScreen"
       >
 
-        <span>
-          ☰
-        </span>
+        <span>☰</span>
 
-        <small>
-          Mais
-        </small>
+        <small>Mais</small>
 
       </button>
 
     </nav>
 
   </div>
+
+  <!-- MODAL DE REGISTRO -->
 
   <dialog id="recordModal">
 
@@ -1326,6 +1548,8 @@
     </form>
 
   </dialog>
+
+  <!-- SUPABASE AUTH -->
 
   <script>
 
@@ -1817,7 +2041,72 @@
 
   </script>
 
+  <!-- JAVASCRIPT PRINCIPAL -->
+
   <script src="app.js"></script>
+
+  <!-- CONTROLE DA TELA DE RELATÓRIOS -->
+
+  <script>
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      function() {
+
+        const reportsButton =
+          document.getElementById(
+            "reportsButton"
+          );
+
+        const reportsScreen =
+          document.getElementById(
+            "reportsScreen"
+          );
+
+        if (
+          reportsButton &&
+          reportsScreen
+        ) {
+
+          reportsButton.addEventListener(
+            "click",
+            function() {
+
+              if (
+                typeof showScreen === "function"
+              ) {
+
+                showScreen(
+                  "reportsScreen"
+                );
+
+              } else {
+
+                document
+                  .querySelectorAll(
+                    ".app-screen"
+                  )
+                  .forEach(
+                    screen => {
+                      screen.hidden = true;
+                    }
+                  );
+
+                reportsScreen.hidden = false;
+
+              }
+
+            }
+          );
+
+        }
+
+      }
+    );
+
+  </script>
+
+  <!-- SERVICE WORKER -->
 
   <script>
 

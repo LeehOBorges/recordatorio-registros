@@ -44,6 +44,13 @@
 
 
   <!-- =====================================================
+       SUPABASE
+  ====================================================== -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+  <!-- =====================================================
        MANIFESTO DO APLICATIVO
   ====================================================== -->
 
@@ -62,10 +69,357 @@
     href="styles.css"
   >
 
+
+  <!-- =====================================================
+       ESTILO DA TELA DE LOGIN
+  ====================================================== -->
+
+  <style>
+
+    /* =====================================================
+       CONTROLE INICIAL
+    ====================================================== */
+
+    body.auth-loading .app-screen,
+    body.auth-loading .bottom-navigation {
+      display: none !important;
+    }
+
+
+    /* =====================================================
+       TELA DE LOGIN
+    ====================================================== */
+
+    #loginScreen {
+
+      min-height: 100vh;
+      min-height: 100dvh;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 24px;
+
+      box-sizing: border-box;
+
+      background:
+        linear-gradient(
+          180deg,
+          #fffaf8 0%,
+          #f8eeee 100%
+        );
+
+    }
+
+
+    .login-container {
+
+      width: 100%;
+      max-width: 420px;
+
+    }
+
+
+    .login-card {
+
+      background: #ffffff;
+
+      border-radius: 22px;
+
+      padding: 30px 24px;
+
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.08);
+
+      box-sizing: border-box;
+
+    }
+
+
+    .login-brand {
+
+      text-align: center;
+
+      margin-bottom: 28px;
+
+    }
+
+
+    .login-brand-icon {
+
+      font-size: 46px;
+
+      margin-bottom: 10px;
+
+    }
+
+
+    .login-brand h1 {
+
+      margin: 0;
+
+      color: #7f4545;
+
+      font-size: 28px;
+
+      line-height: 1.2;
+
+    }
+
+
+    .login-brand p {
+
+      margin: 8px 0 0;
+
+      color: #777;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+    }
+
+
+    .login-form-group {
+
+      margin-bottom: 16px;
+
+    }
+
+
+    .login-form-group label {
+
+      display: block;
+
+      margin-bottom: 7px;
+
+      font-weight: 600;
+
+      font-size: 14px;
+
+      color: #444;
+
+    }
+
+
+    .login-form-group input {
+
+      width: 100%;
+
+      box-sizing: border-box;
+
+      padding: 13px 14px;
+
+      border: 1px solid #ddd;
+
+      border-radius: 12px;
+
+      font-size: 16px;
+
+      background: #fff;
+
+      outline: none;
+
+    }
+
+
+    .login-form-group input:focus {
+
+      border-color: #A85C5C;
+
+      box-shadow:
+        0 0 0 3px rgba(168, 92, 92, 0.12);
+
+    }
+
+
+    #loginButton {
+
+      width: 100%;
+
+      margin-top: 6px;
+
+      padding: 14px;
+
+      border: none;
+
+      border-radius: 12px;
+
+      background: #A85C5C;
+
+      color: #fff;
+
+      font-size: 16px;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+    }
+
+
+    #loginButton:disabled {
+
+      opacity: 0.65;
+
+      cursor: wait;
+
+    }
+
+
+    #forgotPasswordButton {
+
+      width: 100%;
+
+      margin-top: 14px;
+
+      padding: 10px;
+
+      border: none;
+
+      background: transparent;
+
+      color: #A85C5C;
+
+      font-size: 14px;
+
+      cursor: pointer;
+
+    }
+
+
+    #loginMessage {
+
+      min-height: 20px;
+
+      margin-top: 16px;
+
+      text-align: center;
+
+      font-size: 14px;
+
+      line-height: 1.4;
+
+    }
+
+
+    #logoutButton {
+
+      width: 100%;
+
+      margin-top: 12px;
+
+    }
+
+  </style>
+
 </head>
 
 
-<body>
+<body class="auth-loading">
+
+
+  <!-- =====================================================
+       TELA DE LOGIN
+  ====================================================== -->
+
+  <section
+    id="loginScreen"
+    hidden
+  >
+
+    <div class="login-container">
+
+      <div class="login-card">
+
+
+        <div class="login-brand">
+
+          <div class="login-brand-icon">
+            🩷
+          </div>
+
+          <h1>
+            Recordatório
+          </h1>
+
+          <p>
+            Entre para acessar seus registros.
+          </p>
+
+        </div>
+
+
+        <form id="loginForm">
+
+
+          <div class="login-form-group">
+
+            <label for="loginEmail">
+              E-mail
+            </label>
+
+            <input
+              id="loginEmail"
+              type="email"
+              autocomplete="email"
+              placeholder="seu@email.com"
+              required
+            >
+
+          </div>
+
+
+          <div class="login-form-group">
+
+            <label for="loginPassword">
+              Senha
+            </label>
+
+            <input
+              id="loginPassword"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Sua senha"
+              required
+            >
+
+          </div>
+
+
+          <button
+            id="loginButton"
+            type="submit"
+          >
+            Entrar
+          </button>
+
+
+        </form>
+
+
+        <button
+          id="forgotPasswordButton"
+          type="button"
+        >
+          Esqueci minha senha
+        </button>
+
+
+        <div
+          id="loginMessage"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+
+      </div>
+
+    </div>
+
+  </section>
+
 
 
   <!-- =====================================================
@@ -75,6 +429,7 @@
   <section
     id="todayScreen"
     class="app-screen"
+    hidden
   >
 
     <header class="topbar">
@@ -214,8 +569,6 @@
       <section class="quick-actions">
 
 
-        <!-- REFEIÇÃO -->
-
         <button
           class="quick-button"
           type="button"
@@ -230,8 +583,6 @@
 
         </button>
 
-
-        <!-- GLICEMIA -->
 
         <button
           class="quick-button"
@@ -248,8 +599,6 @@
         </button>
 
 
-        <!-- INSULINA -->
-
         <button
           class="quick-button"
           type="button"
@@ -264,8 +613,6 @@
 
         </button>
 
-
-        <!-- ATIVIDADE -->
 
         <button
           class="quick-button"
@@ -282,10 +629,6 @@
         </button>
 
 
-        <!-- =================================================
-             MEDICAMENTOS / SUPLEMENTOS E VITAMINAS
-        ================================================== -->
-
         <button
           class="quick-button"
           type="button"
@@ -300,10 +643,6 @@
 
         </button>
 
-
-        <!-- =================================================
-             CONSULTAS
-        ================================================== -->
 
         <button
           class="quick-button"
@@ -344,7 +683,7 @@
 
 
       <!-- =================================================
-           MEDICAMENTOS / SUPLEMENTOS E VITAMINAS
+           MEDICAMENTOS
       ================================================== -->
 
       <section
@@ -619,6 +958,22 @@
 
         </button>
 
+
+        <!-- =================================================
+             SAIR
+        ================================================== -->
+
+        <button
+          type="button"
+          id="logoutButton"
+          class="secondary-button"
+        >
+
+          🚪 Sair da conta
+
+        </button>
+
+
       </section>
 
 
@@ -690,7 +1045,10 @@
        NAVEGAÇÃO INFERIOR
   ====================================================== -->
 
-  <nav class="bottom-navigation">
+  <nav
+    class="bottom-navigation"
+    hidden
+  >
 
 
     <button
@@ -827,10 +1185,568 @@
 
 
   <!-- =====================================================
-       JAVASCRIPT
+       JAVASCRIPT DO APLICATIVO
   ====================================================== -->
 
   <script src="app.js"></script>
+
+
+
+  <!-- =====================================================
+       AUTENTICAÇÃO SUPABASE
+  ====================================================== -->
+
+  <script>
+
+    /* =====================================================
+       CONFIGURAÇÃO SUPABASE
+    ====================================================== */
+
+    const SUPABASE_URL =
+      "https://gutbveorftpahuyjonnv.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_L8XMa2cXo2aWaGHHMdP1Tw_JtjABUQi";
+
+
+    const supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    /* =====================================================
+       ELEMENTOS
+    ====================================================== */
+
+    const loginScreen =
+      document.getElementById("loginScreen");
+
+    const loginForm =
+      document.getElementById("loginForm");
+
+    const loginEmail =
+      document.getElementById("loginEmail");
+
+    const loginPassword =
+      document.getElementById("loginPassword");
+
+    const loginButton =
+      document.getElementById("loginButton");
+
+    const forgotPasswordButton =
+      document.getElementById("forgotPasswordButton");
+
+    const loginMessage =
+      document.getElementById("loginMessage");
+
+    const bottomNavigation =
+      document.querySelector(".bottom-navigation");
+
+    const appScreens =
+      document.querySelectorAll(".app-screen");
+
+    const logoutButton =
+      document.getElementById("logoutButton");
+
+
+    /* =====================================================
+       MENSAGEM
+    ====================================================== */
+
+    function showLoginMessage(
+      message,
+      isError = false
+    ) {
+
+      if (!loginMessage) return;
+
+      loginMessage.textContent = message;
+
+      loginMessage.style.color =
+        isError
+          ? "#a33"
+          : "#527052";
+
+    }
+
+
+    /* =====================================================
+       MOSTRAR APLICATIVO
+    ====================================================== */
+
+    function showApplication() {
+
+      document.body.classList.remove(
+        "auth-loading"
+      );
+
+
+      if (loginScreen) {
+        loginScreen.hidden = true;
+      }
+
+
+      appScreens.forEach(screen => {
+
+        screen.hidden =
+          screen.id !== "todayScreen";
+
+      });
+
+
+      if (bottomNavigation) {
+        bottomNavigation.hidden = false;
+      }
+
+
+      const navigationItems =
+        document.querySelectorAll(
+          ".navigation-item"
+        );
+
+
+      navigationItems.forEach(item => {
+
+        item.classList.toggle(
+          "active",
+          item.dataset.screen === "todayScreen"
+        );
+
+      });
+
+
+      /*
+       * O app.js já contém a função renderDashboard().
+       * Aqui garantimos que o primeiro carregamento
+       * mostre a tela Hoje.
+       */
+
+      if (
+        typeof renderDashboard === "function"
+      ) {
+
+        renderDashboard();
+
+      }
+
+    }
+
+
+    /* =====================================================
+       MOSTRAR LOGIN
+    ====================================================== */
+
+    function showLogin() {
+
+      document.body.classList.remove(
+        "auth-loading"
+      );
+
+
+      appScreens.forEach(screen => {
+
+        screen.hidden = true;
+
+      });
+
+
+      if (bottomNavigation) {
+        bottomNavigation.hidden = true;
+      }
+
+
+      if (loginScreen) {
+        loginScreen.hidden = false;
+      }
+
+
+      if (loginEmail) {
+        loginEmail.focus();
+      }
+
+    }
+
+
+    /* =====================================================
+       LOGIN
+    ====================================================== */
+
+    if (loginForm) {
+
+      loginForm.addEventListener(
+        "submit",
+        async function(event) {
+
+          event.preventDefault();
+
+
+          const email =
+            loginEmail.value.trim();
+
+          const password =
+            loginPassword.value;
+
+
+          if (!email || !password) {
+
+            showLoginMessage(
+              "Informe seu e-mail e sua senha.",
+              true
+            );
+
+            return;
+
+          }
+
+
+          loginButton.disabled = true;
+
+          loginButton.textContent =
+            "Entrando...";
+
+          showLoginMessage("");
+
+
+          try {
+
+            const {
+              data,
+              error
+            } =
+              await supabaseClient.auth
+                .signInWithPassword({
+                  email,
+                  password
+                });
+
+
+            if (error) {
+
+              console.error(
+                "Erro no login:",
+                error
+              );
+
+              showLoginMessage(
+                "E-mail ou senha incorretos.",
+                true
+              );
+
+              return;
+
+            }
+
+
+            if (data && data.session) {
+
+              loginPassword.value = "";
+
+              showApplication();
+
+            }
+
+          }
+
+          catch (error) {
+
+            console.error(
+              "Erro inesperado no login:",
+              error
+            );
+
+            showLoginMessage(
+              "Não foi possível entrar. Verifique sua conexão.",
+              true
+            );
+
+          }
+
+          finally {
+
+            loginButton.disabled = false;
+
+            loginButton.textContent =
+              "Entrar";
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       RECUPERAÇÃO DE SENHA
+    ====================================================== */
+
+    if (forgotPasswordButton) {
+
+      forgotPasswordButton.addEventListener(
+        "click",
+        async function() {
+
+          const email =
+            loginEmail.value.trim();
+
+
+          if (!email) {
+
+            showLoginMessage(
+              "Digite seu e-mail primeiro.",
+              true
+            );
+
+            loginEmail.focus();
+
+            return;
+
+          }
+
+
+          forgotPasswordButton.disabled = true;
+
+          forgotPasswordButton.textContent =
+            "Enviando...";
+
+
+          try {
+
+            const redirectUrl =
+              window.location.origin +
+              window.location.pathname;
+
+
+            const {
+              error
+            } =
+              await supabaseClient.auth
+                .resetPasswordForEmail(
+                  email,
+                  {
+                    redirectTo: redirectUrl
+                  }
+                );
+
+
+            if (error) {
+
+              console.error(
+                "Erro ao solicitar recuperação:",
+                error
+              );
+
+              showLoginMessage(
+                "Não foi possível enviar o e-mail de recuperação.",
+                true
+              );
+
+              return;
+
+            }
+
+
+            showLoginMessage(
+              "Se esse e-mail estiver cadastrado, você receberá as instruções para redefinir sua senha."
+            );
+
+          }
+
+          catch (error) {
+
+            console.error(
+              "Erro inesperado:",
+              error
+            );
+
+            showLoginMessage(
+              "Não foi possível solicitar a recuperação.",
+              true
+            );
+
+          }
+
+          finally {
+
+            forgotPasswordButton.disabled =
+              false;
+
+            forgotPasswordButton.textContent =
+              "Esqueci minha senha";
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       SAIR
+    ====================================================== */
+
+    if (logoutButton) {
+
+      logoutButton.addEventListener(
+        "click",
+        async function() {
+
+          const confirmed =
+            confirm(
+              "Deseja realmente sair da sua conta?"
+            );
+
+
+          if (!confirmed) {
+            return;
+          }
+
+
+          try {
+
+            const {
+              error
+            } =
+              await supabaseClient.auth
+                .signOut();
+
+
+            if (error) {
+
+              console.error(
+                "Erro ao sair:",
+                error
+              );
+
+              alert(
+                "Não foi possível sair da conta."
+              );
+
+              return;
+
+            }
+
+
+            showLogin();
+
+          }
+
+          catch (error) {
+
+            console.error(
+              "Erro inesperado ao sair:",
+              error
+            );
+
+            alert(
+              "Não foi possível sair da conta."
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       OBSERVAR SESSÃO
+    ====================================================== */
+
+    supabaseClient.auth.onAuthStateChange(
+      function(event, session) {
+
+        console.log(
+          "Estado da autenticação:",
+          event
+        );
+
+
+        if (session) {
+
+          showApplication();
+
+        }
+
+        else {
+
+          showLogin();
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       VERIFICAR SESSÃO EXISTENTE
+    ====================================================== */
+
+    async function initializeAuthentication() {
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient.auth
+            .getSession();
+
+
+        if (error) {
+
+          console.error(
+            "Erro ao verificar sessão:",
+            error
+          );
+
+          showLogin();
+
+          return;
+
+        }
+
+
+        if (
+          data &&
+          data.session
+        ) {
+
+          showApplication();
+
+        }
+
+        else {
+
+          showLogin();
+
+        }
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Erro ao inicializar autenticação:",
+          error
+        );
+
+        showLogin();
+
+      }
+
+    }
+
+
+    initializeAuthentication();
+
+  </script>
+
 
 
   <!-- =====================================================

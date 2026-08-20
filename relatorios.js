@@ -289,6 +289,109 @@
 
 
   /* =====================================================
+     BUSCAR NOME DO USUÁRIO
+  ====================================================== */
+
+  async function getCurrentUserName() {
+
+    const fallback =
+      "Usuário";
+
+    try {
+
+      if (
+        typeof window.supabaseClient ===
+        "undefined" ||
+        !window.supabaseClient ||
+        !window.supabaseClient.auth
+      ) {
+
+        return fallback;
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await window.supabaseClient.auth.getUser();
+
+
+      if (error) {
+
+        console.warn(
+          "Não foi possível obter os dados do usuário:",
+          error
+        );
+
+        return fallback;
+
+      }
+
+
+      const user =
+        data &&
+        data.user
+          ? data.user
+          : null;
+
+
+      if (!user) {
+
+        return fallback;
+
+      }
+
+
+      const metadata =
+        user.user_metadata ||
+        {};
+
+
+      const name =
+        metadata.full_name ||
+        metadata.name ||
+        metadata.display_name ||
+        metadata.nome ||
+        "";
+
+
+      if (
+        String(name).trim()
+      ) {
+
+        return String(
+          name
+        ).trim();
+
+      }
+
+
+      if (user.email) {
+
+        return user.email;
+
+      }
+
+
+      return fallback;
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao obter nome do usuário:",
+        error
+      );
+
+      return fallback;
+
+    }
+
+  }
+
+
+  /* =====================================================
      BANCO DE DADOS
   ====================================================== */
 
@@ -712,9 +815,7 @@
       }
 
 
-      if (
-        record.notes
-      ) {
+      if (record.notes) {
 
         details.push(
           "Observações: " +
@@ -1029,7 +1130,7 @@
                   record.type
                 )
               )}
-              — 
+              —
               ${escapeHTML(
                 title
               )}
@@ -1082,7 +1183,7 @@
      HTML DO PDF
   ====================================================== */
 
-  function buildPDFHTML() {
+  async function buildPDFHTML() {
 
     const records =
       getFilteredRecords();
@@ -1104,6 +1205,10 @@
       reportTypeSelect
         ? reportTypeSelect.value
         : "all";
+
+
+    const userName =
+      await getCurrentUserName();
 
 
     let recordsHTML = "";
@@ -1270,7 +1375,20 @@
 
           <div
             style="
-              font-size:14px;
+              font-size:15px;
+              font-weight:bold;
+              color:#333;
+              margin-top:6px;
+            "
+          >
+            ${escapeHTML(
+              userName
+            )}
+          </div>
+
+          <div
+            style="
+              font-size:13px;
               margin-top:5px;
               color:#555;
             "
@@ -1578,7 +1696,7 @@
 
 
       wrapper.innerHTML =
-        buildPDFHTML();
+        await buildPDFHTML();
 
 
       wrapper.style.position =
@@ -1717,7 +1835,7 @@
 
 
   /* =====================================================
-     INICIALIZAR DEPOIS DO HTML
+     INICIALIZAR
   ====================================================== */
 
   if (

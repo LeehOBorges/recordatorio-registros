@@ -1,24 +1,18 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    VERSÃO 0.1 — CÓDIGO COMPLETO
-
    REFEIÇÕES / GLICEMIA / INSULINA / ATIVIDADE
    MEDICAMENTOS / SUPLEMENTOS / VITAMINAS
    CONSULTAS
-   ÁGUA / META DIÁRIA DE ÁGUA
-   LIXEIRA
+   ÁGUA — META DIÁRIA
    BACKUP E RESTAURAÇÃO
-========================================================= */
-
-
-/* =========================================================
-   CHAVES DO LOCALSTORAGE
 ========================================================= */
 
 const STORAGE_KEY = "recordatorio_registros_v01";
 const GLUCOSE_SETTINGS_KEY = "recordatorio_glicemia_config_v01";
 const MEDICATION_SETTINGS_KEY = "recordatorio_medicamentos_config_v01";
 const WATER_SETTINGS_KEY = "recordatorio_agua_config_v01";
+const WATER_RECORD_TYPE = "water";
 
 
 /* =========================================================
@@ -83,21 +77,11 @@ function loadDatabase() {
     const parsed = JSON.parse(stored);
 
     return {
-      records: Array.isArray(parsed.records)
-        ? parsed.records
-        : [],
-
-      trash: Array.isArray(parsed.trash)
-        ? parsed.trash
-        : []
+      records: Array.isArray(parsed.records) ? parsed.records : [],
+      trash: Array.isArray(parsed.trash) ? parsed.trash : []
     };
-
   } catch (error) {
-
-    console.error(
-      "Erro ao carregar banco:",
-      error
-    );
+    console.error("Erro ao carregar banco:", error);
 
     return {
       records: [],
@@ -108,7 +92,6 @@ function loadDatabase() {
 
 
 function saveDatabase() {
-
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify(database)
@@ -121,13 +104,8 @@ function saveDatabase() {
 ========================================================= */
 
 function loadGlucoseSettings() {
-
   try {
-
-    const stored =
-      localStorage.getItem(
-        GLUCOSE_SETTINGS_KEY
-      );
+    const stored = localStorage.getItem(GLUCOSE_SETTINGS_KEY);
 
     if (!stored) {
       return {
@@ -135,20 +113,13 @@ function loadGlucoseSettings() {
       };
     }
 
-    const parsed =
-      JSON.parse(stored);
+    const parsed = JSON.parse(stored);
 
     return {
       ...defaultGlucoseOptions,
-
-      ...(parsed &&
-      typeof parsed === "object"
-        ? parsed
-        : {})
+      ...(parsed && typeof parsed === "object" ? parsed : {})
     };
-
   } catch (error) {
-
     console.error(
       "Erro ao carregar configurações de glicemia:",
       error
@@ -162,12 +133,9 @@ function loadGlucoseSettings() {
 
 
 function saveGlucoseSettings() {
-
   localStorage.setItem(
     GLUCOSE_SETTINGS_KEY,
-    JSON.stringify(
-      glucoseSettings
-    )
+    JSON.stringify(glucoseSettings)
   );
 }
 
@@ -177,25 +145,17 @@ function saveGlucoseSettings() {
 ========================================================= */
 
 function loadMedications() {
-
   try {
-
-    const stored =
-      localStorage.getItem(
-        MEDICATION_SETTINGS_KEY
-      );
+    const stored = localStorage.getItem(
+      MEDICATION_SETTINGS_KEY
+    );
 
     if (!stored) return [];
 
-    const parsed =
-      JSON.parse(stored);
+    const parsed = JSON.parse(stored);
 
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
-
+    return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-
     console.error(
       "Erro ao carregar medicamentos:",
       error
@@ -207,75 +167,48 @@ function loadMedications() {
 
 
 function saveMedications() {
-
   localStorage.setItem(
     MEDICATION_SETTINGS_KEY,
-    JSON.stringify(
-      medications
-    )
+    JSON.stringify(medications)
   );
 }
 
 
 function generateMedicationId() {
-
   return (
     "med_" +
     Date.now().toString(36) +
     "_" +
-    Math.random()
-      .toString(36)
-      .substring(2)
+    Math.random().toString(36).substring(2)
   );
 }
 
 
 /* =========================================================
-   CONFIGURAÇÃO DA ÁGUA
+   ÁGUA — CONFIGURAÇÃO
 ========================================================= */
 
 function loadWaterSettings() {
-
   try {
-
-    const stored =
-      localStorage.getItem(
-        WATER_SETTINGS_KEY
-      );
+    const stored = localStorage.getItem(
+      WATER_SETTINGS_KEY
+    );
 
     if (!stored) {
-
       return {
         ...defaultWaterSettings
       };
     }
 
-    const parsed =
-      JSON.parse(stored);
-
-    const dailyGoal =
-      Number(
-        parsed &&
-        parsed.dailyGoal
-      );
+    const parsed = JSON.parse(stored);
 
     return {
-
       ...defaultWaterSettings,
-
-      dailyGoal:
-        Number.isFinite(
-          dailyGoal
-        ) &&
-        dailyGoal > 0
-          ? dailyGoal
-          : defaultWaterSettings.dailyGoal
+      ...(parsed && typeof parsed === "object" ? parsed : {})
     };
-
   } catch (error) {
-
     console.error(
-      "Erro ao carregar configuração da água:",
+      "Erro ao carregar configuração de água:",
       error
     );
 
@@ -287,12 +220,9 @@ function loadWaterSettings() {
 
 
 function saveWaterSettings() {
-
   localStorage.setItem(
     WATER_SETTINGS_KEY,
-    JSON.stringify(
-      waterSettings
-    )
+    JSON.stringify(waterSettings)
   );
 }
 
@@ -301,25 +231,10 @@ function saveWaterSettings() {
    ELEMENTOS
 ========================================================= */
 
-const modal =
-  document.getElementById(
-    "recordModal"
-  );
-
-const form =
-  document.getElementById(
-    "recordForm"
-  );
-
-const formFields =
-  document.getElementById(
-    "formFields"
-  );
-
-const modalTitle =
-  document.getElementById(
-    "modalTitle"
-  );
+const modal = document.getElementById("recordModal");
+const form = document.getElementById("recordForm");
+const formFields = document.getElementById("formFields");
+const modalTitle = document.getElementById("modalTitle");
 
 
 /* =========================================================
@@ -327,12 +242,9 @@ const modalTitle =
 ========================================================= */
 
 function generateId() {
-
   return (
     Date.now().toString(36) +
-    Math.random()
-      .toString(36)
-      .substring(2)
+    Math.random().toString(36).substring(2)
   );
 }
 
@@ -342,26 +254,19 @@ function generateId() {
 ========================================================= */
 
 function formatDateKey(date) {
-
-  const year =
-    date.getFullYear();
-
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(2, "0");
-
-  const day =
-    String(
-      date.getDate()
-    ).padStart(2, "0");
+  const year = date.getFullYear();
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
 
 
 function formatDisplayDate(date) {
-
   return date.toLocaleDateString(
     "pt-BR",
     {
@@ -374,20 +279,12 @@ function formatDisplayDate(date) {
 
 
 function currentTime() {
-
-  const now =
-    new Date();
+  const now = new Date();
 
   return (
-    String(
-      now.getHours()
-    ).padStart(2, "0") +
-
+    String(now.getHours()).padStart(2, "0") +
     ":" +
-
-    String(
-      now.getMinutes()
-    ).padStart(2, "0")
+    String(now.getMinutes()).padStart(2, "0")
   );
 }
 
@@ -397,30 +294,12 @@ function currentTime() {
 ========================================================= */
 
 function escapeHTML(value) {
-
-  return String(
-    value ?? ""
-  )
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 
@@ -429,18 +308,13 @@ function escapeHTML(value) {
 ========================================================= */
 
 function renderDate() {
-
   const element =
-    document.getElementById(
-      "currentDate"
-    );
+    document.getElementById("currentDate");
 
   if (!element) return;
 
   element.textContent =
-    formatDisplayDate(
-      selectedDate
-    );
+    formatDisplayDate(selectedDate);
 }
 
 
@@ -449,26 +323,17 @@ function renderDate() {
 ========================================================= */
 
 function getTodayRecords() {
-
   const dateKey =
-    formatDateKey(
-      selectedDate
-    );
+    formatDateKey(selectedDate);
 
   return database.records
     .filter(
-      record =>
-        record.date === dateKey
+      record => record.date === dateKey
     )
-    .sort(
-      (a, b) =>
-        String(
-          a.time || ""
-        ).localeCompare(
-          String(
-            b.time || ""
-          )
-        )
+    .sort((a, b) =>
+      String(a.time || "").localeCompare(
+        String(b.time || "")
+      )
     );
 }
 
@@ -477,67 +342,42 @@ function getTodayRecords() {
    NAVEGAR ENTRE TELAS
 ========================================================= */
 
-function showScreen(
-  targetScreen
-) {
-
+function showScreen(targetScreen) {
   if (!targetScreen) return;
 
   const screens =
-    document.querySelectorAll(
-      ".app-screen"
-    );
+    document.querySelectorAll(".app-screen");
 
-  screens.forEach(
-    screen => {
-
-      screen.hidden =
-        screen.id !==
-        targetScreen;
-    }
-  );
-
+  screens.forEach(screen => {
+    screen.hidden =
+      screen.id !== targetScreen;
+  });
 
   const navigationItems =
     document.querySelectorAll(
       ".navigation-item"
     );
 
-  navigationItems.forEach(
-    item => {
+  navigationItems.forEach(item => {
+    item.classList.toggle(
+      "active",
+      item.dataset.screen === targetScreen
+    );
+  });
 
-      item.classList.toggle(
-        "active",
-        item.dataset.screen ===
-          targetScreen
-      );
-    }
-  );
+  if (targetScreen === "todayScreen") {
+    renderDashboard();
+  }
 
-
-  if (
-    targetScreen ===
-    "diaryScreen"
-  ) {
-
+  if (targetScreen === "diaryScreen") {
     renderDiary();
   }
 
-
-  if (
-    targetScreen ===
-    "consultationScreen"
-  ) {
-
+  if (targetScreen === "consultationScreen") {
     renderConsultations();
   }
 
-
-  if (
-    targetScreen ===
-    "moreScreen"
-  ) {
-
+  if (targetScreen === "moreScreen") {
     renderMoreScreen();
   }
 }
@@ -545,14 +385,11 @@ function showScreen(
 
 /* =========================================================
    ABRIR TELA DE CONSULTAS
+   NÃO ALTERAR
 ========================================================= */
 
 function openConsultationsScreen() {
-
-  showScreen(
-    "consultationScreen"
-  );
-
+  showScreen("consultationScreen");
   renderConsultations();
 }
 
@@ -562,105 +399,73 @@ function openConsultationsScreen() {
 ========================================================= */
 
 function renderDashboard() {
-
   renderDate();
 
-  const records =
-    getTodayRecords();
+  const records = getTodayRecords();
 
   const meals =
     records.filter(
-      record =>
-        record.type === "meal"
+      record => record.type === "meal"
     );
 
   const glucose =
     records.filter(
-      record =>
-        record.type === "glucose"
+      record => record.type === "glucose"
     );
 
   const insulin =
     records.filter(
-      record =>
-        record.type === "insulin"
+      record => record.type === "insulin"
     );
 
   const activities =
     records.filter(
-      record =>
-        record.type === "activity"
+      record => record.type === "activity"
     );
-
 
   const mealCount =
-    document.getElementById(
-      "mealCount"
-    );
+    document.getElementById("mealCount");
 
   if (mealCount) {
     mealCount.textContent =
       meals.length;
   }
 
-
   const glucoseCount =
-    document.getElementById(
-      "glucoseCount"
-    );
+    document.getElementById("glucoseCount");
 
   if (glucoseCount) {
     glucoseCount.textContent =
       glucose.length;
   }
 
-
   const insulinCount =
-    document.getElementById(
-      "insulinCount"
-    );
+    document.getElementById("insulinCount");
 
   if (insulinCount) {
     insulinCount.textContent =
       insulin.length;
   }
 
-
   const totalMinutes =
     activities.reduce(
-      (
-        total,
-        record
-      ) =>
+      (total, record) =>
         total +
-        Number(
-          record.duration || 0
-        ),
+        Number(record.duration || 0),
       0
     );
 
-
   const activityTotal =
-    document.getElementById(
-      "activityTotal"
-    );
+    document.getElementById("activityTotal");
 
   if (activityTotal) {
-
     activityTotal.textContent =
       `${totalMinutes} min`;
   }
 
-
-  renderTimeline(
-    records
-  );
-
+  renderTimeline(records);
   renderMedicationHome();
-
   renderWaterHome();
-
-  renderConsultationsHome();
 }
 
 
@@ -668,20 +473,13 @@ function renderDashboard() {
    LINHA DO TEMPO
 ========================================================= */
 
-function renderTimeline(
-  records
-) {
-
+function renderTimeline(records) {
   const timeline =
-    document.getElementById(
-      "timeline"
-    );
+    document.getElementById("timeline");
 
   if (!timeline) return;
 
-
   if (records.length === 0) {
-
     timeline.innerHTML = `
       <div class="empty-state">
         Nenhum registro neste dia.
@@ -693,13 +491,26 @@ function renderTimeline(
     return;
   }
 
-
   timeline.innerHTML =
     records
-      .map(
-        createTimelineItem
+      .filter(
+        record =>
+          record.type !== WATER_RECORD_TYPE
       )
+      .map(createTimelineItem)
       .join("");
+
+  if (
+    timeline.innerHTML.trim() === ""
+  ) {
+    timeline.innerHTML = `
+      <div class="empty-state">
+        Nenhum registro neste dia.
+        <br><br>
+        Use os botões acima para começar.
+      </div>
+    `;
+  }
 }
 
 
@@ -707,219 +518,122 @@ function renderTimeline(
    ITEM DA LINHA DO TEMPO
 ========================================================= */
 
-function createTimelineItem(
-  record
-) {
-
+function createTimelineItem(record) {
   const icons = {
-
     meal: "🍽️",
-
     glucose: "🩸",
-
     insulin: "💉",
-
     activity: "🏋️",
-
     medication: "💊",
-
-    consultation: "🩺",
-
-    water: "💧"
+    consultation: "🩺"
   };
 
-
   let title = "";
-
   let detail = "";
 
-
-  if (
-    record.type ===
-    "meal"
-  ) {
-
+  if (record.type === "meal") {
     title =
-      record.mealType ||
-      "Refeição";
+      record.mealType || "Refeição";
 
     detail =
       record.food ||
       "Refeição registrada";
 
     if (record.quantity) {
-
       detail +=
         ` · ${record.quantity}`;
     }
   }
 
-
-  else if (
-    record.type ===
-    "glucose"
-  ) {
-
+  else if (record.type === "glucose") {
     title =
       `${record.value} mg/dL`;
 
     detail =
-      record.kind ||
-      "Glicemia";
+      record.kind || "Glicemia";
   }
 
-
-  else if (
-    record.type ===
-    "insulin"
-  ) {
-
+  else if (record.type === "insulin") {
     title =
       `${record.dose} U`;
 
     detail =
-      record.insulin ||
-      "Insulina";
+      record.insulin || "Insulina";
 
-    if (
-      record.application
-    ) {
-
+    if (record.application) {
       detail +=
         ` · ${record.application}`;
     }
   }
 
-
-  else if (
-    record.type ===
-    "activity"
-  ) {
-
+  else if (record.type === "activity") {
     title =
-      record.activity ||
-      "Atividade";
+      record.activity || "Atividade";
 
     detail =
       `${record.duration || 0} min`;
 
-    if (
-      record.intensity
-    ) {
-
+    if (record.intensity) {
       detail +=
         ` · ${record.intensity}`;
     }
   }
 
-
-  else if (
-    record.type ===
-    "medication"
-  ) {
-
+  else if (record.type === "medication") {
     title =
       record.medicationName ||
       "Medicamento / suplemento / vitamina";
 
-    detail =
-      "Tomado";
+    detail = "Tomado";
 
     if (record.period) {
-
       const periodLabels = {
-
         morning: "Manhã",
-
         afternoon: "Tarde",
-
         night: "Noite"
       };
 
       detail +=
         ` · ${
-          periodLabels[
-            record.period
-          ] ||
+          periodLabels[record.period] ||
           record.period
         }`;
     }
   }
 
-
-  else if (
-    record.type ===
-    "consultation"
-  ) {
-
+  else if (record.type === "consultation") {
     title =
-      record.specialty ||
-      "Consulta";
+      record.specialty || "Consulta";
 
     detail =
       record.professional ||
       "Consulta médica";
 
-    if (
-      record.location
-    ) {
-
+    if (record.location) {
       detail +=
         ` · ${record.location}`;
     }
   }
 
-
-  else if (
-    record.type ===
-    "water"
-  ) {
-
-    title =
-      `+${formatWaterAmount(
-        record.amount
-      )}`;
-
-    detail =
-      "Água";
-  }
-
-
   return `
     <div class="timeline-item">
-
       <div class="timeline-icon">
         ${icons[record.type] || "📝"}
       </div>
 
       <div class="timeline-content">
-
         <div class="timeline-title">
-
-          ${escapeHTML(
-            record.time
-          )}
-
+          ${escapeHTML(record.time)}
           ·
-
-          ${escapeHTML(
-            title
-          )}
-
+          ${escapeHTML(title)}
         </div>
 
         <div class="timeline-detail">
-
-          ${escapeHTML(
-            detail
-          )}
-
+          ${escapeHTML(detail)}
         </div>
-
       </div>
 
       <div class="timeline-actions">
-
         <button
           type="button"
           onclick="editRecord('${escapeHTML(record.id)}')"
@@ -935,577 +649,9 @@ function createTimelineItem(
         >
           🗑️
         </button>
-
       </div>
-
     </div>
   `;
-}
-
-
-/* =========================================================
-   ÁGUA — FORMATAR QUANTIDADE
-========================================================= */
-
-function formatWaterAmount(
-  amount
-) {
-
-  const value =
-    Number(amount) || 0;
-
-
-  if (
-    value >= 1000 &&
-    value % 1000 === 0
-  ) {
-
-    return `${value / 1000} L`;
-  }
-
-
-  return `${value} ml`;
-}
-
-
-/* =========================================================
-   ÁGUA — TOTAL DO DIA
-========================================================= */
-
-function getWaterConsumedForDate(
-  dateKey
-) {
-
-  return database.records
-    .filter(
-      record =>
-        record.type === "water" &&
-        record.date === dateKey
-    )
-    .reduce(
-      (
-        total,
-        record
-      ) =>
-        total +
-        Number(
-          record.amount || 0
-        ),
-      0
-    );
-}
-
-
-/* =========================================================
-   ÁGUA — RENDERIZAR NO HOME
-========================================================= */
-
-function renderWaterHome() {
-
-  let container =
-    document.getElementById(
-      "waterHomePanel"
-    );
-
-
-  if (!container) {
-
-    const quickActions =
-      document.querySelector(
-        ".quick-actions"
-      );
-
-    if (!quickActions) return;
-
-
-    container =
-      document.createElement(
-        "section"
-      );
-
-    container.id =
-      "waterHomePanel";
-
-    container.className =
-      "card";
-
-
-    quickActions.insertAdjacentElement(
-      "afterend",
-      container
-    );
-  }
-
-
-  const dateKey =
-    formatDateKey(
-      selectedDate
-    );
-
-
-  const goal =
-    Number(
-      waterSettings.dailyGoal
-    ) || 2000;
-
-
-  const consumed =
-    getWaterConsumedForDate(
-      dateKey
-    );
-
-
-  const percentage =
-    goal > 0
-      ? Math.min(
-          100,
-          Math.round(
-            (
-              consumed /
-              goal
-            ) *
-              100
-          )
-        )
-      : 0;
-
-
-  const remaining =
-    Math.max(
-      goal - consumed,
-      0
-    );
-
-
-  let statusText = "";
-
-
-  if (
-    consumed >= goal
-  ) {
-
-    statusText =
-      "🎯 Meta diária atingida!";
-  }
-
-  else {
-
-    statusText =
-      `${formatWaterAmount(
-        remaining
-      )} restantes`;
-  }
-
-
-  container.innerHTML = `
-
-    <div
-      class="section-header"
-      style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:12px;
-        flex-wrap:wrap;
-      "
-    >
-
-      <div>
-
-        <h2>💧 Água</h2>
-
-        <p>
-          Meta diária de hidratação
-        </p>
-
-      </div>
-
-      <button
-        type="button"
-        id="waterSettingsButton"
-        class="secondary-button"
-      >
-        ⚙️ Meta
-      </button>
-
-    </div>
-
-
-    <div
-      style="
-        margin-top:16px;
-        text-align:center;
-      "
-    >
-
-      <div
-        style="
-          font-size:2rem;
-          font-weight:700;
-        "
-      >
-        ${escapeHTML(
-          formatWaterAmount(
-            consumed
-          )
-        )}
-      </div>
-
-      <div
-        style="
-          opacity:.7;
-          margin-top:4px;
-        "
-      >
-        de
-        ${escapeHTML(
-          formatWaterAmount(
-            goal
-          )
-        )}
-      </div>
-
-    </div>
-
-
-    <div
-      style="
-        width:100%;
-        height:14px;
-        background:rgba(0,0,0,.08);
-        border-radius:999px;
-        overflow:hidden;
-        margin-top:18px;
-      "
-    >
-
-      <div
-        style="
-          width:${percentage}%;
-          height:100%;
-          background:#5B9BD5;
-          border-radius:999px;
-          transition:width .25s ease;
-        "
-      ></div>
-
-    </div>
-
-
-    <div
-      style="
-        text-align:center;
-        margin-top:10px;
-        font-weight:600;
-      "
-    >
-      ${percentage}% ·
-      ${escapeHTML(
-        statusText
-      )}
-    </div>
-
-
-    <div
-      style="
-        display:grid;
-        grid-template-columns:
-          repeat(2, minmax(0, 1fr));
-        gap:10px;
-        margin-top:18px;
-      "
-    >
-
-      <button
-        type="button"
-        class="primary-button water-quick-button"
-        data-water-amount="200"
-      >
-        +200 ml
-      </button>
-
-      <button
-        type="button"
-        class="primary-button water-quick-button"
-        data-water-amount="500"
-      >
-        +500 ml
-      </button>
-
-      <button
-        type="button"
-        class="primary-button water-quick-button"
-        data-water-amount="750"
-      >
-        +750 ml
-      </button>
-
-      <button
-        type="button"
-        class="primary-button water-quick-button"
-        data-water-amount="1000"
-      >
-        +1 L
-      </button>
-
-    </div>
-
-
-    <button
-      type="button"
-      id="customWaterButton"
-      class="secondary-button"
-      style="
-        width:100%;
-        margin-top:10px;
-      "
-    >
-      + Outra quantidade
-    </button>
-
-  `;
-
-
-  attachWaterHomeEvents();
-}
-
-
-/* =========================================================
-   ÁGUA — EVENTOS DO HOME
-========================================================= */
-
-function attachWaterHomeEvents() {
-
-  document
-    .querySelectorAll(
-      ".water-quick-button"
-    )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            const amount =
-              Number(
-                button.dataset.waterAmount
-              );
-
-            addWaterRecord(
-              amount
-            );
-          }
-        );
-      }
-    );
-
-
-  const customButton =
-    document.getElementById(
-      "customWaterButton"
-    );
-
-
-  if (customButton) {
-
-    customButton.addEventListener(
-      "click",
-      openCustomWaterForm
-    );
-  }
-
-
-  const settingsButton =
-    document.getElementById(
-      "waterSettingsButton"
-    );
-
-
-  if (settingsButton) {
-
-    settingsButton.addEventListener(
-      "click",
-      openWaterGoalForm
-    );
-  }
-}
-
-
-/* =========================================================
-   ÁGUA — ADICIONAR CONSUMO
-========================================================= */
-
-function addWaterRecord(
-  amount
-) {
-
-  const value =
-    Number(amount);
-
-
-  if (
-    !Number.isFinite(value) ||
-    value <= 0
-  ) {
-
-    return;
-  }
-
-
-  const record = {
-
-    id:
-      generateId(),
-
-    type:
-      "water",
-
-    date:
-      formatDateKey(
-        selectedDate
-      ),
-
-    time:
-      currentTime(),
-
-    amount:
-      value,
-
-    createdAt:
-      new Date().toISOString(),
-
-    updatedAt:
-      new Date().toISOString()
-  };
-
-
-  database.records.push(
-    record
-  );
-
-
-  saveDatabase();
-
-  renderDashboard();
-
-  renderDiary();
-}
-
-
-/* =========================================================
-   ÁGUA — FORMULÁRIO DE OUTRA QUANTIDADE
-========================================================= */
-
-function openCustomWaterForm() {
-
-  const amount =
-    prompt(
-      "Quantidade de água em ml:",
-      "300"
-    );
-
-
-  if (
-    amount === null
-  ) {
-
-    return;
-  }
-
-
-  const value =
-    Number(
-      String(
-        amount
-      ).replace(
-        ",",
-        "."
-      )
-    );
-
-
-  if (
-    !Number.isFinite(value) ||
-    value <= 0
-  ) {
-
-    alert(
-      "Digite uma quantidade válida."
-    );
-
-    return;
-  }
-
-
-  addWaterRecord(
-    value
-  );
-}
-
-
-/* =========================================================
-   ÁGUA — META DIÁRIA
-========================================================= */
-
-function openWaterGoalForm() {
-
-  const currentGoal =
-    Number(
-      waterSettings.dailyGoal
-    ) || 2000;
-
-
-  const input =
-    prompt(
-      "Qual é sua meta diária de água em ml?",
-      String(
-        currentGoal
-      )
-    );
-
-
-  if (
-    input === null
-  ) {
-
-    return;
-  }
-
-
-  const value =
-    Number(
-      String(
-        input
-      ).replace(
-        ",",
-        "."
-      )
-    );
-
-
-  if (
-    !Number.isFinite(value) ||
-    value <= 0
-  ) {
-
-    alert(
-      "Digite uma meta válida em ml."
-    );
-
-    return;
-  }
-
-
-  waterSettings.dailyGoal =
-    Math.round(
-      value
-    );
-
-
-  saveWaterSettings();
-
-  renderWaterHome();
 }
 
 
@@ -1513,120 +659,48 @@ function openWaterGoalForm() {
    OPÇÕES DE GLICEMIA
 ========================================================= */
 
-function getGlucoseOptions(
-  record = null
-) {
-
+function getGlucoseOptions(record = null) {
   const definitions = [
-
-    [
-      "fasting",
-      "Jejum"
-    ],
-
-    [
-      "breakfast1",
-      "1h após o café da manhã"
-    ],
-
-    [
-      "breakfast2",
-      "2h após o café da manhã"
-    ],
-
-    [
-      "morningSnack1",
-      "1h após o lanche da manhã"
-    ],
-
-    [
-      "morningSnack2",
-      "2h após o lanche da manhã"
-    ],
-
-    [
-      "lunch1",
-      "1h após o almoço"
-    ],
-
-    [
-      "lunch2",
-      "2h após o almoço"
-    ],
-
-    [
-      "afternoonSnack1",
-      "1h após o lanche da tarde"
-    ],
-
-    [
-      "afternoonSnack2",
-      "2h após o lanche da tarde"
-    ],
-
-    [
-      "dinner1",
-      "1h após o jantar"
-    ],
-
-    [
-      "dinner2",
-      "2h após o jantar"
-    ],
-
-    [
-      "supper1",
-      "1h após a ceia"
-    ],
-
-    [
-      "supper2",
-      "2h após a ceia"
-    ]
+    ["fasting", "Jejum"],
+    ["breakfast1", "1h após o café da manhã"],
+    ["breakfast2", "2h após o café da manhã"],
+    ["morningSnack1", "1h após o lanche da manhã"],
+    ["morningSnack2", "2h após o lanche da manhã"],
+    ["lunch1", "1h após o almoço"],
+    ["lunch2", "2h após o almoço"],
+    ["afternoonSnack1", "1h após o lanche da tarde"],
+    ["afternoonSnack2", "2h após o lanche da tarde"],
+    ["dinner1", "1h após o jantar"],
+    ["dinner2", "2h após o jantar"],
+    ["supper1", "1h após a ceia"],
+    ["supper2", "2h após a ceia"]
   ];
-
 
   const options =
     definitions
-
       .filter(
-        item =>
-          glucoseSettings[
-            item[0]
-          ]
+        item => glucoseSettings[item[0]]
       )
-
       .map(
         item => ({
-          value:
-            item[1],
-
-          label:
-            item[1]
+          value: item[1],
+          label: item[1]
         })
       );
-
 
   if (
     record &&
     record.kind &&
     !options.some(
       option =>
-        option.value ===
-        record.kind
+        option.value === record.kind
     )
   ) {
-
     options.unshift({
-
-      value:
-        record.kind,
-
-      label:
-        record.kind
+      value: record.kind,
+      label: record.kind
     });
   }
-
 
   return options;
 }
@@ -1640,18 +714,11 @@ function openRecordForm(
   type,
   record = null
 ) {
-
-  currentRecordType =
-    type;
-
+  currentRecordType = type;
   editingId =
-    record
-      ? record.id
-      : null;
-
+    record ? record.id : null;
 
   const titles = {
-
     meal:
       record
         ? "Editar refeição"
@@ -1675,40 +742,26 @@ function openRecordForm(
     consultation:
       record
         ? "Editar consulta"
-        : "Nova consulta",
-
-    water:
-      record
-        ? "Editar água"
-        : "Registrar água"
+        : "Nova consulta"
   };
 
-
   if (modalTitle) {
-
     modalTitle.textContent =
       titles[type];
   }
 
-
   const date =
     record
       ? record.date
-      : formatDateKey(
-          selectedDate
-        );
-
+      : formatDateKey(selectedDate);
 
   const time =
     record
       ? record.time
       : currentTime();
 
-
   let html = `
-
     <div class="form-group">
-
       <label for="recordDate">
         Data
       </label>
@@ -1719,12 +772,9 @@ function openRecordForm(
         value="${escapeHTML(date)}"
         required
       >
-
     </div>
 
-
     <div class="form-group">
-
       <label for="recordTime">
         Horário
       </label>
@@ -1735,47 +785,29 @@ function openRecordForm(
         value="${escapeHTML(time)}"
         required
       >
-
     </div>
-
   `;
 
 
-  if (
-    type === "meal"
-  ) {
-
+  if (type === "meal") {
     html += `
-
       <div class="form-group">
-
         <label for="mealType">
           Tipo de refeição
         </label>
 
         <select id="mealType">
-
           <option>Café da manhã</option>
-
           <option>Lanche da manhã</option>
-
           <option>Almoço</option>
-
           <option>Lanche da tarde</option>
-
           <option>Jantar</option>
-
           <option>Ceia</option>
-
           <option>Outra</option>
-
         </select>
-
       </div>
 
-
       <div class="form-group">
-
         <label for="food">
           Alimentos consumidos
         </label>
@@ -1785,12 +817,9 @@ function openRecordForm(
           type="text"
           placeholder="Ex.: arroz, feijão, frango e salada"
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="quantity">
           Quantidade
         </label>
@@ -1800,12 +829,9 @@ function openRecordForm(
           type="text"
           placeholder="Ex.: 100 g, 2 unidades"
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="note">
           Observação
         </label>
@@ -1814,56 +840,36 @@ function openRecordForm(
           id="note"
           placeholder="Opcional"
         ></textarea>
-
       </div>
-
     `;
   }
 
 
-  if (
-    type === "glucose"
-  ) {
-
+  if (type === "glucose") {
     const options =
-      getGlucoseOptions(
-        record
-      );
-
+      getGlucoseOptions(record);
 
     const optionsHTML =
       options
-
         .map(
           option => `
-
             <option
               value="${escapeHTML(option.value)}"
               ${
                 record &&
-                record.kind ===
-                  option.value
+                record.kind === option.value
                   ? "selected"
                   : ""
               }
             >
-
-              ${escapeHTML(
-                option.label
-              )}
-
+              ${escapeHTML(option.label)}
             </option>
-
           `
         )
-
         .join("");
 
-
     html += `
-
       <div class="form-group">
-
         <label for="glucoseValue">
           Glicemia (mg/dL)
         </label>
@@ -1875,27 +881,19 @@ function openRecordForm(
           step="1"
           required
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="glucoseKind">
           Momento da medição
         </label>
 
-        <select
-          id="glucoseKind"
-        >
+        <select id="glucoseKind">
           ${optionsHTML}
         </select>
-
       </div>
 
-
       <div class="form-group">
-
         <label for="glucoseNote">
           Observação
         </label>
@@ -1904,21 +902,14 @@ function openRecordForm(
           id="glucoseNote"
           placeholder="Opcional"
         ></textarea>
-
       </div>
-
     `;
   }
 
 
-  if (
-    type === "insulin"
-  ) {
-
+  if (type === "insulin") {
     html += `
-
       <div class="form-group">
-
         <label for="insulinName">
           Insulina
         </label>
@@ -1928,12 +919,9 @@ function openRecordForm(
           type="text"
           value="Novolin N"
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="insulinDose">
           Dose (unidades)
         </label>
@@ -1945,33 +933,22 @@ function openRecordForm(
           step="1"
           required
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="application">
           Aplicação
         </label>
 
         <select id="application">
-
           <option>Em jejum</option>
-
           <option>Antes do almoço</option>
-
           <option>À noite</option>
-
           <option>Outra</option>
-
         </select>
-
       </div>
 
-
       <div class="form-group">
-
         <label for="insulinNote">
           Observação
         </label>
@@ -1980,46 +957,29 @@ function openRecordForm(
           id="insulinNote"
           placeholder="Opcional"
         ></textarea>
-
       </div>
-
     `;
   }
 
 
-  if (
-    type === "activity"
-  ) {
-
+  if (type === "activity") {
     html += `
-
       <div class="form-group">
-
         <label for="activityType">
           Atividade
         </label>
 
         <select id="activityType">
-
           <option>Musculação</option>
-
           <option>Caminhada</option>
-
           <option>Corrida</option>
-
           <option>Bicicleta</option>
-
           <option>Alongamento</option>
-
           <option>Outra</option>
-
         </select>
-
       </div>
 
-
       <div class="form-group">
-
         <label for="duration">
           Duração (minutos)
         </label>
@@ -2030,31 +990,21 @@ function openRecordForm(
           min="0"
           required
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="intensity">
           Intensidade
         </label>
 
         <select id="intensity">
-
           <option>Leve</option>
-
           <option>Moderada</option>
-
           <option>Intensa</option>
-
         </select>
-
       </div>
 
-
       <div class="form-group">
-
         <label for="activityNote">
           Observação
         </label>
@@ -2063,21 +1013,19 @@ function openRecordForm(
           id="activityNote"
           placeholder="Opcional"
         ></textarea>
-
       </div>
-
     `;
   }
 
 
-  if (
-    type === "consultation"
-  ) {
+  /* =======================================================
+     CONSULTAS
+     MANTIDA COMO ESTAVA
+  ======================================================= */
 
+  if (type === "consultation") {
     html += `
-
       <div class="form-group">
-
         <label for="consultationProfessional">
           Profissional
         </label>
@@ -2088,12 +1036,9 @@ function openRecordForm(
           placeholder="Ex.: Dra. Maria Silva"
           required
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="consultationSpecialty">
           Especialidade
         </label>
@@ -2104,12 +1049,9 @@ function openRecordForm(
           placeholder="Ex.: Obstetra"
           required
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="consultationLocation">
           Local
         </label>
@@ -2119,12 +1061,9 @@ function openRecordForm(
           type="text"
           placeholder="Ex.: Clínica / consultório / hospital"
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="consultationReason">
           Motivo da consulta
         </label>
@@ -2134,12 +1073,9 @@ function openRecordForm(
           type="text"
           placeholder="Ex.: Consulta de acompanhamento"
         >
-
       </div>
 
-
       <div class="form-group">
-
         <label for="consultationNote">
           Observações
         </label>
@@ -2148,64 +1084,19 @@ function openRecordForm(
           id="consultationNote"
           placeholder="Anote informações importantes, orientações, pedidos de exames etc."
         ></textarea>
-
       </div>
-
     `;
   }
-
-
-  if (
-    type === "water"
-  ) {
-
-    html += `
-
-      <div class="form-group">
-
-        <label for="waterAmount">
-          Quantidade de água (ml)
-        </label>
-
-        <input
-          id="waterAmount"
-          type="number"
-          min="1"
-          step="1"
-          value="${
-            record
-              ? escapeHTML(
-                  record.amount
-                )
-              : ""
-          }"
-          placeholder="Ex.: 300"
-          required
-        >
-
-      </div>
-
-    `;
-  }
-
 
   if (formFields) {
-
-    formFields.innerHTML =
-      html;
+    formFields.innerHTML = html;
   }
-
 
   if (record) {
-
-    fillEditFields(
-      record
-    );
+    fillEditFields(record);
   }
 
-
   if (modal) {
-
     modal.showModal();
   }
 }
@@ -2215,28 +1106,17 @@ function openRecordForm(
    PREENCHER EDIÇÃO
 ========================================================= */
 
-function fillEditFields(
-  record
-) {
-
+function fillEditFields(record) {
   const setValue =
-    (
-      id,
-      value
-    ) => {
-
+    (id, value) => {
       const element =
-        document.getElementById(
-          id
-        );
+        document.getElementById(id);
 
       if (element) {
-
         element.value =
           value ?? "";
       }
     };
-
 
   setValue(
     "recordDate",
@@ -2247,7 +1127,6 @@ function fillEditFields(
     "recordTime",
     record.time
   );
-
 
   setValue(
     "mealType",
@@ -2269,7 +1148,6 @@ function fillEditFields(
     record.note
   );
 
-
   setValue(
     "glucoseValue",
     record.value
@@ -2284,7 +1162,6 @@ function fillEditFields(
     "glucoseNote",
     record.note
   );
-
 
   setValue(
     "insulinName",
@@ -2306,7 +1183,6 @@ function fillEditFields(
     record.note
   );
 
-
   setValue(
     "activityType",
     record.activity
@@ -2326,7 +1202,6 @@ function fillEditFields(
     "activityNote",
     record.note
   );
-
 
   setValue(
     "consultationProfessional",
@@ -2352,12 +1227,6 @@ function fillEditFields(
     "consultationNote",
     record.note
   );
-
-
-  setValue(
-    "waterAmount",
-    record.amount
-  );
 }
 
 
@@ -2366,13 +1235,10 @@ function fillEditFields(
 ========================================================= */
 
 if (form) {
-
   form.addEventListener(
     "submit",
     function(event) {
-
       event.preventDefault();
-
 
       const dateElement =
         document.getElementById(
@@ -2384,18 +1250,14 @@ if (form) {
           "recordTime"
         );
 
-
       if (
         !dateElement ||
         !timeElement
       ) {
-
         return;
       }
 
-
       const record = {
-
         id:
           editingId ||
           generateId(),
@@ -2415,10 +1277,8 @@ if (form) {
 
 
       if (
-        currentRecordType ===
-        "meal"
+        currentRecordType === "meal"
       ) {
-
         record.mealType =
           document.getElementById(
             "mealType"
@@ -2442,10 +1302,8 @@ if (form) {
 
 
       if (
-        currentRecordType ===
-        "glucose"
+        currentRecordType === "glucose"
       ) {
-
         record.value =
           document.getElementById(
             "glucoseValue"
@@ -2464,10 +1322,8 @@ if (form) {
 
 
       if (
-        currentRecordType ===
-        "insulin"
+        currentRecordType === "insulin"
       ) {
-
         record.insulin =
           document.getElementById(
             "insulinName"
@@ -2491,10 +1347,8 @@ if (form) {
 
 
       if (
-        currentRecordType ===
-        "activity"
+        currentRecordType === "activity"
       ) {
-
         record.activity =
           document.getElementById(
             "activityType"
@@ -2518,10 +1372,8 @@ if (form) {
 
 
       if (
-        currentRecordType ===
-        "consultation"
+        currentRecordType === "consultation"
       ) {
-
         record.professional =
           document.getElementById(
             "consultationProfessional"
@@ -2549,71 +1401,24 @@ if (form) {
       }
 
 
-      if (
-        currentRecordType ===
-        "water"
-      ) {
-
-        const waterElement =
-          document.getElementById(
-            "waterAmount"
-          );
-
-
-        const amount =
-          Number(
-            waterElement.value
-          );
-
-
-        if (
-          !Number.isFinite(
-            amount
-          ) ||
-          amount <= 0
-        ) {
-
-          alert(
-            "Digite uma quantidade válida de água."
-          );
-
-          return;
-        }
-
-
-        record.amount =
-          Math.round(
-            amount
-          );
-      }
-
-
       if (editingId) {
-
         const index =
           database.records.findIndex(
             item =>
-              item.id ===
-              editingId
+              item.id === editingId
           );
 
-
-        if (
-          index !== -1
-        ) {
-
-          database.records[index] =
-            {
-              ...database.records[index],
-              ...record
-            };
+        if (index !== -1) {
+          database.records[index] = {
+            ...database.records[index],
+            ...record
+          };
         }
+      }
 
-      } else {
-
+      else {
         record.createdAt =
-          new Date()
-            .toISOString();
+          new Date().toISOString();
 
         database.records.push(
           record
@@ -2623,27 +1428,16 @@ if (form) {
 
       saveDatabase();
 
-
       if (modal) {
-
         modal.close();
       }
 
-
-      editingId =
-        null;
-
-      currentRecordType =
-        null;
-
+      editingId = null;
+      currentRecordType = null;
 
       renderDashboard();
-
       renderDiary();
-
       renderConsultations();
-
-      renderTrash();
     }
   );
 }
@@ -2653,25 +1447,17 @@ if (form) {
    EDITAR REGISTRO
 ========================================================= */
 
-function editRecord(
-  id
-) {
-
+function editRecord(id) {
   const record =
     database.records.find(
-      item =>
-        item.id === id
+      item => item.id === id
     );
-
 
   if (!record) return;
 
-
   if (
-    record.type ===
-    "medication"
+    record.type === "medication"
   ) {
-
     const medication =
       medications.find(
         item =>
@@ -2679,18 +1465,14 @@ function editRecord(
           record.medicationId
       );
 
-
     if (medication) {
-
       openEditMedicationForm(
         medication.id
       );
     }
 
-
     return;
   }
-
 
   openRecordForm(
     record.type,
@@ -2703,80 +1485,59 @@ function editRecord(
    EXCLUIR REGISTRO
 ========================================================= */
 
-function deleteRecord(
-  id
-) {
-
+function deleteRecord(id) {
   const record =
     database.records.find(
-      item =>
-        item.id === id
+      item => item.id === id
     );
 
-
   if (!record) return;
-
 
   const confirmed =
     confirm(
       "Mover este registro para a lixeira?"
     );
 
-
   if (!confirmed) return;
 
-
   database.trash.push({
-
     ...record,
-
     deletedAt:
-      new Date()
-        .toISOString()
+      new Date().toISOString()
   });
-
 
   database.records =
     database.records.filter(
-      item =>
-        item.id !== id
+      item => item.id !== id
     );
-
 
   saveDatabase();
 
   renderDashboard();
-
   renderDiary();
-
   renderTrash();
-
   renderConsultations();
 }
 
 
 /* =========================================================
    CONSULTAS — HOME
+   NÃO ALTERADO
 ========================================================= */
 
 function renderConsultationsHome() {
-
   let container =
     document.getElementById(
       "consultationsHomePanel"
     );
 
-
   if (!container) {
-
     const timeline =
       document.getElementById(
         "timeline"
       );
 
-
     if (!timeline) return;
-
 
     container =
       document.createElement(
@@ -2789,31 +1550,25 @@ function renderConsultationsHome() {
     container.className =
       "card";
 
-
     timeline.insertAdjacentElement(
       "afterend",
       container
     );
   }
 
-
   const dateKey =
     formatDateKey(
       selectedDate
     );
 
-
   const consultations =
     database.records
-
       .filter(
         record =>
           record.type ===
             "consultation" &&
-          record.date ===
-            dateKey
+          record.date === dateKey
       )
-
       .sort(
         (a, b) =>
           String(
@@ -2825,9 +1580,7 @@ function renderConsultationsHome() {
           )
       );
 
-
   let html = `
-
     <div
       class="section-header"
       style="
@@ -2837,15 +1590,11 @@ function renderConsultationsHome() {
         gap:12px;
       "
     >
-
       <div>
-
         <h2>🩺 Consultas</h2>
-
         <p>
           Consultas agendadas para este dia.
         </p>
-
       </div>
 
       <button
@@ -2855,32 +1604,22 @@ function renderConsultationsHome() {
       >
         + Nova consulta
       </button>
-
     </div>
-
   `;
-
 
   if (
     consultations.length === 0
   ) {
-
     html += `
-
       <div class="empty-state">
-
-        Nenhuma consulta registrada
-        para este dia.
-
+        Nenhuma consulta registrada para este dia.
       </div>
-
     `;
+  }
 
-  } else {
-
+  else {
     consultations.forEach(
       consultation => {
-
         html +=
           createConsultationCard(
             consultation
@@ -2889,19 +1628,15 @@ function renderConsultationsHome() {
     );
   }
 
-
   container.innerHTML =
     html;
-
 
   const addButton =
     document.getElementById(
       "addConsultationHomeButton"
     );
 
-
   if (addButton) {
-
     addButton.addEventListener(
       "click",
       () =>
@@ -2920,17 +1655,11 @@ function renderConsultationsHome() {
 function createConsultationCard(
   consultation
 ) {
-
   return `
-
     <div
       class="card"
-      style="
-        margin-top:12px;
-        padding:14px;
-      "
+      style="margin-top:12px; padding:14px;"
     >
-
       <div
         style="
           display:flex;
@@ -2939,43 +1668,29 @@ function createConsultationCard(
           gap:12px;
         "
       >
-
         <div>
-
           <strong>
-
             🩺
             ${escapeHTML(
               consultation.time
             )}
-
             ·
-
             ${escapeHTML(
               consultation.specialty ||
               "Consulta"
             )}
-
           </strong>
 
-
-          <div
-            style="margin-top:6px;"
-          >
-
+          <div style="margin-top:6px;">
             ${escapeHTML(
               consultation.professional ||
               ""
             )}
-
           </div>
-
 
           ${
             consultation.location
-
               ? `
-
                 <div
                   style="
                     margin-top:4px;
@@ -2987,35 +1702,22 @@ function createConsultationCard(
                     consultation.location
                   )}
                 </div>
-
               `
-
               : ""
           }
 
-
           ${
             consultation.reason
-
               ? `
-
-                <div
-                  style="
-                    margin-top:6px;
-                  "
-                >
+                <div style="margin-top:6px;">
                   ${escapeHTML(
                     consultation.reason
                   )}
                 </div>
-
               `
-
               : ""
           }
-
         </div>
-
 
         <div
           style="
@@ -3023,7 +1725,6 @@ function createConsultationCard(
             gap:6px;
           "
         >
-
           <button
             type="button"
             onclick="editRecord('${escapeHTML(consultation.id)}')"
@@ -3039,39 +1740,31 @@ function createConsultationCard(
           >
             🗑️
           </button>
-
         </div>
-
       </div>
-
     </div>
-
   `;
 }
 
 
 /* =========================================================
    TELA DE CONSULTAS
+   NÃO ALTERADO
 ========================================================= */
 
 function renderConsultations() {
-
   let container =
     document.getElementById(
       "consultationsContent"
     );
 
-
   if (!container) {
-
     const screen =
       document.getElementById(
         "consultationScreen"
       );
 
-
     if (!screen) return;
-
 
     container =
       document.createElement(
@@ -3081,42 +1774,25 @@ function renderConsultations() {
     container.id =
       "consultationsContent";
 
-
-    /*
-      IMPORTANTE:
-      Não criamos outro título
-      "Consultas" dentro da tela.
-      O conteúdo abaixo começa
-      diretamente com a descrição.
-    */
-
     screen.appendChild(
       container
     );
   }
 
-
   const consultations =
     database.records
-
       .filter(
         record =>
           record.type ===
           "consultation"
       )
-
       .sort(
         (a, b) => {
-
           const dateA =
-            `${a.date} ${
-              a.time || ""
-            }`;
+            `${a.date} ${a.time || ""}`;
 
           const dateB =
-            `${b.date} ${
-              b.time || ""
-            }`;
+            `${b.date} ${b.time || ""}`;
 
           return dateA.localeCompare(
             dateB
@@ -3124,9 +1800,7 @@ function renderConsultations() {
         }
       );
 
-
   let html = `
-
     <div
       class="section-header"
       style="
@@ -3137,16 +1811,12 @@ function renderConsultations() {
         flex-wrap:wrap;
       "
     >
-
       <div>
-
+        <h2>🩺 Consultas</h2>
         <p>
-          Acompanhe suas consultas
-          e compromissos de saúde.
+          Acompanhe suas consultas e compromissos de saúde.
         </p>
-
       </div>
-
 
       <button
         type="button"
@@ -3155,36 +1825,23 @@ function renderConsultations() {
       >
         + Nova consulta
       </button>
-
     </div>
-
   `;
-
 
   if (
     consultations.length === 0
   ) {
-
     html += `
-
       <div class="empty-state">
-
         Nenhuma consulta cadastrada.
-
         <br><br>
-
-        Cadastre sua primeira consulta
-        para começar a organizar
-        seus compromissos de saúde.
-
+        Cadastre sua primeira consulta para começar a organizar seus compromissos de saúde.
       </div>
-
     `;
+  }
 
-  } else {
-
+  else {
     html += `
-
       <div
         style="
           display:flex;
@@ -3193,22 +1850,15 @@ function renderConsultations() {
           margin-top:16px;
         "
       >
-
     `;
-
 
     consultations.forEach(
       consultation => {
-
         html += `
-
           <div
             class="card"
-            style="
-              padding:16px;
-            "
+            style="padding:16px;"
           >
-
             <div
               style="
                 display:flex;
@@ -3217,135 +1867,82 @@ function renderConsultations() {
                 gap:12px;
               "
             >
-
-              <div
-                style="flex:1;"
-              >
-
+              <div style="flex:1;">
                 <div
                   style="
                     font-weight:700;
                     font-size:1.05rem;
                   "
                 >
-
                   🩺
                   ${escapeHTML(
                     consultation.specialty ||
                     "Consulta"
                   )}
-
                 </div>
 
-
-                <div
-                  style="
-                    margin-top:8px;
-                  "
-                >
-
+                <div style="margin-top:8px;">
                   📅
                   ${escapeHTML(
                     consultation.date
                   )}
-
                   ·
-
                   ⏰
                   ${escapeHTML(
                     consultation.time
                   )}
-
                 </div>
-
 
                 ${
                   consultation.professional
-
                     ? `
-
-                      <div
-                        style="
-                          margin-top:6px;
-                        "
-                      >
-
+                      <div style="margin-top:6px;">
                         👩‍⚕️
                         ${escapeHTML(
                           consultation.professional
                         )}
-
                       </div>
-
                     `
-
                     : ""
                 }
 
-
                 ${
                   consultation.location
-
                     ? `
-
                       <div
                         style="
                           margin-top:6px;
                           opacity:.75;
                         "
                       >
-
                         📍
                         ${escapeHTML(
                           consultation.location
                         )}
-
                       </div>
-
                     `
-
                     : ""
                 }
-
 
                 ${
                   consultation.reason
-
                     ? `
-
-                      <div
-                        style="
-                          margin-top:8px;
-                        "
-                      >
-
+                      <div style="margin-top:8px;">
                         <strong>
                           Motivo:
                         </strong>
-
                         ${escapeHTML(
                           consultation.reason
                         )}
-
                       </div>
-
                     `
-
                     : ""
                 }
 
-
                 ${
                   consultation.note
-
                     ? `
-
-                      <div
-                        style="
-                          margin-top:8px;
-                        "
-                      >
-
+                      <div style="margin-top:8px;">
                         <strong>
                           Observações:
                         </strong>
@@ -3360,16 +1957,11 @@ function renderConsultations() {
                             consultation.note
                           )}
                         </div>
-
                       </div>
-
                     `
-
                     : ""
                 }
-
               </div>
-
 
               <div
                 style="
@@ -3378,7 +1970,6 @@ function renderConsultations() {
                   flex-shrink:0;
                 "
               >
-
                 <button
                   type="button"
                   onclick="editRecord('${escapeHTML(consultation.id)}')"
@@ -3394,34 +1985,27 @@ function renderConsultations() {
                 >
                   🗑️
                 </button>
-
               </div>
-
             </div>
-
           </div>
-
         `;
       }
     );
 
-
-    html += `</div>`;
+    html += `
+      </div>
+    `;
   }
-
 
   container.innerHTML =
     html;
-
 
   const newButton =
     document.getElementById(
       "newConsultationButton"
     );
 
-
   if (newButton) {
-
     newButton.addEventListener(
       "click",
       () =>
@@ -3438,23 +2022,18 @@ function renderConsultations() {
 ========================================================= */
 
 function renderMedicationHome() {
-
   let container =
     document.getElementById(
       "medicationHomePanel"
     );
 
-
   if (!container) {
-
     const quickActions =
       document.querySelector(
         ".quick-actions"
       );
 
-
     if (!quickActions) return;
-
 
     container =
       document.createElement(
@@ -3467,22 +2046,18 @@ function renderMedicationHome() {
     container.className =
       "card";
 
-
     quickActions.insertAdjacentElement(
       "afterend",
       container
     );
   }
 
-
   const dateKey =
     formatDateKey(
       selectedDate
     );
 
-
   let html = `
-
     <div
       class="section-header"
       style="
@@ -3492,21 +2067,15 @@ function renderMedicationHome() {
         gap:12px;
       "
     >
-
       <div>
-
         <h2>
-          💊 Medicamentos /
-          Suplementos e Vitaminas
+          💊 Medicamentos / Suplementos e Vitaminas
         </h2>
 
         <p>
-          Marque cada item conforme
-          você tomar.
+          Marque cada item conforme você tomar.
         </p>
-
       </div>
-
 
       <button
         type="button"
@@ -3515,23 +2084,15 @@ function renderMedicationHome() {
       >
         ⚙️ Gerenciar
       </button>
-
     </div>
-
   `;
-
 
   if (
     medications.length === 0
   ) {
-
     html += `
-
       <div class="empty-state">
-
-        Nenhum medicamento ou vitamina
-        cadastrado.
-
+        Nenhum medicamento ou vitamina cadastrado.
         <br><br>
 
         <button
@@ -3539,14 +2100,10 @@ function renderMedicationHome() {
           id="addFirstMedicationButton"
           class="primary-button"
         >
-          + Adicionar medicamento,
-          suplemento ou vitamina
+          + Adicionar medicamento, suplemento ou vitamina
         </button>
-
       </div>
-
     `;
-
 
     container.innerHTML =
       html;
@@ -3556,29 +2113,23 @@ function renderMedicationHome() {
     return;
   }
 
-
   const periods = [
-
     {
       key: "morning",
       label: "🌅 Manhã"
     },
-
     {
       key: "afternoon",
       label: "☀️ Tarde"
     },
-
     {
       key: "night",
       label: "🌙 Noite"
     }
   ];
 
-
   periods.forEach(
     period => {
-
       const periodMedications =
         medications.filter(
           medication =>
@@ -3588,43 +2139,29 @@ function renderMedicationHome() {
               period.key
         );
 
-
       if (
         periodMedications.length ===
         0
       ) {
-
         return;
       }
 
-
       html += `
-
-        <div
-          style="
-            margin-top:18px;
-          "
-        >
-
+        <div style="margin-top:18px;">
           <h3>
             ${period.label}
           </h3>
-
       `;
-
 
       periodMedications.forEach(
         medication => {
-
           const taken =
             isMedicationTaken(
               medication.id,
               dateKey
             );
 
-
           html += `
-
             <label
               style="
                 display:flex;
@@ -3632,12 +2169,9 @@ function renderMedicationHome() {
                 gap:12px;
                 padding:12px 0;
                 cursor:pointer;
-                border-bottom:
-                  1px solid
-                  rgba(0,0,0,.08);
+                border-bottom:1px solid rgba(0,0,0,.08);
               "
             >
-
               <input
                 type="checkbox"
                 class="medication-check"
@@ -3649,7 +2183,6 @@ function renderMedicationHome() {
                 }
               >
 
-
               <span
                 style="
                   flex:1;
@@ -3660,24 +2193,20 @@ function renderMedicationHome() {
                   }
                 "
               >
-
                 ${escapeHTML(
                   medication.name
                 )}
-
               </span>
-
             </label>
-
           `;
         }
       );
 
-
-      html += `</div>`;
+      html += `
+        </div>
+      `;
     }
   );
-
 
   container.innerHTML =
     html;
@@ -3691,34 +2220,27 @@ function renderMedicationHome() {
 ========================================================= */
 
 function attachMedicationHomeEvents() {
-
   const manage =
     document.getElementById(
       "manageMedicationsButton"
     );
-
 
   const add =
     document.getElementById(
       "addFirstMedicationButton"
     );
 
-
   if (manage) {
-
     manage.addEventListener(
       "click",
       openMedicationManager
     );
   }
 
-
   if (add) {
-
     add.addEventListener(
       "click",
       () => {
-
         openMedicationManager();
 
         setTimeout(
@@ -3729,22 +2251,18 @@ function attachMedicationHomeEvents() {
     );
   }
 
-
   document
     .querySelectorAll(
       ".medication-check"
     )
     .forEach(
       checkbox => {
-
         checkbox.addEventListener(
           "change",
           () => {
-
             toggleMedicationTaken(
               checkbox.dataset
                 .medicationId,
-
               checkbox.checked
             );
           }
@@ -3762,21 +2280,15 @@ function isMedicationTaken(
   medicationId,
   dateKey
 ) {
-
   return database.records.some(
     record =>
-
       record.type ===
         "medication" &&
-
       record.medicationId ===
         medicationId &&
-
       record.date ===
         dateKey &&
-
-      record.taken ===
-        true
+      record.taken === true
   );
 }
 
@@ -3789,43 +2301,31 @@ function toggleMedicationTaken(
   medicationId,
   checked
 ) {
-
   const dateKey =
     formatDateKey(
       selectedDate
     );
 
-
   const medication =
     medications.find(
       item =>
-        item.id ===
-        medicationId
+        item.id === medicationId
     );
 
-
   if (!medication) return;
-
 
   const existingIndex =
     database.records.findIndex(
       record =>
-
         record.type ===
           "medication" &&
-
         record.medicationId ===
           medicationId &&
-
-        record.date ===
-          dateKey
+        record.date === dateKey
     );
 
-
   if (checked) {
-
     const record = {
-
       id:
         existingIndex !== -1
           ? database.records[
@@ -3856,50 +2356,40 @@ function toggleMedicationTaken(
 
       createdAt:
         existingIndex !== -1
-
           ? database.records[
               existingIndex
             ].createdAt ||
-            new Date()
-              .toISOString()
-
-          : new Date()
-              .toISOString(),
+            new Date().toISOString()
+          : new Date().toISOString(),
 
       updatedAt:
-        new Date()
-          .toISOString()
+        new Date().toISOString()
     };
-
 
     if (
       existingIndex !== -1
     ) {
-
       database.records[
         existingIndex
       ] = {
-
         ...database.records[
           existingIndex
         ],
-
         ...record
       };
+    }
 
-    } else {
-
+    else {
       database.records.push(
         record
       );
     }
+  }
 
-  } else {
-
+  else {
     if (
       existingIndex !== -1
     ) {
-
       database.records.splice(
         existingIndex,
         1
@@ -3907,11 +2397,9 @@ function toggleMedicationTaken(
     }
   }
 
-
   saveDatabase();
 
   renderDashboard();
-
   renderDiary();
 }
 
@@ -3921,15 +2409,12 @@ function toggleMedicationTaken(
 ========================================================= */
 
 function openMedicationManager() {
-
   let manager =
     document.getElementById(
       "medicationManager"
     );
 
-
   if (!manager) {
-
     manager =
       document.createElement(
         "dialog"
@@ -3938,12 +2423,10 @@ function openMedicationManager() {
     manager.id =
       "medicationManager";
 
-
     document.body.appendChild(
       manager
     );
   }
-
 
   renderMedicationManager();
 
@@ -3956,18 +2439,14 @@ function openMedicationManager() {
 ========================================================= */
 
 function renderMedicationManager() {
-
   const manager =
     document.getElementById(
       "medicationManager"
     );
 
-
   if (!manager) return;
 
-
   manager.innerHTML = `
-
     <form
       method="dialog"
       style="
@@ -3977,7 +2456,6 @@ function renderMedicationManager() {
         overflow:auto;
       "
     >
-
       <div
         style="
           display:flex;
@@ -3986,12 +2464,9 @@ function renderMedicationManager() {
           gap:12px;
         "
       >
-
         <h2>
-          💊 Medicamentos /
-          Suplementos e Vitaminas
+          💊 Medicamentos / Suplementos e Vitaminas
         </h2>
-
 
         <button
           type="submit"
@@ -3999,63 +2474,41 @@ function renderMedicationManager() {
         >
           ✕
         </button>
-
       </div>
 
-
       <p>
-        Cadastre cada item separadamente
-        e escolha o período em que ele
-        é tomado.
+        Cadastre cada item separadamente e escolha o período em que ele é tomado.
       </p>
-
 
       <button
         type="button"
         id="newMedicationButton"
         class="primary-button"
-        style="
-          margin:16px 0;
-        "
+        style="margin:16px 0;"
       >
-        + Adicionar medicamento,
-        suplemento ou vitamina
+        + Adicionar medicamento, suplemento ou vitamina
       </button>
 
-
-      <div
-        id="medicationList"
-      ></div>
-
+      <div id="medicationList"></div>
     </form>
-
   `;
-
 
   const list =
     document.getElementById(
       "medicationList"
     );
 
-
   if (
-    medications.length ===
-    0
+    medications.length === 0
   ) {
-
     list.innerHTML = `
-
       <div class="empty-state">
-
-        Nenhum medicamento ou
-        vitamina cadastrado.
-
+        Nenhum medicamento ou vitamina cadastrado.
       </div>
-
     `;
+  }
 
-  } else {
-
+  else {
     list.innerHTML =
       medications
         .map(
@@ -4063,7 +2516,6 @@ function renderMedicationManager() {
         )
         .join("");
   }
-
 
   document
     .getElementById(
@@ -4074,14 +2526,12 @@ function renderMedicationManager() {
       openAddMedicationForm
     );
 
-
   manager
     .querySelectorAll(
       "[data-edit-medication]"
     )
     .forEach(
       button => {
-
         button.addEventListener(
           "click",
           () =>
@@ -4093,14 +2543,12 @@ function renderMedicationManager() {
       }
     );
 
-
   manager
     .querySelectorAll(
       "[data-delete-medication]"
     )
     .forEach(
       button => {
-
         button.addEventListener(
           "click",
           () =>
@@ -4121,29 +2569,17 @@ function renderMedicationManager() {
 function createMedicationManagerItem(
   medication
 ) {
-
   const periodLabels = {
-
-    morning:
-      "Manhã",
-
-    afternoon:
-      "Tarde",
-
-    night:
-      "Noite"
+    morning: "Manhã",
+    afternoon: "Tarde",
+    night: "Noite"
   };
 
-
   return `
-
     <div
       class="card"
-      style="
-        margin-bottom:12px;
-      "
+      style="margin-bottom:12px;"
     >
-
       <div
         style="
           display:flex;
@@ -4152,15 +2588,12 @@ function createMedicationManagerItem(
           gap:12px;
         "
       >
-
         <div>
-
           <strong>
             ${escapeHTML(
               medication.name
             )}
           </strong>
-
 
           <div
             style="
@@ -4168,7 +2601,6 @@ function createMedicationManagerItem(
               opacity:.7;
             "
           >
-
             ${escapeHTML(
               periodLabels[
                 medication.period
@@ -4183,11 +2615,8 @@ function createMedicationManagerItem(
                   )}`
                 : ""
             }
-
           </div>
-
         </div>
-
 
         <div
           style="
@@ -4195,7 +2624,6 @@ function createMedicationManagerItem(
             gap:6px;
           "
         >
-
           <button
             type="button"
             data-edit-medication="${escapeHTML(medication.id)}"
@@ -4211,13 +2639,9 @@ function createMedicationManagerItem(
           >
             🗑️
           </button>
-
         </div>
-
       </div>
-
     </div>
-
   `;
 }
 
@@ -4227,7 +2651,6 @@ function createMedicationManagerItem(
 ========================================================= */
 
 function openAddMedicationForm() {
-
   renderMedicationForm();
 }
 
@@ -4235,16 +2658,12 @@ function openAddMedicationForm() {
 function openEditMedicationForm(
   id
 ) {
-
   const medication =
     medications.find(
-      item =>
-        item.id === id
+      item => item.id === id
     );
 
-
   if (!medication) return;
-
 
   renderMedicationForm(
     medication
@@ -4255,24 +2674,17 @@ function openEditMedicationForm(
 function renderMedicationForm(
   medication = null
 ) {
-
   const manager =
     document.getElementById(
       "medicationManager"
     );
 
-
   if (!manager) return;
 
-
   const isEditing =
-    Boolean(
-      medication
-    );
-
+    Boolean(medication);
 
   manager.innerHTML = `
-
     <form
       id="medicationForm"
       style="
@@ -4280,7 +2692,6 @@ function renderMedicationForm(
         min-width:min(90vw,520px);
       "
     >
-
       <div
         style="
           display:flex;
@@ -4288,17 +2699,13 @@ function renderMedicationForm(
           align-items:center;
         "
       >
-
         <h2>
-
           ${
             isEditing
               ? "Editar medicamento / suplemento / vitamina"
               : "Novo medicamento / suplemento / vitamina"
           }
-
         </h2>
-
 
         <button
           type="button"
@@ -4307,17 +2714,10 @@ function renderMedicationForm(
         >
           ✕
         </button>
-
       </div>
 
-
-      <div
-        class="form-group"
-      >
-
-        <label
-          for="medicationName"
-        >
+      <div class="form-group">
+        <label for="medicationName">
           Nome
         </label>
 
@@ -4334,17 +2734,10 @@ function renderMedicationForm(
           placeholder="Ex.: Vitamina D"
           required
         >
-
       </div>
 
-
-      <div
-        class="form-group"
-      >
-
-        <label
-          for="medicationPeriod"
-        >
+      <div class="form-group">
+        <label for="medicationPeriod">
           Período
         </label>
 
@@ -4352,7 +2745,6 @@ function renderMedicationForm(
           id="medicationPeriod"
           required
         >
-
           <option
             value="morning"
             ${
@@ -4391,19 +2783,11 @@ function renderMedicationForm(
           >
             🌙 Noite
           </option>
-
         </select>
-
       </div>
 
-
-      <div
-        class="form-group"
-      >
-
-        <label
-          for="medicationTime"
-        >
+      <div class="form-group">
+        <label for="medicationTime">
           Horário
         </label>
 
@@ -4420,9 +2804,7 @@ function renderMedicationForm(
           }"
           required
         >
-
       </div>
-
 
       <div
         style="
@@ -4431,7 +2813,6 @@ function renderMedicationForm(
           margin-top:20px;
         "
       >
-
         <button
           type="button"
           id="cancelMedicationForm"
@@ -4446,13 +2827,9 @@ function renderMedicationForm(
         >
           Salvar
         </button>
-
       </div>
-
     </form>
-
   `;
-
 
   document
     .getElementById(
@@ -4463,7 +2840,6 @@ function renderMedicationForm(
       renderMedicationManager
     );
 
-
   document
     .getElementById(
       "cancelMedicationForm"
@@ -4473,7 +2849,6 @@ function renderMedicationForm(
       renderMedicationManager
     );
 
-
   document
     .getElementById(
       "medicationForm"
@@ -4481,43 +2856,28 @@ function renderMedicationForm(
     .addEventListener(
       "submit",
       event => {
-
         event.preventDefault();
-
 
         const name =
           document.getElementById(
             "medicationName"
-          )
-            .value
-            .trim();
-
+          ).value.trim();
 
         const period =
           document.getElementById(
             "medicationPeriod"
-          )
-            .value;
-
+          ).value;
 
         const time =
           document.getElementById(
             "medicationTime"
-          )
-            .value;
+          ).value;
 
-
-        if (
-          !name ||
-          !time
-        ) {
-
+        if (!name || !time) {
           return;
         }
 
-
         if (isEditing) {
-
           const index =
             medications.findIndex(
               item =>
@@ -4525,83 +2885,54 @@ function renderMedicationForm(
                 medication.id
             );
 
-
-          if (
-            index !== -1
-          ) {
-
+          if (index !== -1) {
             medications[index] = {
-
-              ...medications[
-                index
-              ],
-
+              ...medications[index],
               name,
-
               period,
-
               time,
-
-              active:
-                true
+              active: true
             };
           }
-
 
           database.records =
             database.records.map(
               record => {
-
                 if (
                   record.type ===
                     "medication" &&
                   record.medicationId ===
                     medication.id
                 ) {
-
                   return {
-
                     ...record,
-
                     medicationName:
                       name,
-
                     period
                   };
                 }
 
-
                 return record;
               }
             );
+        }
 
-        } else {
-
+        else {
           medications.push({
-
             id:
               generateMedicationId(),
-
             name,
-
             period,
-
             time,
-
-            active:
-              true
+            active: true
           });
         }
 
-
         saveMedications();
-
         saveDatabase();
 
         renderMedicationManager();
-
         renderMedicationHome();
-
         renderDashboard();
       }
     );
@@ -4612,35 +2943,25 @@ function renderMedicationForm(
    EXCLUIR MEDICAMENTO
 ========================================================= */
 
-function deleteMedication(
-  id
-) {
-
+function deleteMedication(id) {
   const medication =
     medications.find(
-      item =>
-        item.id === id
+      item => item.id === id
     );
 
-
   if (!medication) return;
-
 
   const confirmed =
     confirm(
       `Excluir "${medication.name}" da lista de medicamentos / suplementos e vitaminas?`
     );
 
-
   if (!confirmed) return;
-
 
   medications =
     medications.filter(
-      item =>
-        item.id !== id
+      item => item.id !== id
     );
-
 
   database.records =
     database.records.filter(
@@ -4653,16 +2974,742 @@ function deleteMedication(
         )
     );
 
-
   saveMedications();
-
   saveDatabase();
 
   renderMedicationManager();
-
   renderMedicationHome();
-
   renderDashboard();
+}
+
+
+/* =========================================================
+   ÁGUA — REGISTROS
+========================================================= */
+
+function getWaterRecordsForDate(
+  dateKey = formatDateKey(selectedDate)
+) {
+  return database.records.filter(
+    record =>
+      record.type ===
+        WATER_RECORD_TYPE &&
+      record.date === dateKey
+  );
+}
+
+
+function getWaterTotalForDate(
+  dateKey = formatDateKey(selectedDate)
+) {
+  return getWaterRecordsForDate(
+    dateKey
+  ).reduce(
+    (total, record) =>
+      total +
+      Number(record.amount || 0),
+    0
+  );
+}
+
+
+function formatWaterAmount(
+  amount
+) {
+  const value =
+    Number(amount || 0);
+
+  if (
+    value >= 1000 &&
+    value % 1000 === 0
+  ) {
+    return `${value / 1000} L`;
+  }
+
+  return `${value} ml`;
+}
+
+
+/* =========================================================
+   ÁGUA — LANÇAR QUANTIDADE
+========================================================= */
+
+function addWater(amount) {
+  amount =
+    Number(amount);
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+    return;
+  }
+
+  const dateKey =
+    formatDateKey(
+      selectedDate
+    );
+
+  database.records.push({
+    id:
+      generateId(),
+
+    type:
+      WATER_RECORD_TYPE,
+
+    date:
+      dateKey,
+
+    time:
+      currentTime(),
+
+    amount:
+      amount,
+
+    action:
+      "add",
+
+    createdAt:
+      new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString()
+  });
+
+  saveDatabase();
+
+  renderWaterHome();
+  renderDashboard();
+}
+
+
+/* =========================================================
+   ÁGUA — RETIRAR QUANTIDADE
+========================================================= */
+
+function removeWater(amount) {
+  amount =
+    Number(amount);
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+    return;
+  }
+
+  const dateKey =
+    formatDateKey(
+      selectedDate
+    );
+
+  const currentTotal =
+    getWaterTotalForDate(
+      dateKey
+    );
+
+  if (currentTotal <= 0) {
+    return;
+  }
+
+  /*
+     Nunca deixa a contagem negativa.
+     Se houver menos água do que a medida
+     solicitada, retira somente o que existe.
+  */
+
+  const amountToRemove =
+    Math.min(
+      amount,
+      currentTotal
+    );
+
+  database.records.push({
+    id:
+      generateId(),
+
+    type:
+      WATER_RECORD_TYPE,
+
+    date:
+      dateKey,
+
+    time:
+      currentTime(),
+
+    amount:
+      -amountToRemove,
+
+    action:
+      "remove",
+
+    createdAt:
+      new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString()
+  });
+
+  saveDatabase();
+
+  renderWaterHome();
+  renderDashboard();
+}
+
+
+/* =========================================================
+   ÁGUA — PAINEL PRINCIPAL
+========================================================= */
+
+function renderWaterHome() {
+  let container =
+    document.getElementById(
+      "waterHomePanel"
+    );
+
+  if (!container) {
+    const quickActions =
+      document.querySelector(
+        ".quick-actions"
+      );
+
+    if (!quickActions) return;
+
+    container =
+      document.createElement(
+        "section"
+      );
+
+    container.id =
+      "waterHomePanel";
+
+    container.className =
+      "card";
+
+    quickActions.insertAdjacentElement(
+      "afterend",
+      container
+    );
+  }
+
+  const total =
+    getWaterTotalForDate();
+
+  const goal =
+    Number(
+      waterSettings.dailyGoal || 0
+    );
+
+  const percentage =
+    goal > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (total / goal) *
+              100
+          )
+        )
+      : 0;
+
+  container.innerHTML = `
+    <div
+      class="section-header"
+      style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+      "
+    >
+      <div>
+        <h2>
+          💧 Água — Meta Diária
+        </h2>
+
+        <p>
+          Controle a quantidade de água consumida neste dia.
+        </p>
+      </div>
+    </div>
+
+    <div
+      style="
+        text-align:center;
+        padding:18px 8px 10px;
+      "
+    >
+      <div
+        style="
+          font-size:2rem;
+          font-weight:700;
+        "
+        id="waterTotalDisplay"
+      >
+        ${formatWaterAmount(total)}
+      </div>
+
+      <div
+        style="
+          margin-top:4px;
+          opacity:.7;
+        "
+      >
+        Meta:
+        ${formatWaterAmount(goal)}
+      </div>
+
+      <div
+        style="
+          margin-top:14px;
+          height:10px;
+          border-radius:999px;
+          background:rgba(0,0,0,.08);
+          overflow:hidden;
+        "
+      >
+        <div
+          style="
+            width:${percentage}%;
+            height:100%;
+            background:currentColor;
+            border-radius:999px;
+            transition:width .2s ease;
+          "
+        ></div>
+      </div>
+
+      <div
+        style="
+          margin-top:6px;
+          font-size:.9rem;
+          opacity:.7;
+        "
+      >
+        ${percentage}% da meta
+      </div>
+    </div>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+        margin-top:14px;
+      "
+    >
+      <button
+        type="button"
+        class="primary-button water-action-button"
+        data-water-action="add"
+        data-water-amount="200"
+      >
+        +200 ml
+      </button>
+
+      <button
+        type="button"
+        class="secondary-button water-action-button"
+        data-water-action="remove"
+        data-water-amount="200"
+      >
+        −200 ml
+      </button>
+
+      <button
+        type="button"
+        class="primary-button water-action-button"
+        data-water-action="add"
+        data-water-amount="500"
+      >
+        +500 ml
+      </button>
+
+      <button
+        type="button"
+        class="secondary-button water-action-button"
+        data-water-action="remove"
+        data-water-amount="500"
+      >
+        −500 ml
+      </button>
+
+      <button
+        type="button"
+        class="primary-button water-action-button"
+        data-water-action="add"
+        data-water-amount="750"
+      >
+        +750 ml
+      </button>
+
+      <button
+        type="button"
+        class="secondary-button water-action-button"
+        data-water-action="remove"
+        data-water-amount="750"
+      >
+        −750 ml
+      </button>
+
+      <button
+        type="button"
+        class="primary-button water-action-button"
+        data-water-action="add"
+        data-water-amount="1000"
+      >
+        +1 L
+      </button>
+
+      <button
+        type="button"
+        class="secondary-button water-action-button"
+        data-water-action="remove"
+        data-water-amount="1000"
+      >
+        −1 L
+      </button>
+    </div>
+
+    <div
+      style="
+        margin-top:16px;
+        display:flex;
+        justify-content:center;
+      "
+    >
+      <button
+        type="button"
+        id="waterGoalButton"
+        class="secondary-button"
+      >
+        ⚙️ Alterar meta diária
+      </button>
+    </div>
+  `;
+
+  container
+    .querySelectorAll(
+      ".water-action-button"
+    )
+    .forEach(
+      button => {
+        button.addEventListener(
+          "click",
+          () => {
+            const amount =
+              Number(
+                button.dataset
+                  .waterAmount
+              );
+
+            const action =
+              button.dataset
+                .waterAction;
+
+            if (
+              action === "add"
+            ) {
+              addWater(amount);
+            }
+
+            else {
+              removeWater(amount);
+            }
+          }
+        );
+      }
+    );
+
+  const goalButton =
+    document.getElementById(
+      "waterGoalButton"
+    );
+
+  if (goalButton) {
+    goalButton.addEventListener(
+      "click",
+      openWaterGoalForm
+    );
+  }
+}
+
+
+/* =========================================================
+   ÁGUA — META DIÁRIA
+========================================================= */
+
+function openWaterGoalForm() {
+  const currentGoal =
+    Number(
+      waterSettings.dailyGoal ||
+        defaultWaterSettings.dailyGoal
+    );
+
+  const value =
+    prompt(
+      "Digite sua meta diária de água em ml:",
+      currentGoal
+    );
+
+  if (
+    value === null
+  ) {
+    return;
+  }
+
+  const goal =
+    Number(value);
+
+  if (
+    !Number.isFinite(goal) ||
+    goal <= 0
+  ) {
+    alert(
+      "Digite uma meta válida maior que zero."
+    );
+
+    return;
+  }
+
+  waterSettings.dailyGoal =
+    Math.round(goal);
+
+  saveWaterSettings();
+
+  renderWaterHome();
+}
+
+
+/* =========================================================
+   ÁGUA — HISTÓRICO
+========================================================= */
+
+function renderWaterHistory() {
+  const container =
+    document.getElementById(
+      "waterHistoryContent"
+    );
+
+  if (!container) return;
+
+  const records =
+    database.records
+      .filter(
+        record =>
+          record.type ===
+          WATER_RECORD_TYPE
+      )
+      .sort(
+        (a, b) =>
+          `${b.date} ${b.time || ""}`.localeCompare(
+            `${a.date} ${a.time || ""}`
+          )
+      );
+
+  if (
+    records.length === 0
+  ) {
+    container.innerHTML = `
+      <div class="empty-state">
+        Nenhum registro de água.
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML =
+    records
+      .map(
+        record => `
+          <div
+            class="timeline-item"
+            style="margin-bottom:10px;"
+          >
+            <div class="timeline-icon">
+              💧
+            </div>
+
+            <div class="timeline-content">
+              <div class="timeline-title">
+                ${escapeHTML(
+                  record.date
+                )}
+                ·
+                ${escapeHTML(
+                  record.time || ""
+                )}
+              </div>
+
+              <div class="timeline-detail">
+                ${
+                  Number(
+                    record.amount
+                  ) >= 0
+                    ? "+"
+                    : ""
+                }
+                ${formatWaterAmount(
+                  Math.abs(
+                    Number(
+                      record.amount
+                    )
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        `
+      )
+      .join("");
+}
+
+
+/* =========================================================
+   REMOVER VERSÕES DUPLICADAS DE ÁGUA
+========================================================= */
+
+function removeDuplicateWaterPanels() {
+  const validPanel =
+    document.getElementById(
+      "waterHomePanel"
+    );
+
+  document
+    .querySelectorAll(
+      "[id*='water'], [id*='Water'], [class*='water'], [class*='Water']"
+    )
+    .forEach(element => {
+      if (
+        validPanel &&
+        element === validPanel
+      ) {
+        return;
+      }
+
+      if (
+        element.id ===
+          "waterHomePanel"
+      ) {
+        return;
+      }
+
+      const text =
+        element.textContent
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+
+      if (
+        text.includes(
+          "água meta diária"
+        ) &&
+        element !== validPanel
+      ) {
+        element.remove();
+      }
+    });
+}
+
+
+/* =========================================================
+   CRIAR BOTÃO ÁGUA JUNTO ÀS AÇÕES PRINCIPAIS
+========================================================= */
+
+function ensureWaterQuickButton() {
+  const quickActions =
+    document.querySelector(
+      ".quick-actions"
+    );
+
+  if (!quickActions) {
+    return;
+  }
+
+  /*
+     Remove somente botões antigos de água
+     criados anteriormente, preservando
+     o novo botão oficial.
+  */
+
+  quickActions
+    .querySelectorAll(
+      "button"
+    )
+    .forEach(button => {
+      if (
+        button.id ===
+          "waterQuickButton"
+      ) {
+        return;
+      }
+
+      const text =
+        button.textContent
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+
+      if (
+        text === "💧 água" ||
+        text === "água" ||
+        text.includes(
+          "água meta diária"
+        )
+      ) {
+        button.remove();
+      }
+    });
+
+  if (
+    document.getElementById(
+      "waterQuickButton"
+    )
+  ) {
+    return;
+  }
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+  button.type =
+    "button";
+
+  button.id =
+    "waterQuickButton";
+
+  button.className =
+    "quick-button";
+
+  button.innerHTML = `
+    <span>💧</span>
+    Água
+  `;
+
+  quickActions.appendChild(
+    button
+  );
+
+  button.addEventListener(
+    "click",
+    () => {
+      renderWaterHome();
+
+      const panel =
+        document.getElementById(
+          "waterHomePanel"
+        );
+
+      if (panel) {
+        panel.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+    }
+  );
 }
 
 
@@ -4676,11 +3723,9 @@ document
   )
   .forEach(
     button => {
-
       button.addEventListener(
         "click",
         () => {
-
           openRecordForm(
             button.dataset
               .recordType
@@ -4693,6 +3738,7 @@ document
 
 /* =========================================================
    BOTÃO CONSULTAS
+   NÃO ALTERADO
 ========================================================= */
 
 const consultationQuickButton =
@@ -4700,15 +3746,12 @@ const consultationQuickButton =
     "consultationQuickButton"
   );
 
-
 if (
   consultationQuickButton
 ) {
-
   consultationQuickButton.addEventListener(
     "click",
     () => {
-
       openConsultationsScreen();
     }
   );
@@ -4724,15 +3767,11 @@ const closeModal =
     "closeModal"
   );
 
-
 if (closeModal) {
-
   closeModal.addEventListener(
     "click",
     () => {
-
       if (modal) {
-
         modal.close();
       }
     }
@@ -4745,15 +3784,11 @@ const cancelButton =
     "cancelButton"
   );
 
-
 if (cancelButton) {
-
   cancelButton.addEventListener(
     "click",
     () => {
-
       if (modal) {
-
         modal.close();
       }
     }
@@ -4770,16 +3805,12 @@ const previousDay =
     "previousDay"
   );
 
-
 if (previousDay) {
-
   previousDay.addEventListener(
     "click",
     () => {
-
       selectedDate.setDate(
-        selectedDate.getDate() -
-          1
+        selectedDate.getDate() - 1
       );
 
       renderDashboard();
@@ -4793,16 +3824,12 @@ const nextDay =
     "nextDay"
   );
 
-
 if (nextDay) {
-
   nextDay.addEventListener(
     "click",
     () => {
-
       selectedDate.setDate(
-        selectedDate.getDate() +
-          1
+        selectedDate.getDate() + 1
       );
 
       renderDashboard();
@@ -4816,49 +3843,39 @@ if (nextDay) {
 ========================================================= */
 
 function renderDiary() {
-
   const container =
     document.getElementById(
       "diaryContent"
     );
 
-
   if (!container) return;
 
-
   if (
-    database.records.length ===
-    0
+    database.records.length === 0
   ) {
-
     container.innerHTML = `
-
       <div class="empty-state">
-
         Nenhum registro encontrado.
-
       </div>
-
     `;
 
     return;
   }
 
-
   const sortedRecords =
     [...database.records]
+      .filter(
+        record =>
+          record.type !==
+          WATER_RECORD_TYPE
+      )
       .sort(
         (a, b) => {
-
           const dateA =
-            `${a.date} ${
-              a.time || ""
-            }`;
+            `${a.date} ${a.time || ""}`;
 
           const dateB =
-            `${b.date} ${
-              b.time || ""
-            }`;
+            `${b.date} ${b.time || ""}`;
 
           return dateB.localeCompare(
             dateA
@@ -4866,12 +3883,21 @@ function renderDiary() {
         }
       );
 
+  if (
+    sortedRecords.length === 0
+  ) {
+    container.innerHTML = `
+      <div class="empty-state">
+        Nenhum registro encontrado.
+      </div>
+    `;
+
+    return;
+  }
 
   container.innerHTML =
     sortedRecords
-      .map(
-        createDiaryItem
-      )
+      .map(createDiaryItem)
       .join("");
 }
 
@@ -4883,35 +3909,19 @@ function renderDiary() {
 function createDiaryItem(
   record
 ) {
-
   const icons = {
-
     meal: "🍽️",
-
     glucose: "🩸",
-
     insulin: "💉",
-
     activity: "🏋️",
-
     medication: "💊",
-
-    consultation: "🩺",
-
-    water: "💧"
+    consultation: "🩺"
   };
 
-
   let title = "";
-
   let detail = "";
 
-
-  if (
-    record.type ===
-    "meal"
-  ) {
-
+  if (record.type === "meal") {
     title =
       record.mealType ||
       "Refeição";
@@ -4921,12 +3931,9 @@ function createDiaryItem(
       "Refeição registrada";
   }
 
-
   else if (
-    record.type ===
-    "glucose"
+    record.type === "glucose"
   ) {
-
     title =
       `${record.value} mg/dL`;
 
@@ -4935,12 +3942,9 @@ function createDiaryItem(
       "Glicemia";
   }
 
-
   else if (
-    record.type ===
-    "insulin"
+    record.type === "insulin"
   ) {
-
     title =
       `${record.dose} U`;
 
@@ -4948,21 +3952,15 @@ function createDiaryItem(
       record.insulin ||
       "Insulina";
 
-    if (
-      record.application
-    ) {
-
+    if (record.application) {
       detail +=
         ` · ${record.application}`;
     }
   }
 
-
   else if (
-    record.type ===
-    "activity"
+    record.type === "activity"
   ) {
-
     title =
       record.activity ||
       "Atividade";
@@ -4970,45 +3968,27 @@ function createDiaryItem(
     detail =
       `${record.duration || 0} min`;
 
-    if (
-      record.intensity
-    ) {
-
+    if (record.intensity) {
       detail +=
         ` · ${record.intensity}`;
     }
   }
 
-
   else if (
-    record.type ===
-    "medication"
+    record.type === "medication"
   ) {
-
     title =
       record.medicationName ||
       "Medicamento / suplemento / vitamina";
 
-    detail =
-      "Tomado";
+    detail = "Tomado";
 
-
-    if (
-      record.period
-    ) {
-
+    if (record.period) {
       const periods = {
-
-        morning:
-          "Manhã",
-
-        afternoon:
-          "Tarde",
-
-        night:
-          "Noite"
+        morning: "Manhã",
+        afternoon: "Tarde",
+        night: "Noite"
       };
-
 
       detail +=
         ` · ${
@@ -5020,12 +4000,9 @@ function createDiaryItem(
     }
   }
 
-
   else if (
-    record.type ===
-    "consultation"
+    record.type === "consultation"
   ) {
-
     title =
       record.specialty ||
       "Consulta";
@@ -5034,127 +4011,39 @@ function createDiaryItem(
       record.professional ||
       "Consulta médica";
 
-
-    if (
-      record.location
-    ) {
-
+    if (record.location) {
       detail +=
         ` · ${record.location}`;
     }
   }
 
-
-  else if (
-    record.type ===
-    "water"
-  ) {
-
-    title =
-      `+${formatWaterAmount(
-        record.amount
-      )}`;
-
-    detail =
-      "Água";
-  }
-
-
   return `
-
     <div
       class="timeline-item"
-      style="
-        margin-bottom:12px;
-      "
+      style="margin-bottom:12px;"
     >
-
       <div class="timeline-icon">
-
-        ${
-          icons[
-            record.type
-          ] || "📝"
-        }
-
+        ${icons[record.type] || "📝"}
       </div>
 
-
-      <div
-        class="timeline-content"
-      >
-
-        <div
-          class="timeline-title"
-        >
-
+      <div class="timeline-content">
+        <div class="timeline-title">
           ${escapeHTML(
             record.date
           )}
-
           ·
-
           ${escapeHTML(
             record.time || ""
           )}
-
         </div>
 
-
-        <div
-          class="timeline-detail"
-        >
-
-          ${escapeHTML(
-            title
-          )}
-
+        <div class="timeline-detail">
+          ${escapeHTML(title)}
           ·
-
-          ${escapeHTML(
-            detail
-          )}
-
+          ${escapeHTML(detail)}
         </div>
-
       </div>
-
-
-      ${
-        record.type ===
-        "water"
-
-          ? `
-
-            <div
-              class="timeline-actions"
-            >
-
-              <button
-                type="button"
-                onclick="editRecord('${escapeHTML(record.id)}')"
-                title="Editar"
-              >
-                ✏️
-              </button>
-
-              <button
-                type="button"
-                onclick="deleteRecord('${escapeHTML(record.id)}')"
-                title="Excluir"
-              >
-                🗑️
-              </button>
-
-            </div>
-
-          `
-
-          : ""
-      }
-
     </div>
-
   `;
 }
 
@@ -5164,50 +4053,35 @@ function createDiaryItem(
 ========================================================= */
 
 function renderTrash() {
-
   const container =
     document.getElementById(
       "trashContent"
     );
 
-
   if (!container) return;
-
 
   if (
     !database.trash ||
     database.trash.length ===
       0
   ) {
-
     container.innerHTML = `
-
       <div class="empty-state">
-
         A lixeira está vazia.
-
       </div>
-
     `;
 
     return;
   }
 
-
   const sortedTrash =
     [...database.trash].sort(
       (a, b) =>
-        new Date(
-          b.deletedAt
-        ) -
-        new Date(
-          a.deletedAt
-        )
+        new Date(b.deletedAt) -
+        new Date(a.deletedAt)
     );
 
-
   container.innerHTML = `
-
     <div
       style="
         display:flex;
@@ -5216,7 +4090,6 @@ function renderTrash() {
         flex-wrap:wrap;
       "
     >
-
       <button
         type="button"
         id="emptyTrashButton"
@@ -5224,27 +4097,19 @@ function renderTrash() {
       >
         Esvaziar lixeira
       </button>
-
     </div>
 
-
     ${sortedTrash
-      .map(
-        createTrashItem
-      )
+      .map(createTrashItem)
       .join("")}
-
   `;
-
 
   const button =
     document.getElementById(
       "emptyTrashButton"
     );
 
-
   if (button) {
-
     button.addEventListener(
       "click",
       emptyTrash
@@ -5260,35 +4125,44 @@ function renderTrash() {
 function createTrashItem(
   record
 ) {
-
   const icons = {
-
     meal: "🍽️",
-
     glucose: "🩸",
-
     insulin: "💉",
-
     activity: "🏋️",
-
     medication: "💊",
-
     consultation: "🩺",
-
     water: "💧"
   };
 
-
   let title = "";
-
   let detail = "";
-
 
   if (
     record.type ===
-    "meal"
+    WATER_RECORD_TYPE
   ) {
+    title = "Água";
 
+    detail =
+      `${
+        Number(
+          record.amount
+        ) >= 0
+          ? "+"
+          : ""
+      }${formatWaterAmount(
+        Math.abs(
+          Number(
+            record.amount
+          )
+        )
+      )}`;
+  }
+
+  else if (
+    record.type === "meal"
+  ) {
     title =
       record.mealType ||
       "Refeição";
@@ -5298,12 +4172,9 @@ function createTrashItem(
       "Refeição registrada";
   }
 
-
   else if (
-    record.type ===
-    "glucose"
+    record.type === "glucose"
   ) {
-
     title =
       `${record.value} mg/dL`;
 
@@ -5312,12 +4183,9 @@ function createTrashItem(
       "Glicemia";
   }
 
-
   else if (
-    record.type ===
-    "insulin"
+    record.type === "insulin"
   ) {
-
     title =
       `${record.dose} U`;
 
@@ -5326,12 +4194,9 @@ function createTrashItem(
       "Insulina";
   }
 
-
   else if (
-    record.type ===
-    "activity"
+    record.type === "activity"
   ) {
-
     title =
       record.activity ||
       "Atividade";
@@ -5340,12 +4205,9 @@ function createTrashItem(
       `${record.duration || 0} min`;
   }
 
-
   else if (
-    record.type ===
-    "medication"
+    record.type === "medication"
   ) {
-
     title =
       record.medicationName ||
       "Medicamento / suplemento / vitamina";
@@ -5354,12 +4216,9 @@ function createTrashItem(
       "Tomado";
   }
 
-
   else if (
-    record.type ===
-    "consultation"
+    record.type === "consultation"
   ) {
-
     title =
       record.specialty ||
       "Consulta";
@@ -5369,94 +4228,39 @@ function createTrashItem(
       "Consulta médica";
   }
 
-
-  else if (
-    record.type ===
-    "water"
-  ) {
-
-    title =
-      `+${formatWaterAmount(
-        record.amount
-      )}`;
-
-    detail =
-      "Água";
-  }
-
-
   return `
-
     <div
       class="timeline-item"
-      style="
-        margin-bottom:12px;
-      "
+      style="margin-bottom:12px;"
     >
-
       <div class="timeline-icon">
-
-        ${
-          icons[
-            record.type
-          ] || "📝"
-        }
-
+        ${icons[record.type] || "📝"}
       </div>
 
-
-      <div
-        class="timeline-content"
-      >
-
-        <div
-          class="timeline-title"
-        >
-
+      <div class="timeline-content">
+        <div class="timeline-title">
           ${escapeHTML(
             record.time || ""
           )}
-
           ·
-
-          ${escapeHTML(
-            title
-          )}
-
+          ${escapeHTML(title)}
         </div>
 
+        <div class="timeline-detail">
+          ${escapeHTML(detail)}
+        </div>
 
         <div
           class="timeline-detail"
+          style="margin-top:4px;"
         >
-
-          ${escapeHTML(
-            detail
-          )}
-
-        </div>
-
-
-        <div
-          class="timeline-detail"
-          style="
-            margin-top:4px;
-          "
-        >
-
           ${escapeHTML(
             record.date || ""
           )}
-
         </div>
-
       </div>
 
-
-      <div
-        class="timeline-actions"
-      >
-
+      <div class="timeline-actions">
         <button
           type="button"
           onclick="restoreRecord('${escapeHTML(record.id)}')"
@@ -5465,7 +4269,6 @@ function createTrashItem(
           ↩️
         </button>
 
-
         <button
           type="button"
           onclick="permanentlyDeleteRecord('${escapeHTML(record.id)}')"
@@ -5473,11 +4276,8 @@ function createTrashItem(
         >
           ❌
         </button>
-
       </div>
-
     </div>
-
   `;
 }
 
@@ -5486,54 +4286,37 @@ function createTrashItem(
    RESTAURAR DA LIXEIRA
 ========================================================= */
 
-function restoreRecord(
-  id
-) {
-
+function restoreRecord(id) {
   const index =
     database.trash.findIndex(
-      item =>
-        item.id === id
+      item => item.id === id
     );
 
-
   if (index === -1) return;
-
 
   const record =
     database.trash[index];
 
-
   const restoredRecord =
-    {
-      ...record
-    };
-
+    { ...record };
 
   delete restoredRecord.deletedAt;
-
 
   database.records.push(
     restoredRecord
   );
-
 
   database.trash.splice(
     index,
     1
   );
 
-
   saveDatabase();
 
   renderTrash();
-
   renderDashboard();
-
   renderDiary();
-
   renderConsultations();
-
 
   alert(
     "Registro restaurado."
@@ -5542,28 +4325,23 @@ function restoreRecord(
 
 
 /* =========================================================
-   EXCLUIR DEFINITIVAMENTE DA LIXEIRA
+   EXCLUIR DEFINITIVAMENTE
 ========================================================= */
 
 function permanentlyDeleteRecord(
   id
 ) {
-
   const confirmed =
     confirm(
       "Excluir este registro definitivamente? Esta ação não poderá ser desfeita."
     );
 
-
   if (!confirmed) return;
-
 
   database.trash =
     database.trash.filter(
-      item =>
-        item.id !== id
+      item => item.id !== id
     );
-
 
   saveDatabase();
 
@@ -5576,28 +4354,22 @@ function permanentlyDeleteRecord(
 ========================================================= */
 
 function emptyTrash() {
-
   if (
     !database.trash ||
     database.trash.length ===
       0
   ) {
-
     return;
   }
-
 
   const confirmed =
     confirm(
       "Esvaziar toda a lixeira? Todos esses registros serão excluídos definitivamente."
     );
 
-
   if (!confirmed) return;
 
-
   database.trash = [];
-
 
   saveDatabase();
 
@@ -5610,160 +4382,40 @@ function emptyTrash() {
 ========================================================= */
 
 function renderGlucoseSettings() {
-
   const container =
     document.getElementById(
       "settingsPanel"
     );
 
-
   if (!container) return;
 
-
   const items = [
-
-    [
-      "fasting",
-      "Jejum"
-    ],
-
-    [
-      "breakfast1",
-      "1h após o café da manhã"
-    ],
-
-    [
-      "breakfast2",
-      "2h após o café da manhã"
-    ],
-
-    [
-      "morningSnack1",
-      "1h após o lanche da manhã"
-    ],
-
-    [
-      "morningSnack2",
-      "2h após o lanche da manhã"
-    ],
-
-    [
-      "lunch1",
-      "1h após o almoço"
-    ],
-
-    [
-      "lunch2",
-      "2h após o almoço"
-    ],
-
-    [
-      "afternoonSnack1",
-      "1h após o lanche da tarde"
-    ],
-
-    [
-      "afternoonSnack2",
-      "2h após o lanche da tarde"
-    ],
-
-    [
-      "dinner1",
-      "1h após o jantar"
-    ],
-
-    [
-      "dinner2",
-      "2h após o jantar"
-    ],
-
-    [
-      "supper1",
-      "1h após a ceia"
-    ],
-
-    [
-      "supper2",
-      "2h após a ceia"
-    ]
+    ["fasting", "Jejum"],
+    ["breakfast1", "1h após o café da manhã"],
+    ["breakfast2", "2h após o café da manhã"],
+    ["morningSnack1", "1h após o lanche da manhã"],
+    ["morningSnack2", "2h após o lanche da manhã"],
+    ["lunch1", "1h após o almoço"],
+    ["lunch2", "2h após o almoço"],
+    ["afternoonSnack1", "1h após o lanche da tarde"],
+    ["afternoonSnack2", "2h após o lanche da tarde"],
+    ["dinner1", "1h após o jantar"],
+    ["dinner2", "2h após o jantar"],
+    ["supper1", "1h após a ceia"],
+    ["supper2", "2h após a ceia"]
   ];
 
-
   let html = `
-
-    <h2>
-      Configurações
-    </h2>
-
+    <h2>Configurações</h2>
 
     <div class="card">
-
       <h3>
-        💧 Meta diária de água
+        Medições de glicemia
       </h3>
 
       <p>
-        Defina a quantidade de água
-        que deseja atingir diariamente.
-        O consumo é reiniciado a cada dia.
+        Ative somente os momentos em que você deseja que apareçam no registro de glicemia.
       </p>
-
-
-      <div
-        style="
-          display:flex;
-          align-items:center;
-          gap:10px;
-          margin-top:16px;
-        "
-      >
-
-        <strong>
-          Meta atual:
-        </strong>
-
-        <span>
-          ${escapeHTML(
-            formatWaterAmount(
-              waterSettings.dailyGoal
-            )
-          )}
-        </span>
-
-      </div>
-
-
-      <button
-        type="button"
-        id="changeWaterGoalSettingsButton"
-        class="primary-button"
-        style="
-          margin-top:14px;
-        "
-      >
-        Alterar meta de água
-      </button>
-
-    </div>
-
-
-    <div
-      class="card"
-      style="
-        margin-top:16px;
-      "
-    >
-
-      <h3>
-        🩸 Medições de glicemia
-      </h3>
-
-      <p>
-        Ative somente os momentos
-        em que você deseja que apareçam
-        no registro de glicemia.
-      </p>
-
 
       <div
         style="
@@ -5773,15 +4425,11 @@ function renderGlucoseSettings() {
           margin-top:16px;
         "
       >
-
   `;
-
 
   items.forEach(
     item => {
-
       html += `
-
         <label
           style="
             display:flex;
@@ -5790,7 +4438,6 @@ function renderGlucoseSettings() {
             cursor:pointer;
           "
         >
-
           <input
             type="checkbox"
             class="glucose-setting-checkbox"
@@ -5809,49 +4456,18 @@ function renderGlucoseSettings() {
               item[1]
             )}
           </span>
-
         </label>
-
       `;
     }
   );
 
-
   html += `
-
       </div>
-
     </div>
-
   `;
-
 
   container.innerHTML =
     html;
-
-
-  const changeWaterButton =
-    document.getElementById(
-      "changeWaterGoalSettingsButton"
-    );
-
-
-  if (changeWaterButton) {
-
-    changeWaterButton.addEventListener(
-      "click",
-      () => {
-
-        openWaterGoalForm();
-
-        setTimeout(
-          renderGlucoseSettings,
-          50
-        );
-      }
-    );
-  }
-
 
   container
     .querySelectorAll(
@@ -5859,21 +4475,17 @@ function renderGlucoseSettings() {
     )
     .forEach(
       checkbox => {
-
         checkbox.addEventListener(
           "change",
           () => {
-
             const key =
               checkbox.dataset
                 .glucoseKey;
-
 
             glucoseSettings[
               key
             ] =
               checkbox.checked;
-
 
             saveGlucoseSettings();
           }
@@ -5884,34 +4496,26 @@ function renderGlucoseSettings() {
 
 
 /* =========================================================
-   TELA "MAIS" E PAINÉIS
+   TELA "MAIS"
 ========================================================= */
 
 function renderMoreScreen() {
-
   const trashPanel =
     document.getElementById(
       "trashPanel"
     );
-
 
   const settingsPanel =
     document.getElementById(
       "settingsPanel"
     );
 
-
   if (trashPanel) {
-
-    trashPanel.hidden =
-      true;
+    trashPanel.hidden = true;
   }
 
-
   if (settingsPanel) {
-
-    settingsPanel.hidden =
-      true;
+    settingsPanel.hidden = true;
   }
 }
 
@@ -5921,38 +4525,27 @@ const openTrashButton =
     "openTrashButton"
   );
 
-
 if (openTrashButton) {
-
   openTrashButton.addEventListener(
     "click",
     () => {
-
       const trashPanel =
         document.getElementById(
           "trashPanel"
         );
-
 
       const settingsPanel =
         document.getElementById(
           "settingsPanel"
         );
 
-
       if (trashPanel) {
-
-        trashPanel.hidden =
-          false;
+        trashPanel.hidden = false;
       }
-
 
       if (settingsPanel) {
-
-        settingsPanel.hidden =
-          true;
+        settingsPanel.hidden = true;
       }
-
 
       renderTrash();
     }
@@ -5965,38 +4558,27 @@ const settingsButton =
     "settingsButton"
   );
 
-
 if (settingsButton) {
-
   settingsButton.addEventListener(
     "click",
     () => {
-
       const trashPanel =
         document.getElementById(
           "trashPanel"
         );
-
 
       const settingsPanel =
         document.getElementById(
           "settingsPanel"
         );
 
-
       if (trashPanel) {
-
-        trashPanel.hidden =
-          true;
+        trashPanel.hidden = true;
       }
-
 
       if (settingsPanel) {
-
-        settingsPanel.hidden =
-          false;
+        settingsPanel.hidden = false;
       }
-
 
       renderGlucoseSettings();
     }
@@ -6013,25 +4595,17 @@ const navigationItems =
     ".navigation-item"
   );
 
-
 navigationItems.forEach(
   button => {
-
     button.addEventListener(
       "click",
       () => {
-
         const targetScreen =
           button.dataset.screen;
 
-
-        if (
-          !targetScreen
-        ) {
-
+        if (!targetScreen) {
           return;
         }
-
 
         showScreen(
           targetScreen
@@ -6044,31 +4618,24 @@ navigationItems.forEach(
 
 /* =========================================================
    DELEGAÇÃO DE CLIQUE
-   BOTÃO DE MEDICAMENTOS
+   MEDICAMENTOS
 ========================================================= */
 
 document.addEventListener(
   "click",
   event => {
-
     const button =
       event.target.closest(
         "button"
       );
 
-
     if (!button) return;
-
 
     const text =
       button.textContent
-        .replace(
-          /\s+/g,
-          " "
-        )
+        .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
-
 
     if (
       text.includes(
@@ -6078,7 +4645,6 @@ document.addEventListener(
         "medicamentos/suplementos e vitaminas"
       )
     ) {
-
       event.preventDefault();
 
       openMedicationManager();
@@ -6096,9 +4662,7 @@ const backupButton =
     "backupButton"
   );
 
-
 if (backupButton) {
-
   backupButton.addEventListener(
     "click",
     createBackup
@@ -6107,9 +4671,7 @@ if (backupButton) {
 
 
 function createBackup() {
-
   const backup = {
-
     application:
       "Recordatório + Registros",
 
@@ -6117,11 +4679,9 @@ function createBackup() {
       "0.1",
 
     createdAt:
-      new Date()
-        .toISOString(),
+      new Date().toISOString(),
 
     data: {
-
       records:
         database.records,
 
@@ -6139,7 +4699,6 @@ function createBackup() {
       waterSettings
   };
 
-
   const blob =
     new Blob(
       [
@@ -6155,39 +4714,29 @@ function createBackup() {
       }
     );
 
-
   const url =
     URL.createObjectURL(
       blob
     );
-
 
   const link =
     document.createElement(
       "a"
     );
 
-
   link.href =
     url;
 
-
   link.download =
-    `Recordatorio_Backup_${formatDateKey(
-      new Date()
-    )}.json`;
-
+    `Recordatorio_Backup_${formatDateKey(new Date())}.json`;
 
   document.body.appendChild(
     link
   );
 
-
   link.click();
 
-
   link.remove();
-
 
   URL.revokeObjectURL(
     url
@@ -6202,31 +4751,24 @@ function createBackup() {
 function restoreBackupFile(
   file
 ) {
-
   if (!file) return;
-
 
   const reader =
     new FileReader();
 
-
   reader.onload =
     function(event) {
-
       try {
-
         const backup =
           JSON.parse(
             event.target.result
           );
-
 
         if (
           !validateBackup(
             backup
           )
         ) {
-
           alert(
             "Este arquivo não é um backup válido do Recordatório + Registros."
           );
@@ -6234,19 +4776,16 @@ function restoreBackupFile(
           return;
         }
 
-
         const confirmed =
           confirm(
             "Restaurar este backup substituirá os registros atuais do aplicativo. Deseja continuar?"
           );
 
-
-        if (!confirmed)
+        if (!confirmed) {
           return;
-
+        }
 
         database = {
-
           records:
             backup.data.records,
 
@@ -6254,69 +4793,44 @@ function restoreBackupFile(
             backup.data.trash
         };
 
-
         glucoseSettings = {
-
           ...defaultGlucoseOptions,
-
           ...backup.glucoseSettings
         };
-
 
         medications =
           Array.isArray(
             backup.medications
           )
-
             ? backup.medications
-
             : [];
 
-
         waterSettings = {
-
           ...defaultWaterSettings,
-
-          ...(backup.waterSettings &&
-          typeof backup.waterSettings ===
-            "object"
-
-            ? backup.waterSettings
-
-            : {})
+          ...(backup.waterSettings || {})
         };
 
-
         saveDatabase();
-
         saveGlucoseSettings();
-
         saveMedications();
-
         saveWaterSettings();
 
-
         renderDashboard();
-
         renderDiary();
-
         renderTrash();
-
         renderConsultations();
-
+        renderWaterHome();
 
         alert(
           "Backup restaurado com sucesso."
         );
+      }
 
-
-      } catch (error) {
-
+      catch (error) {
         console.error(
           "Erro ao restaurar backup:",
           error
         );
-
 
         alert(
           "Não foi possível ler este arquivo de backup."
@@ -6324,80 +4838,54 @@ function restoreBackupFile(
       }
     };
 
-
   reader.readAsText(
     file
   );
 }
 
 
-/* =========================================================
-   VALIDAR BACKUP
-========================================================= */
-
 function validateBackup(
   backup
 ) {
-
   return Boolean(
-
     backup &&
-
     typeof backup ===
       "object" &&
-
     backup.application ===
       "Recordatório + Registros" &&
-
     backup.data &&
-
     typeof backup.data ===
       "object" &&
-
     Array.isArray(
       backup.data.records
     ) &&
-
     Array.isArray(
       backup.data.trash
     ) &&
-
     backup.glucoseSettings &&
-
     typeof backup.glucoseSettings ===
       "object"
   );
 }
 
 
-/* =========================================================
-   BOTÃO RESTAURAR BACKUP
-========================================================= */
-
 const restoreBackupButton =
   document.getElementById(
     "restoreBackupButton"
   );
-
 
 const restoreBackupInput =
   document.getElementById(
     "restoreBackupInput"
   );
 
-
-if (
-  restoreBackupButton
-) {
-
+if (restoreBackupButton) {
   restoreBackupButton.addEventListener(
     "click",
     () => {
-
       if (
         restoreBackupInput
       ) {
-
         restoreBackupInput.click();
       }
     }
@@ -6405,23 +4893,17 @@ if (
 }
 
 
-if (
-  restoreBackupInput
-) {
-
+if (restoreBackupInput) {
   restoreBackupInput.addEventListener(
     "change",
     event => {
-
       const file =
         event.target.files &&
         event.target.files[0];
 
-
       restoreBackupFile(
         file
       );
-
 
       event.target.value =
         "";
@@ -6431,13 +4913,13 @@ if (
 
 
 /* =========================================================
-   INICIALIZAÇÃO DO APLICATIVO
+   INICIALIZAÇÃO
 ========================================================= */
 
+removeDuplicateWaterPanels();
+ensureWaterQuickButton();
+
 renderDashboard();
-
 renderDiary();
-
 renderTrash();
-
 renderConsultations();

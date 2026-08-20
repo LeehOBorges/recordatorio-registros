@@ -59,6 +59,10 @@
 
   <style>
 
+    /* =====================================================
+       LOGIN
+    ====================================================== */
+
     #loginScreen {
 
       min-height: 100vh;
@@ -82,8 +86,10 @@
     }
 
     .login-container {
+
       width: 100%;
       max-width: 420px;
+
     }
 
     .login-card {
@@ -103,13 +109,19 @@
     }
 
     .login-brand {
+
       text-align: center;
+
       margin-bottom: 28px;
+
     }
 
     .login-brand-icon {
+
       font-size: 42px;
+
       margin-bottom: 10px;
+
     }
 
     .login-brand-title {
@@ -137,7 +149,9 @@
     }
 
     .login-form-group {
+
       margin-bottom: 16px;
+
     }
 
     .login-form-group label {
@@ -253,12 +267,20 @@
     }
 
     .login-message.error {
+
       color: #a33f3f;
+
     }
 
     .login-message.success {
+
       color: #42724b;
+
     }
+
+    /* =====================================================
+       RECUPERAÇÃO DE SENHA
+    ====================================================== */
 
     #resetPasswordPanel {
 
@@ -273,7 +295,9 @@
     }
 
     #resetPasswordPanel.visible {
+
       display: block;
+
     }
 
     .reset-title {
@@ -340,6 +364,10 @@
 
     }
 
+    /* =====================================================
+       ALTERAÇÃO DE SENHA
+    ====================================================== */
+
     #changePasswordScreen {
 
       min-height: 100vh;
@@ -366,7 +394,9 @@
     }
 
     #changePasswordScreen.visible {
+
       display: flex;
+
     }
 
     .change-password-container {
@@ -464,12 +494,14 @@
 
     }
 
-    /* ================================
+    /* =====================================================
        RELATÓRIOS
-    ================================= */
+    ====================================================== */
 
     #reportsScreen {
+
       padding-bottom: 100px;
+
     }
 
     .reports-intro {
@@ -559,6 +591,14 @@
 
     }
 
+    .report-button:disabled {
+
+      opacity: 0.65;
+
+      cursor: wait;
+
+    }
+
     .report-preview {
 
       margin-top: 20px;
@@ -593,7 +633,9 @@
 
 <body>
 
-  <!-- LOGIN -->
+  <!-- =====================================================
+       TELA DE LOGIN
+  ====================================================== -->
 
   <section id="loginScreen">
 
@@ -731,7 +773,9 @@
 
   </section>
 
-  <!-- ALTERAÇÃO DE SENHA -->
+  <!-- =====================================================
+       TELA DE ALTERAÇÃO DE SENHA
+  ====================================================== -->
 
   <section id="changePasswordScreen">
 
@@ -794,11 +838,15 @@
 
   </section>
 
-  <!-- APLICATIVO -->
+  <!-- =====================================================
+       APLICATIVO
+  ====================================================== -->
 
   <div id="appContent" hidden>
 
-    <!-- HOJE -->
+    <!-- ===================================================
+         TELA HOJE
+    ==================================================== -->
 
     <section
       id="todayScreen"
@@ -923,7 +971,9 @@
             data-record-type="meal"
           >
 
-            <span>🍽️</span>
+            <span>
+              🍽️
+            </span>
 
             Refeição
 
@@ -935,7 +985,9 @@
             data-record-type="glucose"
           >
 
-            <span>🩸</span>
+            <span>
+              🩸
+            </span>
 
             Glicemia
 
@@ -947,7 +999,9 @@
             data-record-type="insulin"
           >
 
-            <span>💉</span>
+            <span>
+              💉
+            </span>
 
             Insulina
 
@@ -959,7 +1013,9 @@
             data-record-type="activity"
           >
 
-            <span>🏋️</span>
+            <span>
+              🏋️
+            </span>
 
             Atividade
 
@@ -971,7 +1027,9 @@
             id="medicationsButton"
           >
 
-            <span>💊</span>
+            <span>
+              💊
+            </span>
 
             Medicamentos / Suplementos e Vitaminas
 
@@ -983,7 +1041,9 @@
             id="consultationQuickButton"
           >
 
-            <span>🩺</span>
+            <span>
+              🩺
+            </span>
 
             Consultas
 
@@ -1034,9 +1094,7 @@
           >
 
             <div class="empty-state">
-
               Nenhum medicamento ou vitamina cadastrado.
-
             </div>
 
           </div>
@@ -1058,7 +1116,9 @@
 
     </section>
 
-    <!-- DIÁRIO -->
+    <!-- ===================================================
+         DIÁRIO
+    ==================================================== -->
 
     <section
       id="diaryScreen"
@@ -1104,7 +1164,9 @@
 
     </section>
 
-    <!-- ANÁLISES -->
+    <!-- ===================================================
+         ANÁLISES
+    ==================================================== -->
 
     <section
       id="analysisScreen"
@@ -1137,9 +1199,7 @@
           </h2>
 
           <div class="empty-state">
-
             Esta área será desenvolvida nas próximas etapas.
-
           </div>
 
         </section>
@@ -1148,7 +1208,9 @@
 
     </section>
 
-    <!-- CONSULTAS -->
+    <!-- ===================================================
+         CONSULTAS
+    ==================================================== -->
 
     <section
       id="consultationScreen"
@@ -1188,7 +1250,9 @@
 
     </section>
 
-    <!-- MAIS -->
+    <!-- ===================================================
+         MAIS
+    ==================================================== -->
 
     <section
       id="moreScreen"
@@ -1225,7 +1289,9 @@
             id="openTrashButton"
             class="quick-button"
           >
+
             🗑️ Lixeira
+
           </button>
 
           <button
@@ -1233,7 +1299,9 @@
             id="settingsButton"
             class="quick-button"
           >
+
             ⚙️ Configurações
+
           </button>
 
           <button
@@ -1241,7 +1309,9 @@
             id="reportsButton"
             class="quick-button"
           >
+
             📊 Relatórios
+
           </button>
 
         </section>
@@ -1285,9 +1355,7 @@
           </div>
 
           <div class="empty-state">
-
             Esta área será desenvolvida nas próximas etapas.
-
           </div>
 
         </section>
@@ -1296,7 +1364,9 @@
 
     </section>
 
-    <!-- RELATÓRIOS -->
+    <!-- ===================================================
+         RELATÓRIOS
+    ==================================================== -->
 
     <section
       id="reportsScreen"
@@ -1329,8 +1399,7 @@
           </h2>
 
           <p class="reports-intro">
-            Escolha o período e o tipo de informação que deseja
-            consultar.
+            Escolha o período e o tipo de informação que deseja consultar.
           </p>
 
           <div class="report-field">
@@ -1430,10 +1499,7 @@
             id="reportPreviewContent"
             class="empty-state"
           >
-
-            Escolha o período e clique em
-            "Visualizar relatório".
-
+            Escolha o período e clique em "Visualizar relatório".
           </div>
 
         </section>
@@ -1442,7 +1508,9 @@
 
     </section>
 
-    <!-- NAVEGAÇÃO -->
+    <!-- ===================================================
+         NAVEGAÇÃO
+    ==================================================== -->
 
     <nav class="bottom-navigation">
 
@@ -1452,9 +1520,13 @@
         data-screen="todayScreen"
       >
 
-        <span>🏠</span>
+        <span>
+          🏠
+        </span>
 
-        <small>Hoje</small>
+        <small>
+          Hoje
+        </small>
 
       </button>
 
@@ -1464,9 +1536,13 @@
         data-screen="diaryScreen"
       >
 
-        <span>📖</span>
+        <span>
+          📖
+        </span>
 
-        <small>Diário</small>
+        <small>
+          Diário
+        </small>
 
       </button>
 
@@ -1476,9 +1552,13 @@
         data-screen="analysisScreen"
       >
 
-        <span>📊</span>
+        <span>
+          📊
+        </span>
 
-        <small>Análises</small>
+        <small>
+          Análises
+        </small>
 
       </button>
 
@@ -1488,9 +1568,13 @@
         data-screen="moreScreen"
       >
 
-        <span>☰</span>
+        <span>
+          ☰
+        </span>
 
-        <small>Mais</small>
+        <small>
+          Mais
+        </small>
 
       </button>
 
@@ -1498,7 +1582,9 @@
 
   </div>
 
-  <!-- MODAL DE REGISTRO -->
+  <!-- =====================================================
+       MODAL DE REGISTRO
+  ====================================================== -->
 
   <dialog id="recordModal">
 
@@ -1549,7 +1635,9 @@
 
   </dialog>
 
-  <!-- SUPABASE AUTH -->
+  <!-- =====================================================
+       SUPABASE AUTH
+  ====================================================== -->
 
   <script>
 
@@ -1566,86 +1654,133 @@
       );
 
     const loginScreen =
-      document.getElementById("loginScreen");
+      document.getElementById(
+        "loginScreen"
+      );
 
     const changePasswordScreen =
-      document.getElementById("changePasswordScreen");
+      document.getElementById(
+        "changePasswordScreen"
+      );
 
     const appContent =
-      document.getElementById("appContent");
+      document.getElementById(
+        "appContent"
+      );
 
     const loginForm =
-      document.getElementById("loginForm");
+      document.getElementById(
+        "loginForm"
+      );
 
     const loginEmail =
-      document.getElementById("loginEmail");
+      document.getElementById(
+        "loginEmail"
+      );
 
     const loginPassword =
-      document.getElementById("loginPassword");
+      document.getElementById(
+        "loginPassword"
+      );
 
     const loginButton =
-      document.getElementById("loginButton");
+      document.getElementById(
+        "loginButton"
+      );
 
     const loginMessage =
-      document.getElementById("loginMessage");
+      document.getElementById(
+        "loginMessage"
+      );
 
     const forgotPasswordButton =
-      document.getElementById("forgotPasswordButton");
+      document.getElementById(
+        "forgotPasswordButton"
+      );
 
     const resetPasswordPanel =
-      document.getElementById("resetPasswordPanel");
+      document.getElementById(
+        "resetPasswordPanel"
+      );
 
     const resetEmail =
-      document.getElementById("resetEmail");
+      document.getElementById(
+        "resetEmail"
+      );
 
     const sendResetButton =
-      document.getElementById("sendResetButton");
+      document.getElementById(
+        "sendResetButton"
+      );
 
     const backToLoginButton =
-      document.getElementById("backToLoginButton");
+      document.getElementById(
+        "backToLoginButton"
+      );
 
     const resetMessage =
-      document.getElementById("resetMessage");
+      document.getElementById(
+        "resetMessage"
+      );
 
     const changePasswordForm =
-      document.getElementById("changePasswordForm");
+      document.getElementById(
+        "changePasswordForm"
+      );
 
     const newPassword =
-      document.getElementById("newPassword");
+      document.getElementById(
+        "newPassword"
+      );
 
     const confirmNewPassword =
-      document.getElementById("confirmNewPassword");
+      document.getElementById(
+        "confirmNewPassword"
+      );
 
     const changePasswordMessage =
       document.getElementById(
         "changePasswordMessage"
       );
 
+
     function setLoginMessage(
       message,
       type = ""
     ) {
 
-      loginMessage.textContent = message;
+      loginMessage.textContent =
+        message;
 
       loginMessage.className =
         "login-message" +
-        (type ? " " + type : "");
+        (
+          type
+            ? " " + type
+            : ""
+        );
 
     }
+
 
     function setResetMessage(
       message,
       type = ""
     ) {
 
-      resetMessage.textContent = message;
+      resetMessage.textContent =
+        message;
 
       resetMessage.className =
         "login-message" +
-        (type ? " " + type : "");
+        (
+          type
+            ? " " + type
+            : ""
+        );
 
     }
+
 
     function setChangePasswordMessage(
       message,
@@ -1657,53 +1792,70 @@
 
       changePasswordMessage.className =
         "login-message" +
-        (type ? " " + type : "");
+        (
+          type
+            ? " " + type
+            : ""
+        );
 
     }
+
 
     function showLogin() {
 
-      loginScreen.style.display = "flex";
+      loginScreen.style.display =
+        "flex";
 
       changePasswordScreen.classList.remove(
         "visible"
       );
 
-      appContent.hidden = true;
+      appContent.hidden =
+        true;
 
     }
 
+
     function showApp() {
 
-      loginScreen.style.display = "none";
+      loginScreen.style.display =
+        "none";
 
       changePasswordScreen.classList.remove(
         "visible"
       );
 
-      appContent.hidden = false;
+      appContent.hidden =
+        false;
 
       if (
-        typeof showScreen === "function"
+        typeof showScreen ===
+        "function"
       ) {
 
-        showScreen("todayScreen");
+        showScreen(
+          "todayScreen"
+        );
 
       }
 
     }
 
+
     function showChangePassword() {
 
-      loginScreen.style.display = "none";
+      loginScreen.style.display =
+        "none";
 
-      appContent.hidden = true;
+      appContent.hidden =
+        true;
 
       changePasswordScreen.classList.add(
         "visible"
       );
 
     }
+
 
     async function checkAuthSession() {
 
@@ -1712,6 +1864,7 @@
         error
       } =
         await supabaseClient.auth.getSession();
+
 
       if (error) {
 
@@ -1726,6 +1879,7 @@
 
       }
 
+
       if (data.session) {
 
         showApp();
@@ -1738,11 +1892,13 @@
 
     }
 
+
     loginForm.addEventListener(
       "submit",
       async function(event) {
 
         event.preventDefault();
+
 
         const email =
           loginEmail.value.trim();
@@ -1750,7 +1906,11 @@
         const password =
           loginPassword.value;
 
-        if (!email || !password) {
+
+        if (
+          !email ||
+          !password
+        ) {
 
           setLoginMessage(
             "Digite seu e-mail e sua senha.",
@@ -1761,12 +1921,15 @@
 
         }
 
-        loginButton.disabled = true;
+
+        loginButton.disabled =
+          true;
 
         loginButton.textContent =
           "Entrando...";
 
         setLoginMessage("");
+
 
         const {
           data,
@@ -1778,10 +1941,13 @@
               password
             });
 
-        loginButton.disabled = false;
+
+        loginButton.disabled =
+          false;
 
         loginButton.textContent =
           "Entrar";
+
 
         if (error) {
 
@@ -1799,6 +1965,7 @@
 
         }
 
+
         if (data.session) {
 
           setLoginMessage(
@@ -1813,6 +1980,7 @@
       }
     );
 
+
     forgotPasswordButton.addEventListener(
       "click",
       function() {
@@ -1821,8 +1989,10 @@
           "visible"
         );
 
+
         const currentEmail =
           loginEmail.value.trim();
+
 
         if (currentEmail) {
 
@@ -1831,10 +2001,12 @@
 
         }
 
+
         setLoginMessage("");
 
       }
     );
+
 
     backToLoginButton.addEventListener(
       "click",
@@ -1849,12 +2021,14 @@
       }
     );
 
+
     sendResetButton.addEventListener(
       "click",
       async function() {
 
         const email =
           resetEmail.value.trim();
+
 
         if (!email) {
 
@@ -1867,16 +2041,21 @@
 
         }
 
-        sendResetButton.disabled = true;
+
+        sendResetButton.disabled =
+          true;
 
         sendResetButton.textContent =
           "Enviando...";
 
+
         setResetMessage("");
+
 
         const redirectTo =
           window.location.origin +
           window.location.pathname;
+
 
         const {
           error
@@ -1889,10 +2068,13 @@
               }
             );
 
-        sendResetButton.disabled = false;
+
+        sendResetButton.disabled =
+          false;
 
         sendResetButton.textContent =
           "Enviar link para redefinir senha";
+
 
         if (error) {
 
@@ -1900,6 +2082,7 @@
             "Erro ao solicitar recuperação:",
             error
           );
+
 
           setResetMessage(
             "Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.",
@@ -1910,6 +2093,7 @@
 
         }
 
+
         setResetMessage(
           "E-mail enviado. Verifique sua caixa de entrada e clique no link para criar uma nova senha.",
           "success"
@@ -1918,11 +2102,13 @@
       }
     );
 
+
     changePasswordForm.addEventListener(
       "submit",
       async function(event) {
 
         event.preventDefault();
+
 
         const password =
           newPassword.value;
@@ -1930,7 +2116,10 @@
         const confirmation =
           confirmNewPassword.value;
 
-        if (password.length < 6) {
+
+        if (
+          password.length < 6
+        ) {
 
           setChangePasswordMessage(
             "A senha deve ter pelo menos 6 caracteres.",
@@ -1941,7 +2130,11 @@
 
         }
 
-        if (password !== confirmation) {
+
+        if (
+          password !==
+          confirmation
+        ) {
 
           setChangePasswordMessage(
             "As senhas não são iguais.",
@@ -1952,9 +2145,11 @@
 
         }
 
+
         setChangePasswordMessage(
           "Salvando..."
         );
+
 
         const {
           error
@@ -1964,12 +2159,14 @@
               password
             });
 
+
         if (error) {
 
           console.error(
             "Erro ao alterar senha:",
             error
           );
+
 
           setChangePasswordMessage(
             "Não foi possível alterar a senha. Solicite um novo link de recuperação.",
@@ -1980,10 +2177,12 @@
 
         }
 
+
         setChangePasswordMessage(
           "Senha alterada com sucesso.",
           "success"
         );
+
 
         setTimeout(
           function() {
@@ -1997,16 +2196,22 @@
       }
     );
 
+
     supabaseClient.auth.onAuthStateChange(
-      function(event, session) {
+      function(
+        event,
+        session
+      ) {
 
         console.log(
           "Supabase Auth:",
           event
         );
 
+
         if (
-          event === "PASSWORD_RECOVERY"
+          event ===
+          "PASSWORD_RECOVERY"
         ) {
 
           showChangePassword();
@@ -2015,8 +2220,10 @@
 
         }
 
+
         if (
-          event === "SIGNED_IN" &&
+          event ===
+            "SIGNED_IN" &&
           session
         ) {
 
@@ -2026,8 +2233,10 @@
 
         }
 
+
         if (
-          event === "SIGNED_OUT"
+          event ===
+          "SIGNED_OUT"
         ) {
 
           showLogin();
@@ -2037,81 +2246,32 @@
       }
     );
 
+
     checkAuthSession();
 
   </script>
 
-  <!-- JAVASCRIPT PRINCIPAL -->
+  <!-- =====================================================
+       JAVASCRIPT PRINCIPAL DO APLICATIVO
+  ====================================================== -->
 
   <script src="app.js"></script>
 
-  <!-- CONTROLE DA TELA DE RELATÓRIOS -->
+  <!-- =====================================================
+       MÓDULO SEPARADO DE RELATÓRIOS E PDF
+  ====================================================== -->
 
-  <script>
+  <script src="relatorios.js"></script>
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      function() {
-
-        const reportsButton =
-          document.getElementById(
-            "reportsButton"
-          );
-
-        const reportsScreen =
-          document.getElementById(
-            "reportsScreen"
-          );
-
-        if (
-          reportsButton &&
-          reportsScreen
-        ) {
-
-          reportsButton.addEventListener(
-            "click",
-            function() {
-
-              if (
-                typeof showScreen === "function"
-              ) {
-
-                showScreen(
-                  "reportsScreen"
-                );
-
-              } else {
-
-                document
-                  .querySelectorAll(
-                    ".app-screen"
-                  )
-                  .forEach(
-                    screen => {
-                      screen.hidden = true;
-                    }
-                  );
-
-                reportsScreen.hidden = false;
-
-              }
-
-            }
-          );
-
-        }
-
-      }
-    );
-
-  </script>
-
-  <!-- SERVICE WORKER -->
+  <!-- =====================================================
+       SERVICE WORKER / PWA
+  ====================================================== -->
 
   <script>
 
     if (
-      "serviceWorker" in navigator
+      "serviceWorker" in
+      navigator
     ) {
 
       window.addEventListener(

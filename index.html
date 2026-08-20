@@ -44,7 +44,7 @@
 
 
   <!-- =====================================================
-        MANIFESTO
+       MANIFESTO
   ====================================================== -->
 
   <link
@@ -54,7 +54,7 @@
 
 
   <!-- =====================================================
-        ESTILOS DO APLICATIVO
+       ESTILOS DO APLICATIVO
   ====================================================== -->
 
   <link
@@ -64,27 +64,22 @@
 
 
   <!-- =====================================================
-        SUPABASE SDK & VARIÁVEIS GLOBAIS
+       SUPABASE
   ====================================================== -->
 
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
   ></script>
 
-  <script>
-    window.SUPABASE_URL = "https://gutbveorftpahuyjonnv.supabase.co";
-    window.SUPABASE_ANON_KEY = "sb_publishable_L8XMa2cXo2aWaGHHMdP1Tw_JtjABUQi";
-  </script>
-
 
   <!-- =====================================================
-        ESTILO DA TELA DE LOGIN
+       ESTILO DA TELA DE LOGIN
   ====================================================== -->
 
   <style>
 
     /* =====================================================
-        LOGIN
+       LOGIN
     ====================================================== */
 
     #loginScreen {
@@ -320,7 +315,7 @@
 
 
     /* =====================================================
-        RECUPERAÇÃO DE SENHA
+       RECUPERAÇÃO DE SENHA
     ====================================================== */
 
     #resetPasswordPanel {
@@ -412,7 +407,7 @@
 
 
     /* =====================================================
-        ALTERAÇÃO DE SENHA
+       ALTERAÇÃO DE SENHA
     ====================================================== */
 
     #changePasswordScreen {
@@ -558,7 +553,7 @@
 
 
   <!-- =====================================================
-        TELA DE LOGIN
+       TELA DE LOGIN
   ====================================================== -->
 
   <section
@@ -725,7 +720,7 @@
 
 
   <!-- =====================================================
-        TELA DE ALTERAÇÃO DE SENHA
+       TELA DE ALTERAÇÃO DE SENHA
   ====================================================== -->
 
   <section
@@ -798,7 +793,7 @@
 
 
   <!-- =====================================================
-        APLICATIVO
+       APLICATIVO
   ====================================================== -->
 
   <div
@@ -808,7 +803,7 @@
 
 
     <!-- ===================================================
-          TELA HOJE
+         TELA HOJE
     ==================================================== -->
 
     <section
@@ -1111,7 +1106,7 @@
 
 
     <!-- ===================================================
-          DIÁRIO
+         DIÁRIO
     ==================================================== -->
 
     <section
@@ -1165,7 +1160,7 @@
 
 
     <!-- ===================================================
-          ANÁLISES
+         ANÁLISES
     ==================================================== -->
 
     <section
@@ -1215,7 +1210,7 @@
 
 
     <!-- ===================================================
-          CONSULTAS
+         CONSULTAS
     ==================================================== -->
 
     <section
@@ -1261,7 +1256,7 @@
 
 
     <!-- ===================================================
-          MAIS
+         MAIS
     ==================================================== -->
 
     <section
@@ -1380,7 +1375,7 @@
 
 
     <!-- ===================================================
-          NAVEGAÇÃO
+         NAVEGAÇÃO
     ==================================================== -->
 
     <nav class="bottom-navigation">
@@ -1462,7 +1457,7 @@
 
 
   <!-- =====================================================
-        MODAL DE REGISTRO
+       MODAL DE REGISTRO
   ====================================================== -->
 
   <dialog id="recordModal">
@@ -1521,213 +1516,654 @@
   </dialog>
 
 
+
   <!-- =====================================================
-        JAVASCRIPT PRINCIPAL DO APLICATIVO
-        (Deve vir antes da lógica da interface para que as
-        funções do app.js já existam na memória)
+       SUPABASE AUTH
+  ====================================================== -->
+
+  <script>
+
+    /* =====================================================
+       CONFIGURAÇÃO DO SUPABASE
+    ====================================================== */
+
+    const SUPABASE_URL =
+      "https://gutbveorftpahuyjonnv.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_L8XMa2cXo2aWaGHHMdP1Tw_JtjABUQi";
+
+
+    const supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    /* =====================================================
+       ELEMENTOS DE AUTENTICAÇÃO
+    ====================================================== */
+
+    const loginScreen =
+      document.getElementById("loginScreen");
+
+    const changePasswordScreen =
+      document.getElementById("changePasswordScreen");
+
+    const appContent =
+      document.getElementById("appContent");
+
+    const loginForm =
+      document.getElementById("loginForm");
+
+    const loginEmail =
+      document.getElementById("loginEmail");
+
+    const loginPassword =
+      document.getElementById("loginPassword");
+
+    const loginButton =
+      document.getElementById("loginButton");
+
+    const loginMessage =
+      document.getElementById("loginMessage");
+
+    const forgotPasswordButton =
+      document.getElementById("forgotPasswordButton");
+
+    const resetPasswordPanel =
+      document.getElementById("resetPasswordPanel");
+
+    const resetEmail =
+      document.getElementById("resetEmail");
+
+    const sendResetButton =
+      document.getElementById("sendResetButton");
+
+    const backToLoginButton =
+      document.getElementById("backToLoginButton");
+
+    const resetMessage =
+      document.getElementById("resetMessage");
+
+    const changePasswordForm =
+      document.getElementById("changePasswordForm");
+
+    const newPassword =
+      document.getElementById("newPassword");
+
+    const confirmNewPassword =
+      document.getElementById("confirmNewPassword");
+
+    const changePasswordMessage =
+      document.getElementById(
+        "changePasswordMessage"
+      );
+
+
+    /* =====================================================
+       MENSAGENS
+    ====================================================== */
+
+    function setLoginMessage(
+      message,
+      type = ""
+    ) {
+
+      loginMessage.textContent = message;
+
+      loginMessage.className =
+        "login-message" +
+        (type ? " " + type : "");
+
+    }
+
+
+    function setResetMessage(
+      message,
+      type = ""
+    ) {
+
+      resetMessage.textContent = message;
+
+      resetMessage.className =
+        "login-message" +
+        (type ? " " + type : "");
+
+    }
+
+
+    function setChangePasswordMessage(
+      message,
+      type = ""
+    ) {
+
+      changePasswordMessage.textContent =
+        message;
+
+      changePasswordMessage.className =
+        "login-message" +
+        (type ? " " + type : "");
+
+    }
+
+
+    /* =====================================================
+       MOSTRAR / ESCONDER TELAS
+    ====================================================== */
+
+    function showLogin() {
+
+      loginScreen.style.display = "flex";
+
+      changePasswordScreen.classList.remove(
+        "visible"
+      );
+
+      appContent.hidden = true;
+
+    }
+
+
+    function showApp() {
+
+      loginScreen.style.display = "none";
+
+      changePasswordScreen.classList.remove(
+        "visible"
+      );
+
+      appContent.hidden = false;
+
+      if (
+        typeof showScreen === "function"
+      ) {
+
+        showScreen("todayScreen");
+
+      }
+
+    }
+
+
+    function showChangePassword() {
+
+      loginScreen.style.display = "none";
+
+      appContent.hidden = true;
+
+      changePasswordScreen.classList.add(
+        "visible"
+      );
+
+    }
+
+
+    /* =====================================================
+       VERIFICAR SESSÃO
+    ====================================================== */
+
+    async function checkAuthSession() {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth.getSession();
+
+
+      if (error) {
+
+        console.error(
+          "Erro ao verificar sessão:",
+          error
+        );
+
+        showLogin();
+
+        return;
+
+      }
+
+
+      if (data.session) {
+
+        showApp();
+
+      } else {
+
+        showLogin();
+
+      }
+
+    }
+
+
+    /* =====================================================
+       LOGIN
+    ====================================================== */
+
+    loginForm.addEventListener(
+      "submit",
+      async function(event) {
+
+        event.preventDefault();
+
+        const email =
+          loginEmail.value.trim();
+
+        const password =
+          loginPassword.value;
+
+
+        if (!email || !password) {
+
+          setLoginMessage(
+            "Digite seu e-mail e sua senha.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        loginButton.disabled = true;
+
+        loginButton.textContent =
+          "Entrando...";
+
+        setLoginMessage("");
+
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient.auth
+            .signInWithPassword({
+              email,
+              password
+            });
+
+
+        loginButton.disabled = false;
+
+        loginButton.textContent =
+          "Entrar";
+
+
+        if (error) {
+
+          console.error(
+            "Erro de login:",
+            error
+          );
+
+
+          setLoginMessage(
+            "E-mail ou senha incorretos.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        if (data.session) {
+
+          setLoginMessage(
+            "Login realizado.",
+            "success"
+          );
+
+          showApp();
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       ESQUECI MINHA SENHA
+    ====================================================== */
+
+    forgotPasswordButton.addEventListener(
+      "click",
+      function() {
+
+        resetPasswordPanel.classList.add(
+          "visible"
+        );
+
+
+        const currentEmail =
+          loginEmail.value.trim();
+
+        if (currentEmail) {
+
+          resetEmail.value =
+            currentEmail;
+
+        }
+
+
+        setLoginMessage("");
+
+      }
+    );
+
+
+    /* =====================================================
+       VOLTAR PARA LOGIN
+    ====================================================== */
+
+    backToLoginButton.addEventListener(
+      "click",
+      function() {
+
+        resetPasswordPanel.classList.remove(
+          "visible"
+        );
+
+        setResetMessage("");
+
+      }
+    );
+
+
+    /* =====================================================
+       ENVIAR RECUPERAÇÃO
+    ====================================================== */
+
+    sendResetButton.addEventListener(
+      "click",
+      async function() {
+
+        const email =
+          resetEmail.value.trim();
+
+
+        if (!email) {
+
+          setResetMessage(
+            "Digite seu e-mail.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        sendResetButton.disabled = true;
+
+        sendResetButton.textContent =
+          "Enviando...";
+
+
+        setResetMessage("");
+
+
+        /*
+         * O link retornará para a própria página.
+         * Ao retornar, o Supabase dispara o evento
+         * PASSWORD_RECOVERY e mostramos a tela
+         * de criação da nova senha.
+         */
+
+        const redirectTo =
+          window.location.origin +
+          window.location.pathname;
+
+
+        const {
+          error
+        } =
+          await supabaseClient.auth
+            .resetPasswordForEmail(
+              email,
+              {
+                redirectTo
+              }
+            );
+
+
+        sendResetButton.disabled = false;
+
+        sendResetButton.textContent =
+          "Enviar link para redefinir senha";
+
+
+        if (error) {
+
+          console.error(
+            "Erro ao solicitar recuperação:",
+            error
+          );
+
+
+          setResetMessage(
+            "Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        setResetMessage(
+          "E-mail enviado. Verifique sua caixa de entrada e clique no link para criar uma nova senha.",
+          "success"
+        );
+
+      }
+    );
+
+
+    /* =====================================================
+       ALTERAÇÃO DE SENHA
+    ====================================================== */
+
+    changePasswordForm.addEventListener(
+      "submit",
+      async function(event) {
+
+        event.preventDefault();
+
+
+        const password =
+          newPassword.value;
+
+        const confirmation =
+          confirmNewPassword.value;
+
+
+        if (password.length < 6) {
+
+          setChangePasswordMessage(
+            "A senha deve ter pelo menos 6 caracteres.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        if (password !== confirmation) {
+
+          setChangePasswordMessage(
+            "As senhas não são iguais.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        setChangePasswordMessage(
+          "Salvando..."
+        );
+
+
+        const {
+          error
+        } =
+          await supabaseClient.auth
+            .updateUser({
+              password
+            });
+
+
+        if (error) {
+
+          console.error(
+            "Erro ao alterar senha:",
+            error
+          );
+
+
+          setChangePasswordMessage(
+            "Não foi possível alterar a senha. Solicite um novo link de recuperação.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        setChangePasswordMessage(
+          "Senha alterada com sucesso.",
+          "success"
+        );
+
+
+        setTimeout(
+          function() {
+
+            showApp();
+
+          },
+          1200
+        );
+
+      }
+    );
+
+
+    /* =====================================================
+       OBSERVAR ALTERAÇÕES DE AUTENTICAÇÃO
+    ====================================================== */
+
+    supabaseClient.auth.onAuthStateChange(
+      function(event, session) {
+
+        console.log(
+          "Supabase Auth:",
+          event
+        );
+
+
+        if (
+          event === "PASSWORD_RECOVERY"
+        ) {
+
+          showChangePassword();
+
+          return;
+
+        }
+
+
+        if (
+          event === "SIGNED_IN" &&
+          session
+        ) {
+
+          showApp();
+
+          return;
+
+        }
+
+
+        if (
+          event === "SIGNED_OUT"
+        ) {
+
+          showLogin();
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       INICIAR AUTENTICAÇÃO
+    ====================================================== */
+
+    checkAuthSession();
+
+  </script>
+
+
+
+  <!-- =====================================================
+       JAVASCRIPT PRINCIPAL DO APLICATIVO
   ====================================================== -->
 
   <script src="app.js"></script>
 
 
+
   <!-- =====================================================
-        LÓGICA DA INTERFACE DE LOGIN / AUTENTICAÇÃO
+       SERVICE WORKER / PWA
   ====================================================== -->
 
   <script>
 
-    const loginScreen = document.getElementById("loginScreen");
-    const changePasswordScreen = document.getElementById("changePasswordScreen");
-    const appContent = document.getElementById("appContent");
-    const loginForm = document.getElementById("loginForm");
-    const loginEmail = document.getElementById("loginEmail");
-    const loginPassword = document.getElementById("loginPassword");
-    const loginButton = document.getElementById("loginButton");
-    const loginMessage = document.getElementById("loginMessage");
-    const forgotPasswordButton = document.getElementById("forgotPasswordButton");
-    const resetPasswordPanel = document.getElementById("resetPasswordPanel");
-    const resetEmail = document.getElementById("resetEmail");
-    const sendResetButton = document.getElementById("sendResetButton");
-    const backToLoginButton = document.getElementById("backToLoginButton");
-    const resetMessage = document.getElementById("resetMessage");
-    const changePasswordForm = document.getElementById("changePasswordForm");
-    const newPassword = document.getElementById("newPassword");
-    const confirmNewPassword = document.getElementById("confirmNewPassword");
-    const changePasswordMessage = document.getElementById("changePasswordMessage");
+    if (
+      "serviceWorker" in navigator
+    ) {
 
-    function setLoginMessage(message, type = "") {
-      loginMessage.textContent = message;
-      loginMessage.className = "login-message" + (type ? " " + type : "");
-    }
+      window.addEventListener(
+        "load",
+        () => {
 
-    function setResetMessage(message, type = "") {
-      resetMessage.textContent = message;
-      resetMessage.className = "login-message" + (type ? " " + type : "");
-    }
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then(
+              registration => {
 
-    function setChangePasswordMessage(message, type = "") {
-      changePasswordMessage.textContent = message;
-      changePasswordMessage.className = "login-message" + (type ? " " + type : "");
-    }
+                console.log(
+                  "Service Worker registrado:",
+                  registration.scope
+                );
 
-    function showLogin() {
-      loginScreen.style.display = "flex";
-      changePasswordScreen.classList.remove("visible");
-      appContent.hidden = true;
-    }
+              }
+            )
+            .catch(
+              error => {
 
-    function showApp() {
-      loginScreen.style.display = "none";
-      changePasswordScreen.classList.remove("visible");
-      appContent.hidden = false;
-      if (typeof showScreen === "function") {
-        showScreen("todayScreen");
-      }
-    }
+                console.error(
+                  "Erro ao registrar Service Worker:",
+                  error
+                );
 
-    function showChangePassword() {
-      loginScreen.style.display = "none";
-      appContent.hidden = true;
-      changePasswordScreen.classList.add("visible");
-    }
+              }
+            );
 
-    loginForm.addEventListener("submit", async function(event) {
-      event.preventDefault();
-      const email = loginEmail.value.trim();
-      const password = loginPassword.value;
-
-      if (!email || !password) {
-        setLoginMessage("Digite seu e-mail e sua senha.", "error");
-        return;
-      }
-
-      loginButton.disabled = true;
-      loginButton.textContent = "Entrando...";
-      setLoginMessage("");
-
-      if (typeof loginWithSupabase === "function") {
-        const { data, error } = await loginWithSupabase(email, password);
-        loginButton.disabled = false;
-        loginButton.textContent = "Entrar";
-
-        if (error) {
-          console.error("Erro de login:", error);
-          setLoginMessage("E-mail ou senha incorretos.", "error");
-        } else if (data && data.user) {
-          setLoginMessage("Login realizado com sucesso.", "success");
-          showApp();
         }
-      } else {
-        loginButton.disabled = false;
-        loginButton.textContent = "Entrar";
-        setLoginMessage("Erro: Função de login não carregada do app.js.", "error");
-      }
-    });
+      );
 
-    forgotPasswordButton.addEventListener("click", function() {
-      resetPasswordPanel.classList.add("visible");
-      const currentEmail = loginEmail.value.trim();
-      if (currentEmail) resetEmail.value = currentEmail;
-      setLoginMessage("");
-    });
-
-    backToLoginButton.addEventListener("click", function() {
-      resetPasswordPanel.classList.remove("visible");
-      setResetMessage("");
-    });
-
-    sendResetButton.addEventListener("click", async function() {
-      const email = resetEmail.value.trim();
-      if (!email) {
-        setResetMessage("Digite seu e-mail.", "error");
-        return;
-      }
-
-      sendResetButton.disabled = true;
-      sendResetButton.textContent = "Enviando...";
-      setResetMessage("");
-
-      const redirectTo = window.location.origin + window.location.pathname;
-
-      if (window.supabase) {
-        const tempClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        const { error } = await tempClient.auth.resetPasswordForEmail(email, { redirectTo });
-        sendResetButton.disabled = false;
-        sendResetButton.textContent = "Enviar link para redefinir senha";
-
-        if (error) {
-          console.error("Erro ao solicitar recuperação:", error);
-          setResetMessage("Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.", "error");
-          return;
-        }
-
-        setResetMessage("E-mail enviado. Verifique sua caixa de entrada e clique no link para criar uma nova senha.", "success");
-      }
-    });
-
-    changePasswordForm.addEventListener("submit", async function(event) {
-      event.preventDefault();
-      const password = newPassword.value;
-      const confirmation = confirmNewPassword.value;
-
-      if (password.length < 6) {
-        setChangePasswordMessage("A senha deve ter pelo menos 6 caracteres.", "error");
-        return;
-      }
-
-      if (password !== confirmation) {
-        setChangePasswordMessage("As senhas não são iguais.", "error");
-        return;
-      }
-
-      setChangePasswordMessage("Salvando...");
-
-      if (window.supabase) {
-        const tempClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        const { error } = await tempClient.auth.updateUser({ password });
-
-        if (error) {
-          console.error("Erro ao alterar senha:", error);
-          setChangePasswordMessage("Não foi possível alterar a senha. Solicite um novo link de recuperação.", "error");
-          return;
-        }
-
-        setChangePasswordMessage("Senha alterada com sucesso.", "success");
-        setTimeout(showApp, 1200);
-      }
-    });
-
-    window.addEventListener("DOMContentLoaded", async () => {
-      if (typeof checkAndInitUser === "function") {
-        const user = await checkAndInitUser();
-        if (user) {
-          showApp();
-        } else {
-          showLogin();
-        }
-      }
-    });
-
-  </script>
-
-
-  <!-- =====================================================
-        SERVICE WORKER / PWA
-  ====================================================== -->
-
-  <script>
-
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("./sw.js")
-          .then(registration => {
-            console.log("Service Worker registrado:", registration.scope);
-          })
-          .catch(error => {
-            console.error("Erro ao registrar Service Worker:", error);
-          });
-      });
     }
 
   </script>

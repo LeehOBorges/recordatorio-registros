@@ -416,6 +416,93 @@ function getTodayRecords() {
 
 
 /* =========================================================
+   NAVEGAR ENTRE TELAS
+========================================================= */
+
+function showScreen(
+  targetScreen
+) {
+
+  if (!targetScreen) return;
+
+
+  const screens =
+    document.querySelectorAll(
+      ".app-screen"
+    );
+
+
+  screens.forEach(
+    screen => {
+
+      screen.hidden =
+        screen.id !==
+        targetScreen;
+    }
+  );
+
+
+  const navigationItems =
+    document.querySelectorAll(
+      ".navigation-item"
+    );
+
+
+  navigationItems.forEach(
+    item => {
+
+      item.classList.toggle(
+        "active",
+        item.dataset.screen ===
+          targetScreen
+      );
+    }
+  );
+
+
+  if (
+    targetScreen ===
+    "diaryScreen"
+  ) {
+
+    renderDiary();
+  }
+
+
+  if (
+    targetScreen ===
+    "consultationScreen"
+  ) {
+
+    renderConsultations();
+  }
+
+
+  if (
+    targetScreen ===
+    "moreScreen"
+  ) {
+
+    renderMoreScreen();
+  }
+}
+
+
+/* =========================================================
+   ABRIR TELA DE CONSULTAS
+========================================================= */
+
+function openConsultationsScreen() {
+
+  showScreen(
+    "consultationScreen"
+  );
+
+  renderConsultations();
+}
+
+
+/* =========================================================
    DASHBOARD
 ========================================================= */
 
@@ -2280,7 +2367,7 @@ function renderConsultations() {
 
     const screen =
       document.getElementById(
-        "consultationsScreen"
+        "consultationScreen"
       );
 
 
@@ -3838,6 +3925,29 @@ document
 
 
 /* =========================================================
+   BOTÃO CONSULTAS — CORREÇÃO
+========================================================= */
+
+const consultationQuickButton =
+  document.getElementById(
+    "consultationQuickButton"
+  );
+
+
+if (consultationQuickButton) {
+
+  consultationQuickButton.addEventListener(
+    "click",
+    () => {
+
+      openConsultationsScreen();
+
+    }
+  );
+}
+
+
+/* =========================================================
    FECHAR MODAL
 ========================================================= */
 
@@ -4948,12 +5058,6 @@ const navigationItems =
   );
 
 
-const appScreens =
-  document.querySelectorAll(
-    ".app-screen"
-  );
-
-
 navigationItems.forEach(
   button => {
 
@@ -4970,63 +5074,9 @@ navigationItems.forEach(
           return;
 
 
-        appScreens.forEach(
-          screen => {
-
-            screen.hidden =
-              screen.id !==
-              targetScreen;
-          }
+        showScreen(
+          targetScreen
         );
-
-
-        navigationItems.forEach(
-          item => {
-
-            item.classList.remove(
-              "active"
-            );
-          }
-        );
-
-
-        button.classList.add(
-          "active"
-        );
-
-
-        if (
-          targetScreen ===
-          "diaryScreen"
-        ) {
-
-          renderDiary();
-        }
-
-
-        if (
-          targetScreen ===
-          "moreScreen"
-        ) {
-
-          renderMoreScreen();
-        }
-
-
-        /*
-           CONSULTAS
-        */
-
-        if (
-          targetScreen ===
-            "consultationsScreen" ||
-          targetScreen ===
-            "consultationScreen"
-        ) {
-
-          renderConsultations();
-        }
-
       }
     );
   }

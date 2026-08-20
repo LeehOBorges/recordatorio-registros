@@ -2225,3 +2225,75 @@ renderConsultations();
 
 // Verifica e recupera o usuário autenticado no Supabase ao carregar o aplicativo
 checkAndInitUser();
+
+/* =====================================================
+   INTEGRAÇÃO SUPABASE - AUTENTICAÇÃO E MIGRAÇÃO
+====================================================== */
+
+// Instância global do cliente Supabase
+let supabase = null;
+let currentUser = null;
+
+// Inicializa o cliente Supabase se as chaves existirem no HTML
+if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+  supabase = window.supabase.createClient(
+    window.SUPABASE_URL,
+    window.SUPABASE_ANON_KEY
+  );
+}
+
+/**
+ * Realiza o login no Supabase
+ */
+async function loginWithSupabase(email, password) {
+  if (!supabase) {
+    console.error("Cliente Supabase não configurado.");
+    return { error: { message: "Supabase não configurado no HTML." } };
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (!error && data.user) {
+    currentUser = data.user;
+    // Tenta migrar dados antigos do localStorage para o Supabase
+    if (typeof migrateLocalStorageToSupabase === "function") {
+      await migrateLocalStorageToSupabase(currentUser.id);
+    }
+  }
+
+  return { data, error };
+}
+
+/**
+ * Verifica se já existe um usuário logado na sessão ativa
+ */
+async function checkAndInitUser() {
+  if (!supabase) return null;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session && session.user) {
+    currentUser = session.user;
+    return currentUser;
+  }
+  return null;
+}
+
+/**
+ * Envia e-mail para redefinição de senha
+ */
+async function resetPasswordSupabase(email) {
+  if (!supabase) return { error: { message: "Supabase não configurado." } };
+  const redirectTo = window.location.origin + window.location.pathname;
+  return await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+}
+
+/**
+ * Atualiza a senha do usuário
+ */
+async function updatePasswordSupabase(newPassword) {
+  if (!supabase) return { error: { message: "Supabase não configurado." } };
+  return await supabase.auth.updateUser({ password: newPassword });
+}

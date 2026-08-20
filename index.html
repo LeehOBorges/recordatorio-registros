@@ -44,14 +44,7 @@
 
 
   <!-- =====================================================
-       SUPABASE
-  ====================================================== -->
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
-  <!-- =====================================================
-       MANIFESTO DO APLICATIVO
+       MANIFESTO
   ====================================================== -->
 
   <link
@@ -61,7 +54,7 @@
 
 
   <!-- =====================================================
-       ESTILOS
+       ESTILOS DO APLICATIVO
   ====================================================== -->
 
   <link
@@ -71,23 +64,22 @@
 
 
   <!-- =====================================================
+       SUPABASE
+  ====================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+
+  <!-- =====================================================
        ESTILO DA TELA DE LOGIN
   ====================================================== -->
 
   <style>
 
     /* =====================================================
-       CONTROLE INICIAL
-    ====================================================== */
-
-    body.auth-loading .app-screen,
-    body.auth-loading .bottom-navigation {
-      display: none !important;
-    }
-
-
-    /* =====================================================
-       TELA DE LOGIN
+       LOGIN
     ====================================================== */
 
     #loginScreen {
@@ -101,14 +93,14 @@
 
       padding: 24px;
 
-      box-sizing: border-box;
-
       background:
         linear-gradient(
           180deg,
-          #fffaf8 0%,
+          #fff8f6 0%,
           #f8eeee 100%
         );
+
+      box-sizing: border-box;
 
     }
 
@@ -125,12 +117,13 @@
 
       background: #ffffff;
 
-      border-radius: 22px;
+      border-radius: 24px;
 
-      padding: 30px 24px;
+      padding: 32px 26px;
 
       box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.08);
+        0 12px 40px
+        rgba(80, 40, 40, 0.10);
 
       box-sizing: border-box;
 
@@ -148,27 +141,27 @@
 
     .login-brand-icon {
 
-      font-size: 46px;
+      font-size: 42px;
 
       margin-bottom: 10px;
 
     }
 
 
-    .login-brand h1 {
+    .login-brand-title {
 
       margin: 0;
 
-      color: #7f4545;
+      color: #7f4444;
 
-      font-size: 28px;
+      font-size: 26px;
 
-      line-height: 1.2;
+      font-weight: 700;
 
     }
 
 
-    .login-brand p {
+    .login-brand-subtitle {
 
       margin: 8px 0 0;
 
@@ -194,9 +187,9 @@
 
       margin-bottom: 7px;
 
-      font-weight: 600;
-
       font-size: 14px;
+
+      font-weight: 600;
 
       color: #444;
 
@@ -217,9 +210,9 @@
 
       font-size: 16px;
 
-      background: #fff;
-
       outline: none;
+
+      background: #fff;
 
     }
 
@@ -229,22 +222,23 @@
       border-color: #A85C5C;
 
       box-shadow:
-        0 0 0 3px rgba(168, 92, 92, 0.12);
+        0 0 0 3px
+        rgba(168, 92, 92, 0.10);
 
     }
 
 
-    #loginButton {
+    .login-button {
 
       width: 100%;
 
-      margin-top: 6px;
+      border: 0;
+
+      border-radius: 12px;
 
       padding: 14px;
 
-      border: none;
-
-      border-radius: 12px;
+      margin-top: 6px;
 
       background: #A85C5C;
 
@@ -252,14 +246,14 @@
 
       font-size: 16px;
 
-      font-weight: 600;
+      font-weight: 700;
 
       cursor: pointer;
 
     }
 
 
-    #loginButton:disabled {
+    .login-button:disabled {
 
       opacity: 0.65;
 
@@ -268,15 +262,15 @@
     }
 
 
-    #forgotPasswordButton {
+    .forgot-password-button {
+
+      display: block;
 
       width: 100%;
 
-      margin-top: 14px;
+      margin-top: 16px;
 
-      padding: 10px;
-
-      border: none;
+      border: 0;
 
       background: transparent;
 
@@ -284,12 +278,14 @@
 
       font-size: 14px;
 
+      font-weight: 600;
+
       cursor: pointer;
 
     }
 
 
-    #loginMessage {
+    .login-message {
 
       min-height: 20px;
 
@@ -299,16 +295,252 @@
 
       font-size: 14px;
 
-      line-height: 1.4;
+      line-height: 1.5;
 
     }
 
 
-    #logoutButton {
+    .login-message.error {
+
+      color: #a33f3f;
+
+    }
+
+
+    .login-message.success {
+
+      color: #42724b;
+
+    }
+
+
+    /* =====================================================
+       RECUPERAÇÃO DE SENHA
+    ====================================================== */
+
+    #resetPasswordPanel {
+
+      display: none;
+
+      margin-top: 24px;
+
+      padding-top: 24px;
+
+      border-top: 1px solid #eee;
+
+    }
+
+
+    #resetPasswordPanel.visible {
+
+      display: block;
+
+    }
+
+
+    .reset-title {
+
+      margin: 0 0 8px;
+
+      color: #555;
+
+      font-size: 18px;
+
+    }
+
+
+    .reset-description {
+
+      margin: 0 0 18px;
+
+      color: #777;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+    }
+
+
+    .reset-button {
+
+      width: 100%;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      padding: 13px;
+
+      background: #f0dddd;
+
+      color: #7f4444;
+
+      font-size: 15px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+    }
+
+
+    .back-login-button {
+
+      display: block;
 
       width: 100%;
 
       margin-top: 12px;
+
+      border: 0;
+
+      background: transparent;
+
+      color: #777;
+
+      font-size: 14px;
+
+      cursor: pointer;
+
+    }
+
+
+    /* =====================================================
+       ALTERAÇÃO DE SENHA
+    ====================================================== */
+
+    #changePasswordScreen {
+
+      min-height: 100vh;
+
+      min-height: 100dvh;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      padding: 24px;
+
+      box-sizing: border-box;
+
+      background:
+        linear-gradient(
+          180deg,
+          #fff8f6 0%,
+          #f8eeee 100%
+        );
+
+    }
+
+
+    #changePasswordScreen.visible {
+
+      display: flex;
+
+    }
+
+
+    .change-password-container {
+
+      width: 100%;
+
+      max-width: 420px;
+
+    }
+
+
+    .change-password-card {
+
+      background: #fff;
+
+      border-radius: 24px;
+
+      padding: 30px 26px;
+
+      box-shadow:
+        0 12px 40px
+        rgba(80, 40, 40, 0.10);
+
+    }
+
+
+    .change-password-card h2 {
+
+      margin-top: 0;
+
+      color: #7f4444;
+
+    }
+
+
+    .change-password-card p {
+
+      color: #777;
+
+      line-height: 1.5;
+
+      font-size: 14px;
+
+    }
+
+
+    .change-password-card label {
+
+      display: block;
+
+      margin:
+        16px 0 7px;
+
+      font-size: 14px;
+
+      font-weight: 600;
+
+      color: #444;
+
+    }
+
+
+    .change-password-card input {
+
+      width: 100%;
+
+      box-sizing: border-box;
+
+      padding: 13px 14px;
+
+      border: 1px solid #ddd;
+
+      border-radius: 12px;
+
+      font-size: 16px;
+
+    }
+
+
+    .change-password-button {
+
+      width: 100%;
+
+      margin-top: 20px;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      padding: 14px;
+
+      background: #A85C5C;
+
+      color: white;
+
+      font-weight: 700;
+
+      font-size: 16px;
+
+      cursor: pointer;
 
     }
 
@@ -317,7 +549,7 @@
 </head>
 
 
-<body class="auth-loading">
+<body>
 
 
   <!-- =====================================================
@@ -326,7 +558,6 @@
 
   <section
     id="loginScreen"
-    hidden
   >
 
     <div class="login-container">
@@ -340,19 +571,22 @@
             🩷
           </div>
 
-          <h1>
+          <h1 class="login-brand-title">
             Recordatório
           </h1>
 
-          <p>
-            Entre para acessar seus registros.
+          <p class="login-brand-subtitle">
+            Seu registro alimentar, glicêmico e de saúde.
           </p>
 
         </div>
 
 
-        <form id="loginForm">
+        <!-- =================================================
+             LOGIN
+        ================================================== -->
 
+        <form id="loginForm">
 
           <div class="login-form-group">
 
@@ -381,7 +615,7 @@
               id="loginPassword"
               type="password"
               autocomplete="current-password"
-              placeholder="Sua senha"
+              placeholder="Digite sua senha"
               required
             >
 
@@ -391,27 +625,90 @@
           <button
             id="loginButton"
             type="submit"
+            class="login-button"
           >
             Entrar
           </button>
 
 
+          <button
+            id="forgotPasswordButton"
+            type="button"
+            class="forgot-password-button"
+          >
+            Esqueci minha senha
+          </button>
+
+
+          <div
+            id="loginMessage"
+            class="login-message"
+            aria-live="polite"
+          ></div>
+
         </form>
 
 
-        <button
-          id="forgotPasswordButton"
-          type="button"
-        >
-          Esqueci minha senha
-        </button>
-
+        <!-- =================================================
+             RECUPERAÇÃO DE SENHA
+        ================================================== -->
 
         <div
-          id="loginMessage"
-          role="status"
-          aria-live="polite"
-        ></div>
+          id="resetPasswordPanel"
+        >
+
+          <h2 class="reset-title">
+            Recuperar senha
+          </h2>
+
+
+          <p class="reset-description">
+            Digite seu e-mail. Enviaremos um link para você
+            criar uma nova senha.
+          </p>
+
+
+          <div class="login-form-group">
+
+            <label for="resetEmail">
+              E-mail
+            </label>
+
+            <input
+              id="resetEmail"
+              type="email"
+              autocomplete="email"
+              placeholder="seu@email.com"
+            >
+
+          </div>
+
+
+          <button
+            id="sendResetButton"
+            type="button"
+            class="reset-button"
+          >
+            Enviar link para redefinir senha
+          </button>
+
+
+          <button
+            id="backToLoginButton"
+            type="button"
+            class="back-login-button"
+          >
+            Voltar para o login
+          </button>
+
+
+          <div
+            id="resetMessage"
+            class="login-message"
+            aria-live="polite"
+          ></div>
+
+        </div>
 
 
       </div>
@@ -423,703 +720,739 @@
 
 
   <!-- =====================================================
-       TELA HOJE
+       TELA DE ALTERAÇÃO DE SENHA
   ====================================================== -->
 
   <section
-    id="todayScreen"
-    class="app-screen"
-    hidden
+    id="changePasswordScreen"
   >
 
-    <header class="topbar">
+    <div class="change-password-container">
 
-      <div>
+      <div class="change-password-card">
 
-        <p class="eyebrow">
-          RECORDATÓRIO + REGISTROS
+        <h2>
+          Criar nova senha
+        </h2>
+
+        <p>
+          Digite sua nova senha abaixo.
         </p>
 
-        <h1>
-          Hoje
-        </h1>
+
+        <form id="changePasswordForm">
+
+          <label for="newPassword">
+            Nova senha
+          </label>
+
+          <input
+            id="newPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+          >
+
+
+          <label for="confirmNewPassword">
+            Confirmar nova senha
+          </label>
+
+          <input
+            id="confirmNewPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+          >
+
+
+          <button
+            type="submit"
+            class="change-password-button"
+          >
+            Salvar nova senha
+          </button>
+
+
+          <div
+            id="changePasswordMessage"
+            class="login-message"
+            aria-live="polite"
+          ></div>
+
+        </form>
 
       </div>
 
+    </div>
 
-      <button
-        class="icon-button"
-        id="backupButton"
-        type="button"
-        aria-label="Fazer backup"
-        title="Fazer backup"
-      >
-        💾
-      </button>
-
-    </header>
+  </section>
 
 
-    <main>
+
+  <!-- =====================================================
+       APLICATIVO
+  ====================================================== -->
+
+  <div
+    id="appContent"
+    hidden
+  >
 
 
-      <!-- =================================================
-           DATA
-      ================================================== -->
+    <!-- ===================================================
+         TELA HOJE
+    ==================================================== -->
 
-      <section class="date-card card">
+    <section
+      id="todayScreen"
+      class="app-screen"
+    >
 
-        <button
-          id="previousDay"
-          class="date-arrow"
-          type="button"
-          aria-label="Dia anterior"
-        >
-          ‹
-        </button>
-
+      <header class="topbar">
 
         <div>
 
-          <strong id="currentDate">
+          <p class="eyebrow">
+            RECORDATÓRIO + REGISTROS
+          </p>
+
+          <h1>
             Hoje
-          </strong>
+          </h1>
 
         </div>
 
 
         <button
-          id="nextDay"
-          class="date-arrow"
+          class="icon-button"
+          id="backupButton"
           type="button"
-          aria-label="Próximo dia"
+          aria-label="Fazer backup"
+          title="Fazer backup"
         >
-          ›
+          💾
         </button>
 
-      </section>
+      </header>
 
 
-      <!-- =================================================
-           RESUMO
-      ================================================== -->
+      <main>
 
-      <section class="summary-grid">
 
+        <section class="date-card card">
 
-        <article class="card summary-card">
+          <button
+            id="previousDay"
+            class="date-arrow"
+            type="button"
+            aria-label="Dia anterior"
+          >
+            ‹
+          </button>
 
-          <span>
-            🍽️ Refeições
-          </span>
 
-          <strong id="mealCount">
-            0
-          </strong>
+          <div>
 
-        </article>
-
-
-        <article class="card summary-card">
-
-          <span>
-            🩸 Glicemias
-          </span>
-
-          <strong id="glucoseCount">
-            0
-          </strong>
-
-        </article>
-
-
-        <article class="card summary-card">
-
-          <span>
-            💉 Insulina
-          </span>
-
-          <strong id="insulinCount">
-            0
-          </strong>
-
-        </article>
-
-
-        <article class="card summary-card">
-
-          <span>
-            🏋️ Atividade
-          </span>
-
-          <strong id="activityTotal">
-            0 min
-          </strong>
-
-        </article>
-
-
-      </section>
-
-
-      <!-- =================================================
-           AÇÕES RÁPIDAS
-      ================================================== -->
-
-      <section class="quick-actions">
-
-
-        <button
-          class="quick-button"
-          type="button"
-          data-record-type="meal"
-        >
-
-          <span>
-            🍽️
-          </span>
-
-          Refeição
-
-        </button>
-
-
-        <button
-          class="quick-button"
-          type="button"
-          data-record-type="glucose"
-        >
-
-          <span>
-            🩸
-          </span>
-
-          Glicemia
-
-        </button>
-
-
-        <button
-          class="quick-button"
-          type="button"
-          data-record-type="insulin"
-        >
-
-          <span>
-            💉
-          </span>
-
-          Insulina
-
-        </button>
-
-
-        <button
-          class="quick-button"
-          type="button"
-          data-record-type="activity"
-        >
-
-          <span>
-            🏋️
-          </span>
-
-          Atividade
-
-        </button>
-
-
-        <button
-          class="quick-button"
-          type="button"
-          id="medicationsButton"
-        >
-
-          <span>
-            💊
-          </span>
-
-          Medicamentos / Suplementos e Vitaminas
-
-        </button>
-
-
-        <button
-          class="quick-button"
-          type="button"
-          id="consultationQuickButton"
-        >
-
-          <span>
-            🩺
-          </span>
-
-          Consultas
-
-        </button>
-
-
-      </section>
-
-
-      <!-- =================================================
-           LINHA DO TEMPO
-      ================================================== -->
-
-      <section class="card timeline-card">
-
-        <div class="section-header">
-
-          <h2>
-            Linha do tempo
-          </h2>
-
-        </div>
-
-
-        <div id="timeline"></div>
-
-      </section>
-
-
-      <!-- =================================================
-           MEDICAMENTOS
-      ================================================== -->
-
-      <section
-        id="medicationsPanel"
-        class="card"
-        hidden
-      >
-
-        <div class="section-header">
-
-          <h2>
-            💊 Medicamentos / Suplementos e Vitaminas
-          </h2>
-
-        </div>
-
-
-        <p>
-          Marque cada item conforme você tomar.
-        </p>
-
-
-        <div
-          id="medicationsList"
-          style="
-            display:flex;
-            flex-direction:column;
-            gap:12px;
-            margin-top:16px;
-          "
-        >
-
-          <div class="empty-state">
-
-            Nenhum medicamento ou vitamina cadastrado.
+            <strong id="currentDate">
+              Hoje
+            </strong>
 
           </div>
 
-        </div>
+
+          <button
+            id="nextDay"
+            class="date-arrow"
+            type="button"
+            aria-label="Próximo dia"
+          >
+            ›
+          </button>
+
+        </section>
 
 
-        <button
-          type="button"
-          id="addMedicationButton"
-          class="primary-button"
-          style="margin-top:16px;"
-        >
-
-          + Adicionar medicamento, suplemento ou vitamina
-
-        </button>
+        <section class="summary-grid">
 
 
-      </section>
+          <article class="card summary-card">
+
+            <span>
+              🍽️ Refeições
+            </span>
+
+            <strong id="mealCount">
+              0
+            </strong>
+
+          </article>
 
 
-    </main>
+          <article class="card summary-card">
 
-  </section>
+            <span>
+              🩸 Glicemias
+            </span>
 
+            <strong id="glucoseCount">
+              0
+            </strong>
 
-
-  <!-- =====================================================
-       TELA DIÁRIO
-  ====================================================== -->
-
-  <section
-    id="diaryScreen"
-    class="app-screen"
-    hidden
-  >
-
-    <header class="topbar">
-
-      <div>
-
-        <p class="eyebrow">
-          RECORDATÓRIO + REGISTROS
-        </p>
-
-        <h1>
-          Diário
-        </h1>
-
-      </div>
-
-    </header>
+          </article>
 
 
-    <main>
+          <article class="card summary-card">
 
-      <section class="card">
+            <span>
+              💉 Insulina
+            </span>
 
-        <h2>
-          Histórico
-        </h2>
+            <strong id="insulinCount">
+              0
+            </strong>
+
+          </article>
 
 
-        <div id="diaryContent">
+          <article class="card summary-card">
 
-          <div class="empty-state">
+            <span>
+              🏋️ Atividade
+            </span>
 
-            Nenhum registro encontrado.
+            <strong id="activityTotal">
+              0 min
+            </strong>
+
+          </article>
+
+
+        </section>
+
+
+        <section class="quick-actions">
+
+
+          <button
+            class="quick-button"
+            type="button"
+            data-record-type="meal"
+          >
+
+            <span>
+              🍽️
+            </span>
+
+            Refeição
+
+          </button>
+
+
+          <button
+            class="quick-button"
+            type="button"
+            data-record-type="glucose"
+          >
+
+            <span>
+              🩸
+            </span>
+
+            Glicemia
+
+          </button>
+
+
+          <button
+            class="quick-button"
+            type="button"
+            data-record-type="insulin"
+          >
+
+            <span>
+              💉
+            </span>
+
+            Insulina
+
+          </button>
+
+
+          <button
+            class="quick-button"
+            type="button"
+            data-record-type="activity"
+          >
+
+            <span>
+              🏋️
+            </span>
+
+            Atividade
+
+          </button>
+
+
+          <button
+            class="quick-button"
+            type="button"
+            id="medicationsButton"
+          >
+
+            <span>
+              💊
+            </span>
+
+            Medicamentos / Suplementos e Vitaminas
+
+          </button>
+
+
+          <button
+            class="quick-button"
+            type="button"
+            id="consultationQuickButton"
+          >
+
+            <span>
+              🩺
+            </span>
+
+            Consultas
+
+          </button>
+
+
+        </section>
+
+
+        <section class="card timeline-card">
+
+          <div class="section-header">
+
+            <h2>
+              Linha do tempo
+            </h2>
 
           </div>
 
+
+          <div id="timeline"></div>
+
+        </section>
+
+
+        <section
+          id="medicationsPanel"
+          class="card"
+          hidden
+        >
+
+          <div class="section-header">
+
+            <h2>
+              💊 Medicamentos / Suplementos e Vitaminas
+            </h2>
+
+          </div>
+
+
+          <p>
+            Marque cada item conforme você tomar.
+          </p>
+
+
+          <div
+            id="medicationsList"
+            style="
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+              margin-top:16px;
+            "
+          >
+
+            <div class="empty-state">
+
+              Nenhum medicamento ou vitamina cadastrado.
+
+            </div>
+
+          </div>
+
+
+          <button
+            type="button"
+            id="addMedicationButton"
+            class="primary-button"
+            style="margin-top:16px;"
+          >
+
+            + Adicionar medicamento, suplemento ou vitamina
+
+          </button>
+
+
+        </section>
+
+
+      </main>
+
+    </section>
+
+
+
+    <!-- ===================================================
+         DIÁRIO
+    ==================================================== -->
+
+    <section
+      id="diaryScreen"
+      class="app-screen"
+      hidden
+    >
+
+      <header class="topbar">
+
+        <div>
+
+          <p class="eyebrow">
+            RECORDATÓRIO + REGISTROS
+          </p>
+
+          <h1>
+            Diário
+          </h1>
+
         </div>
 
-      </section>
+      </header>
 
-    </main>
 
-  </section>
+      <main>
 
-
-
-  <!-- =====================================================
-       TELA ANÁLISES
-  ====================================================== -->
-
-  <section
-    id="analysisScreen"
-    class="app-screen"
-    hidden
-  >
-
-    <header class="topbar">
-
-      <div>
-
-        <p class="eyebrow">
-          RECORDATÓRIO + REGISTROS
-        </p>
-
-        <h1>
-          Análises
-        </h1>
-
-      </div>
-
-    </header>
-
-
-    <main>
-
-      <section class="card">
-
-        <h2>
-          Análises
-        </h2>
-
-
-        <div class="empty-state">
-
-          Esta área será desenvolvida nas próximas etapas.
-
-        </div>
-
-      </section>
-
-    </main>
-
-  </section>
-
-
-
-  <!-- =====================================================
-       TELA CONSULTAS
-  ====================================================== -->
-
-  <section
-    id="consultationScreen"
-    class="app-screen"
-    hidden
-  >
-
-    <header class="topbar">
-
-      <div>
-
-        <p class="eyebrow">
-          RECORDATÓRIO + REGISTROS
-        </p>
-
-        <h1>
-          Consultas
-        </h1>
-
-      </div>
-
-    </header>
-
-
-    <main>
-
-      <section class="card">
-
-        <h2>
-          🩺 Consultas
-        </h2>
-
-
-        <div
-          id="consultationsContent"
-        ></div>
-
-      </section>
-
-    </main>
-
-  </section>
-
-
-
-  <!-- =====================================================
-       TELA MAIS
-  ====================================================== -->
-
-  <section
-    id="moreScreen"
-    class="app-screen"
-    hidden
-  >
-
-    <header class="topbar">
-
-      <div>
-
-        <p class="eyebrow">
-          RECORDATÓRIO + REGISTROS
-        </p>
-
-        <h1>
-          Mais
-        </h1>
-
-      </div>
-
-    </header>
-
-
-    <main>
-
-
-      <!-- OPÇÕES -->
-
-      <section class="card">
-
-        <h2>
-          Opções
-        </h2>
-
-
-        <button
-          type="button"
-          id="openTrashButton"
-          class="quick-button"
-        >
-
-          🗑️ Lixeira
-
-        </button>
-
-
-        <button
-          type="button"
-          id="settingsButton"
-          class="quick-button"
-        >
-
-          ⚙️ Configurações
-
-        </button>
-
-
-        <!-- =================================================
-             SAIR
-        ================================================== -->
-
-        <button
-          type="button"
-          id="logoutButton"
-          class="secondary-button"
-        >
-
-          🚪 Sair da conta
-
-        </button>
-
-
-      </section>
-
-
-
-      <!-- LIXEIRA -->
-
-      <section
-        id="trashPanel"
-        class="card"
-        hidden
-      >
-
-        <div class="section-header">
+        <section class="card">
 
           <h2>
+            Histórico
+          </h2>
+
+
+          <div id="diaryContent">
+
+            <div class="empty-state">
+
+              Nenhum registro encontrado.
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+
+    </section>
+
+
+
+    <!-- ===================================================
+         ANÁLISES
+    ==================================================== -->
+
+    <section
+      id="analysisScreen"
+      class="app-screen"
+      hidden
+    >
+
+      <header class="topbar">
+
+        <div>
+
+          <p class="eyebrow">
+            RECORDATÓRIO + REGISTROS
+          </p>
+
+          <h1>
+            Análises
+          </h1>
+
+        </div>
+
+      </header>
+
+
+      <main>
+
+        <section class="card">
+
+          <h2>
+            Análises
+          </h2>
+
+
+          <div class="empty-state">
+
+            Esta área será desenvolvida nas próximas etapas.
+
+          </div>
+
+        </section>
+
+      </main>
+
+    </section>
+
+
+
+    <!-- ===================================================
+         CONSULTAS
+    ==================================================== -->
+
+    <section
+      id="consultationScreen"
+      class="app-screen"
+      hidden
+    >
+
+      <header class="topbar">
+
+        <div>
+
+          <p class="eyebrow">
+            RECORDATÓRIO + REGISTROS
+          </p>
+
+          <h1>
+            Consultas
+          </h1>
+
+        </div>
+
+      </header>
+
+
+      <main>
+
+        <section class="card">
+
+          <h2>
+            🩺 Consultas
+          </h2>
+
+
+          <div id="consultationsContent"></div>
+
+        </section>
+
+      </main>
+
+    </section>
+
+
+
+    <!-- ===================================================
+         MAIS
+    ==================================================== -->
+
+    <section
+      id="moreScreen"
+      class="app-screen"
+      hidden
+    >
+
+      <header class="topbar">
+
+        <div>
+
+          <p class="eyebrow">
+            RECORDATÓRIO + REGISTROS
+          </p>
+
+          <h1>
+            Mais
+          </h1>
+
+        </div>
+
+      </header>
+
+
+      <main>
+
+
+        <section class="card">
+
+          <h2>
+            Opções
+          </h2>
+
+
+          <button
+            type="button"
+            id="openTrashButton"
+            class="quick-button"
+          >
+
             🗑️ Lixeira
-          </h2>
 
-        </div>
+          </button>
 
 
-        <div id="trashContent">
+          <button
+            type="button"
+            id="settingsButton"
+            class="quick-button"
+          >
 
-          <div class="empty-state">
+            ⚙️ Configurações
 
-            A lixeira está vazia.
+          </button>
+
+        </section>
+
+
+        <section
+          id="trashPanel"
+          class="card"
+          hidden
+        >
+
+          <div class="section-header">
+
+            <h2>
+              🗑️ Lixeira
+            </h2>
 
           </div>
 
-        </div>
 
-      </section>
+          <div id="trashContent">
+
+            <div class="empty-state">
+
+              A lixeira está vazia.
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <section
+          id="settingsPanel"
+          class="card"
+          hidden
+        >
+
+          <div class="section-header">
+
+            <h2>
+              ⚙️ Configurações
+            </h2>
+
+          </div>
+
+
+          <div class="empty-state">
+
+            Esta área será desenvolvida nas próximas etapas.
+
+          </div>
+
+        </section>
+
+
+      </main>
+
+    </section>
 
 
 
-      <!-- CONFIGURAÇÕES -->
+    <!-- ===================================================
+         NAVEGAÇÃO
+    ==================================================== -->
 
-      <section
-        id="settingsPanel"
-        class="card"
-        hidden
+    <nav class="bottom-navigation">
+
+
+      <button
+        class="navigation-item active"
+        type="button"
+        data-screen="todayScreen"
       >
 
-        <div class="section-header">
+        <span>
+          🏠
+        </span>
 
-          <h2>
-            ⚙️ Configurações
-          </h2>
+        <small>
+          Hoje
+        </small>
 
-        </div>
-
-
-        <div class="empty-state">
-
-          Esta área será desenvolvida nas próximas etapas.
-
-        </div>
-
-      </section>
+      </button>
 
 
-    </main>
+      <button
+        class="navigation-item"
+        type="button"
+        data-screen="diaryScreen"
+      >
 
-  </section>
+        <span>
+          📖
+        </span>
 
+        <small>
+          Diário
+        </small>
 
-
-  <!-- =====================================================
-       NAVEGAÇÃO INFERIOR
-  ====================================================== -->
-
-  <nav
-    class="bottom-navigation"
-    hidden
-  >
-
-
-    <button
-      class="navigation-item active"
-      type="button"
-      data-screen="todayScreen"
-    >
-
-      <span>
-        🏠
-      </span>
-
-      <small>
-        Hoje
-      </small>
-
-    </button>
+      </button>
 
 
-    <button
-      class="navigation-item"
-      type="button"
-      data-screen="diaryScreen"
-    >
+      <button
+        class="navigation-item"
+        type="button"
+        data-screen="analysisScreen"
+      >
 
-      <span>
-        📖
-      </span>
+        <span>
+          📊
+        </span>
 
-      <small>
-        Diário
-      </small>
+        <small>
+          Análises
+        </small>
 
-    </button>
-
-
-    <button
-      class="navigation-item"
-      type="button"
-      data-screen="analysisScreen"
-    >
-
-      <span>
-        📊
-      </span>
-
-      <small>
-        Análises
-      </small>
-
-    </button>
+      </button>
 
 
-    <button
-      class="navigation-item"
-      type="button"
-      data-screen="moreScreen"
-    >
+      <button
+        class="navigation-item"
+        type="button"
+        data-screen="moreScreen"
+      >
 
-      <span>
-        ☰
-      </span>
+        <span>
+          ☰
+        </span>
 
-      <small>
-        Mais
-      </small>
+        <small>
+          Mais
+        </small>
 
-    </button>
+      </button>
 
 
-  </nav>
+    </nav>
+
+
+  </div>
 
 
 
@@ -1185,21 +1518,13 @@
 
 
   <!-- =====================================================
-       JAVASCRIPT DO APLICATIVO
-  ====================================================== -->
-
-  <script src="app.js"></script>
-
-
-
-  <!-- =====================================================
-       AUTENTICAÇÃO SUPABASE
+       SUPABASE AUTH
   ====================================================== -->
 
   <script>
 
     /* =====================================================
-       CONFIGURAÇÃO SUPABASE
+       CONFIGURAÇÃO DO SUPABASE
     ====================================================== */
 
     const SUPABASE_URL =
@@ -1217,11 +1542,17 @@
 
 
     /* =====================================================
-       ELEMENTOS
+       ELEMENTOS DE AUTENTICAÇÃO
     ====================================================== */
 
     const loginScreen =
       document.getElementById("loginScreen");
+
+    const changePasswordScreen =
+      document.getElementById("changePasswordScreen");
+
+    const appContent =
+      document.getElementById("appContent");
 
     const loginForm =
       document.getElementById("loginForm");
@@ -1235,135 +1566,175 @@
     const loginButton =
       document.getElementById("loginButton");
 
-    const forgotPasswordButton =
-      document.getElementById("forgotPasswordButton");
-
     const loginMessage =
       document.getElementById("loginMessage");
 
-    const bottomNavigation =
-      document.querySelector(".bottom-navigation");
+    const forgotPasswordButton =
+      document.getElementById("forgotPasswordButton");
 
-    const appScreens =
-      document.querySelectorAll(".app-screen");
+    const resetPasswordPanel =
+      document.getElementById("resetPasswordPanel");
 
-    const logoutButton =
-      document.getElementById("logoutButton");
+    const resetEmail =
+      document.getElementById("resetEmail");
 
+    const sendResetButton =
+      document.getElementById("sendResetButton");
 
-    /* =====================================================
-       MENSAGEM
-    ====================================================== */
+    const backToLoginButton =
+      document.getElementById("backToLoginButton");
 
-    function showLoginMessage(
-      message,
-      isError = false
-    ) {
+    const resetMessage =
+      document.getElementById("resetMessage");
 
-      if (!loginMessage) return;
+    const changePasswordForm =
+      document.getElementById("changePasswordForm");
 
-      loginMessage.textContent = message;
+    const newPassword =
+      document.getElementById("newPassword");
 
-      loginMessage.style.color =
-        isError
-          ? "#a33"
-          : "#527052";
+    const confirmNewPassword =
+      document.getElementById("confirmNewPassword");
 
-    }
-
-
-    /* =====================================================
-       MOSTRAR APLICATIVO
-    ====================================================== */
-
-    function showApplication() {
-
-      document.body.classList.remove(
-        "auth-loading"
+    const changePasswordMessage =
+      document.getElementById(
+        "changePasswordMessage"
       );
 
 
-      if (loginScreen) {
-        loginScreen.hidden = true;
-      }
+    /* =====================================================
+       MENSAGENS
+    ====================================================== */
+
+    function setLoginMessage(
+      message,
+      type = ""
+    ) {
+
+      loginMessage.textContent = message;
+
+      loginMessage.className =
+        "login-message" +
+        (type ? " " + type : "");
+
+    }
 
 
-      appScreens.forEach(screen => {
+    function setResetMessage(
+      message,
+      type = ""
+    ) {
 
-        screen.hidden =
-          screen.id !== "todayScreen";
+      resetMessage.textContent = message;
 
-      });
+      resetMessage.className =
+        "login-message" +
+        (type ? " " + type : "");
 
-
-      if (bottomNavigation) {
-        bottomNavigation.hidden = false;
-      }
-
-
-      const navigationItems =
-        document.querySelectorAll(
-          ".navigation-item"
-        );
+    }
 
 
-      navigationItems.forEach(item => {
+    function setChangePasswordMessage(
+      message,
+      type = ""
+    ) {
 
-        item.classList.toggle(
-          "active",
-          item.dataset.screen === "todayScreen"
-        );
+      changePasswordMessage.textContent =
+        message;
 
-      });
-
-
-      /*
-       * O app.js já contém a função renderDashboard().
-       * Aqui garantimos que o primeiro carregamento
-       * mostre a tela Hoje.
-       */
-
-      if (
-        typeof renderDashboard === "function"
-      ) {
-
-        renderDashboard();
-
-      }
+      changePasswordMessage.className =
+        "login-message" +
+        (type ? " " + type : "");
 
     }
 
 
     /* =====================================================
-       MOSTRAR LOGIN
+       MOSTRAR / ESCONDER TELAS
     ====================================================== */
 
     function showLogin() {
 
-      document.body.classList.remove(
-        "auth-loading"
+      loginScreen.style.display = "flex";
+
+      changePasswordScreen.classList.remove(
+        "visible"
       );
 
+      appContent.hidden = true;
 
-      appScreens.forEach(screen => {
-
-        screen.hidden = true;
-
-      });
+    }
 
 
-      if (bottomNavigation) {
-        bottomNavigation.hidden = true;
+    function showApp() {
+
+      loginScreen.style.display = "none";
+
+      changePasswordScreen.classList.remove(
+        "visible"
+      );
+
+      appContent.hidden = false;
+
+      if (
+        typeof showScreen === "function"
+      ) {
+
+        showScreen("todayScreen");
+
+      }
+
+    }
+
+
+    function showChangePassword() {
+
+      loginScreen.style.display = "none";
+
+      appContent.hidden = true;
+
+      changePasswordScreen.classList.add(
+        "visible"
+      );
+
+    }
+
+
+    /* =====================================================
+       VERIFICAR SESSÃO
+    ====================================================== */
+
+    async function checkAuthSession() {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth.getSession();
+
+
+      if (error) {
+
+        console.error(
+          "Erro ao verificar sessão:",
+          error
+        );
+
+        showLogin();
+
+        return;
+
       }
 
 
-      if (loginScreen) {
-        loginScreen.hidden = false;
-      }
+      if (data.session) {
 
+        showApp();
 
-      if (loginEmail) {
-        loginEmail.focus();
+      } else {
+
+        showLogin();
+
       }
 
     }
@@ -1373,306 +1744,359 @@
        LOGIN
     ====================================================== */
 
-    if (loginForm) {
+    loginForm.addEventListener(
+      "submit",
+      async function(event) {
 
-      loginForm.addEventListener(
-        "submit",
-        async function(event) {
+        event.preventDefault();
 
-          event.preventDefault();
+        const email =
+          loginEmail.value.trim();
 
-
-          const email =
-            loginEmail.value.trim();
-
-          const password =
-            loginPassword.value;
+        const password =
+          loginPassword.value;
 
 
-          if (!email || !password) {
+        if (!email || !password) {
 
-            showLoginMessage(
-              "Informe seu e-mail e sua senha.",
-              true
-            );
+          setLoginMessage(
+            "Digite seu e-mail e sua senha.",
+            "error"
+          );
 
-            return;
-
-          }
-
-
-          loginButton.disabled = true;
-
-          loginButton.textContent =
-            "Entrando...";
-
-          showLoginMessage("");
-
-
-          try {
-
-            const {
-              data,
-              error
-            } =
-              await supabaseClient.auth
-                .signInWithPassword({
-                  email,
-                  password
-                });
-
-
-            if (error) {
-
-              console.error(
-                "Erro no login:",
-                error
-              );
-
-              showLoginMessage(
-                "E-mail ou senha incorretos.",
-                true
-              );
-
-              return;
-
-            }
-
-
-            if (data && data.session) {
-
-              loginPassword.value = "";
-
-              showApplication();
-
-            }
-
-          }
-
-          catch (error) {
-
-            console.error(
-              "Erro inesperado no login:",
-              error
-            );
-
-            showLoginMessage(
-              "Não foi possível entrar. Verifique sua conexão.",
-              true
-            );
-
-          }
-
-          finally {
-
-            loginButton.disabled = false;
-
-            loginButton.textContent =
-              "Entrar";
-
-          }
+          return;
 
         }
-      );
 
-    }
+
+        loginButton.disabled = true;
+
+        loginButton.textContent =
+          "Entrando...";
+
+        setLoginMessage("");
+
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient.auth
+            .signInWithPassword({
+              email,
+              password
+            });
+
+
+        loginButton.disabled = false;
+
+        loginButton.textContent =
+          "Entrar";
+
+
+        if (error) {
+
+          console.error(
+            "Erro de login:",
+            error
+          );
+
+
+          setLoginMessage(
+            "E-mail ou senha incorretos.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        if (data.session) {
+
+          setLoginMessage(
+            "Login realizado.",
+            "success"
+          );
+
+          showApp();
+
+        }
+
+      }
+    );
 
 
     /* =====================================================
-       RECUPERAÇÃO DE SENHA
+       ESQUECI MINHA SENHA
     ====================================================== */
 
-    if (forgotPasswordButton) {
+    forgotPasswordButton.addEventListener(
+      "click",
+      function() {
 
-      forgotPasswordButton.addEventListener(
-        "click",
-        async function() {
-
-          const email =
-            loginEmail.value.trim();
-
-
-          if (!email) {
-
-            showLoginMessage(
-              "Digite seu e-mail primeiro.",
-              true
-            );
-
-            loginEmail.focus();
-
-            return;
-
-          }
+        resetPasswordPanel.classList.add(
+          "visible"
+        );
 
 
-          forgotPasswordButton.disabled = true;
+        const currentEmail =
+          loginEmail.value.trim();
 
-          forgotPasswordButton.textContent =
-            "Enviando...";
+        if (currentEmail) {
 
-
-          try {
-
-            const redirectUrl =
-              window.location.origin +
-              window.location.pathname;
-
-
-            const {
-              error
-            } =
-              await supabaseClient.auth
-                .resetPasswordForEmail(
-                  email,
-                  {
-                    redirectTo: redirectUrl
-                  }
-                );
-
-
-            if (error) {
-
-              console.error(
-                "Erro ao solicitar recuperação:",
-                error
-              );
-
-              showLoginMessage(
-                "Não foi possível enviar o e-mail de recuperação.",
-                true
-              );
-
-              return;
-
-            }
-
-
-            showLoginMessage(
-              "Se esse e-mail estiver cadastrado, você receberá as instruções para redefinir sua senha."
-            );
-
-          }
-
-          catch (error) {
-
-            console.error(
-              "Erro inesperado:",
-              error
-            );
-
-            showLoginMessage(
-              "Não foi possível solicitar a recuperação.",
-              true
-            );
-
-          }
-
-          finally {
-
-            forgotPasswordButton.disabled =
-              false;
-
-            forgotPasswordButton.textContent =
-              "Esqueci minha senha";
-
-          }
+          resetEmail.value =
+            currentEmail;
 
         }
-      );
 
-    }
+
+        setLoginMessage("");
+
+      }
+    );
 
 
     /* =====================================================
-       SAIR
+       VOLTAR PARA LOGIN
     ====================================================== */
 
-    if (logoutButton) {
+    backToLoginButton.addEventListener(
+      "click",
+      function() {
 
-      logoutButton.addEventListener(
-        "click",
-        async function() {
+        resetPasswordPanel.classList.remove(
+          "visible"
+        );
 
-          const confirmed =
-            confirm(
-              "Deseja realmente sair da sua conta?"
-            );
+        setResetMessage("");
 
-
-          if (!confirmed) {
-            return;
-          }
-
-
-          try {
-
-            const {
-              error
-            } =
-              await supabaseClient.auth
-                .signOut();
-
-
-            if (error) {
-
-              console.error(
-                "Erro ao sair:",
-                error
-              );
-
-              alert(
-                "Não foi possível sair da conta."
-              );
-
-              return;
-
-            }
-
-
-            showLogin();
-
-          }
-
-          catch (error) {
-
-            console.error(
-              "Erro inesperado ao sair:",
-              error
-            );
-
-            alert(
-              "Não foi possível sair da conta."
-            );
-
-          }
-
-        }
-      );
-
-    }
+      }
+    );
 
 
     /* =====================================================
-       OBSERVAR SESSÃO
+       ENVIAR RECUPERAÇÃO
+    ====================================================== */
+
+    sendResetButton.addEventListener(
+      "click",
+      async function() {
+
+        const email =
+          resetEmail.value.trim();
+
+
+        if (!email) {
+
+          setResetMessage(
+            "Digite seu e-mail.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        sendResetButton.disabled = true;
+
+        sendResetButton.textContent =
+          "Enviando...";
+
+
+        setResetMessage("");
+
+
+        /*
+         * O link retornará para a própria página.
+         * Ao retornar, o Supabase dispara o evento
+         * PASSWORD_RECOVERY e mostramos a tela
+         * de criação da nova senha.
+         */
+
+        const redirectTo =
+          window.location.origin +
+          window.location.pathname;
+
+
+        const {
+          error
+        } =
+          await supabaseClient.auth
+            .resetPasswordForEmail(
+              email,
+              {
+                redirectTo
+              }
+            );
+
+
+        sendResetButton.disabled = false;
+
+        sendResetButton.textContent =
+          "Enviar link para redefinir senha";
+
+
+        if (error) {
+
+          console.error(
+            "Erro ao solicitar recuperação:",
+            error
+          );
+
+
+          setResetMessage(
+            "Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        setResetMessage(
+          "E-mail enviado. Verifique sua caixa de entrada e clique no link para criar uma nova senha.",
+          "success"
+        );
+
+      }
+    );
+
+
+    /* =====================================================
+       ALTERAÇÃO DE SENHA
+    ====================================================== */
+
+    changePasswordForm.addEventListener(
+      "submit",
+      async function(event) {
+
+        event.preventDefault();
+
+
+        const password =
+          newPassword.value;
+
+        const confirmation =
+          confirmNewPassword.value;
+
+
+        if (password.length < 6) {
+
+          setChangePasswordMessage(
+            "A senha deve ter pelo menos 6 caracteres.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        if (password !== confirmation) {
+
+          setChangePasswordMessage(
+            "As senhas não são iguais.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        setChangePasswordMessage(
+          "Salvando..."
+        );
+
+
+        const {
+          error
+        } =
+          await supabaseClient.auth
+            .updateUser({
+              password
+            });
+
+
+        if (error) {
+
+          console.error(
+            "Erro ao alterar senha:",
+            error
+          );
+
+
+          setChangePasswordMessage(
+            "Não foi possível alterar a senha. Solicite um novo link de recuperação.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        setChangePasswordMessage(
+          "Senha alterada com sucesso.",
+          "success"
+        );
+
+
+        setTimeout(
+          function() {
+
+            showApp();
+
+          },
+          1200
+        );
+
+      }
+    );
+
+
+    /* =====================================================
+       OBSERVAR ALTERAÇÕES DE AUTENTICAÇÃO
     ====================================================== */
 
     supabaseClient.auth.onAuthStateChange(
       function(event, session) {
 
         console.log(
-          "Estado da autenticação:",
+          "Supabase Auth:",
           event
         );
 
 
-        if (session) {
+        if (
+          event === "PASSWORD_RECOVERY"
+        ) {
 
-          showApplication();
+          showChangePassword();
+
+          return;
 
         }
 
-        else {
+
+        if (
+          event === "SIGNED_IN" &&
+          session
+        ) {
+
+          showApp();
+
+          return;
+
+        }
+
+
+        if (
+          event === "SIGNED_OUT"
+        ) {
 
           showLogin();
 
@@ -1683,74 +2107,25 @@
 
 
     /* =====================================================
-       VERIFICAR SESSÃO EXISTENTE
+       INICIAR AUTENTICAÇÃO
     ====================================================== */
 
-    async function initializeAuthentication() {
-
-      try {
-
-        const {
-          data,
-          error
-        } =
-          await supabaseClient.auth
-            .getSession();
-
-
-        if (error) {
-
-          console.error(
-            "Erro ao verificar sessão:",
-            error
-          );
-
-          showLogin();
-
-          return;
-
-        }
-
-
-        if (
-          data &&
-          data.session
-        ) {
-
-          showApplication();
-
-        }
-
-        else {
-
-          showLogin();
-
-        }
-
-      }
-
-      catch (error) {
-
-        console.error(
-          "Erro ao inicializar autenticação:",
-          error
-        );
-
-        showLogin();
-
-      }
-
-    }
-
-
-    initializeAuthentication();
+    checkAuthSession();
 
   </script>
 
 
 
   <!-- =====================================================
-       SERVICE WORKER / FUNCIONAMENTO COMO PWA
+       JAVASCRIPT PRINCIPAL DO APLICATIVO
+  ====================================================== -->
+
+  <script src="app.js"></script>
+
+
+
+  <!-- =====================================================
+       SERVICE WORKER / PWA
   ====================================================== -->
 
   <script>

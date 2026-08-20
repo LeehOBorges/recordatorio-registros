@@ -116,11 +116,26 @@
 
     }
 
-    .login-brand-icon {
+    /* =====================================================
+       NOVA IMAGEM DE CAPA
+    ====================================================== */
 
-      font-size: 42px;
+    .login-cover-image {
 
-      margin-bottom: 10px;
+      display: block;
+
+      width: 140px;
+      height: 140px;
+
+      object-fit: cover;
+
+      margin: 0 auto 16px;
+
+      border-radius: 28px;
+
+      box-shadow:
+        0 10px 30px
+        rgba(80, 40, 40, 0.15);
 
     }
 
@@ -645,9 +660,11 @@
 
         <div class="login-brand">
 
-          <div class="login-brand-icon">
-            🩷
-          </div>
+          <img
+            src="icon-512.png"
+            alt="Recordatório"
+            class="login-cover-image"
+          >
 
           <h1 class="login-brand-title">
             Recordatório
@@ -1653,10 +1670,6 @@
         SUPABASE_PUBLISHABLE_KEY
       );
 
-    /*
-     * Torna o cliente disponível para os módulos
-     * externos, inclusive sincronizacao.js.
-     */
     window.supabaseClient =
       supabaseClient;
 

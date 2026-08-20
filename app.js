@@ -1,10 +1,16 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
-   VERSÃO 0.1 — CÓDIGO COMPLETO
+   VERSÃO 0.1 — CÓDIGO COMPLETO E CORRIGIDO
    REFEIÇÕES / GLICEMIA / INSULINA / ATIVIDADE
    MEDICAMENTOS / SUPLEMENTOS / VITAMINAS
    CONSULTAS
+   LIXEIRA
    BACKUP E RESTAURAÇÃO
+========================================================= */
+
+
+/* =========================================================
+   CHAVES DO LOCALSTORAGE
 ========================================================= */
 
 const STORAGE_KEY = "recordatorio_registros_v01";
@@ -17,7 +23,6 @@ const MEDICATION_SETTINGS_KEY = "recordatorio_medicamentos_config_v01";
 ========================================================= */
 
 const defaultGlucoseOptions = {
-
   fasting: true,
 
   breakfast1: true,
@@ -45,19 +50,23 @@ const defaultGlucoseOptions = {
 ========================================================= */
 
 let database = loadDatabase();
+let glucoseSettings = loadGlucoseSettings();
+let medications = loadMedications();
 
-let glucoseSettings =
-  loadGlucoseSettings();
-
-let medications =
-  loadMedications();
-
-let selectedDate =
-  new Date();
+let selectedDate = new Date();
 
 let editingId = null;
-
 let currentRecordType = null;
+
+
+/* =========================================================
+   ELEMENTOS PRINCIPAIS
+========================================================= */
+
+const modal = document.getElementById("recordModal");
+const form = document.getElementById("recordForm");
+const formFields = document.getElementById("formFields");
+const modalTitle = document.getElementById("modalTitle");
 
 
 /* =========================================================
@@ -79,6 +88,7 @@ function loadDatabase() {
         records: [],
         trash: []
       };
+
     }
 
     const parsed =
@@ -87,18 +97,15 @@ function loadDatabase() {
     return {
 
       records:
-        Array.isArray(
-          parsed.records
-        )
+        Array.isArray(parsed.records)
           ? parsed.records
           : [],
 
       trash:
-        Array.isArray(
-          parsed.trash
-        )
+        Array.isArray(parsed.trash)
           ? parsed.trash
           : []
+
     };
 
   } catch (error) {
@@ -122,6 +129,7 @@ function saveDatabase() {
     STORAGE_KEY,
     JSON.stringify(database)
   );
+
 }
 
 
@@ -143,6 +151,7 @@ function loadGlucoseSettings() {
       return {
         ...defaultGlucoseOptions
       };
+
     }
 
     const parsed =
@@ -152,10 +161,13 @@ function loadGlucoseSettings() {
 
       ...defaultGlucoseOptions,
 
-      ...(parsed &&
-      typeof parsed === "object"
-        ? parsed
-        : {})
+      ...(
+        parsed &&
+        typeof parsed === "object"
+          ? parsed
+          : {}
+      )
+
     };
 
   } catch (error) {
@@ -176,10 +188,9 @@ function saveGlucoseSettings() {
 
   localStorage.setItem(
     GLUCOSE_SETTINGS_KEY,
-    JSON.stringify(
-      glucoseSettings
-    )
+    JSON.stringify(glucoseSettings)
   );
+
 }
 
 
@@ -196,9 +207,7 @@ function loadMedications() {
         MEDICATION_SETTINGS_KEY
       );
 
-    if (!stored) {
-      return [];
-    }
+    if (!stored) return [];
 
     const parsed =
       JSON.parse(stored);
@@ -223,10 +232,9 @@ function saveMedications() {
 
   localStorage.setItem(
     MEDICATION_SETTINGS_KEY,
-    JSON.stringify(
-      medications
-    )
+    JSON.stringify(medications)
   );
+
 }
 
 
@@ -240,36 +248,12 @@ function generateMedicationId() {
       .toString(36)
       .substring(2)
   );
+
 }
 
 
 /* =========================================================
-   ELEMENTOS
-========================================================= */
-
-const modal =
-  document.getElementById(
-    "recordModal"
-  );
-
-const form =
-  document.getElementById(
-    "recordForm"
-  );
-
-const formFields =
-  document.getElementById(
-    "formFields"
-  );
-
-const modalTitle =
-  document.getElementById(
-    "modalTitle"
-  );
-
-
-/* =========================================================
-   ID
+   GERAR ID
 ========================================================= */
 
 function generateId() {
@@ -280,6 +264,7 @@ function generateId() {
       .toString(36)
       .substring(2)
   );
+
 }
 
 
@@ -303,6 +288,7 @@ function formatDateKey(date) {
     ).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+
 }
 
 
@@ -316,6 +302,7 @@ function formatDisplayDate(date) {
       month: "long"
     }
   );
+
 }
 
 
@@ -328,11 +315,14 @@ function currentTime() {
     String(
       now.getHours()
     ).padStart(2, "0") +
+
     ":" +
+
     String(
       now.getMinutes()
     ).padStart(2, "0")
   );
+
 }
 
 
@@ -343,26 +333,32 @@ function currentTime() {
 function escapeHTML(value) {
 
   return String(value ?? "")
+
     .replaceAll(
       "&",
       "&amp;"
     )
+
     .replaceAll(
       "<",
       "&lt;"
     )
+
     .replaceAll(
       ">",
       "&gt;"
     )
+
     .replaceAll(
       '"',
       "&quot;"
     )
+
     .replaceAll(
       "'",
       "&#039;"
     );
+
 }
 
 
@@ -383,6 +379,7 @@ function renderDate() {
     formatDisplayDate(
       selectedDate
     );
+
 }
 
 
@@ -398,10 +395,12 @@ function getTodayRecords() {
     );
 
   return database.records
+
     .filter(
       record =>
         record.date === dateKey
     )
+
     .sort(
       (a, b) =>
         String(
@@ -412,11 +411,12 @@ function getTodayRecords() {
           )
         )
     );
+
 }
 
 
 /* =========================================================
-   NAVEGAR ENTRE TELAS
+   NAVEGAÇÃO ENTRE TELAS
 ========================================================= */
 
 function showScreen(
@@ -425,19 +425,17 @@ function showScreen(
 
   if (!targetScreen) return;
 
-
   const screens =
     document.querySelectorAll(
       ".app-screen"
     );
 
-
   screens.forEach(
     screen => {
 
       screen.hidden =
-        screen.id !==
-        targetScreen;
+        screen.id !== targetScreen;
+
     }
   );
 
@@ -447,7 +445,6 @@ function showScreen(
       ".navigation-item"
     );
 
-
   navigationItems.forEach(
     item => {
 
@@ -456,6 +453,7 @@ function showScreen(
         item.dataset.screen ===
           targetScreen
       );
+
     }
   );
 
@@ -466,6 +464,7 @@ function showScreen(
   ) {
 
     renderDiary();
+
   }
 
 
@@ -475,6 +474,7 @@ function showScreen(
   ) {
 
     renderConsultations();
+
   }
 
 
@@ -484,7 +484,9 @@ function showScreen(
   ) {
 
     renderMoreScreen();
+
   }
+
 }
 
 
@@ -499,6 +501,7 @@ function openConsultationsScreen() {
   );
 
   renderConsultations();
+
 }
 
 
@@ -510,8 +513,10 @@ function renderDashboard() {
 
   renderDate();
 
+
   const records =
     getTodayRecords();
+
 
   const meals =
     records.filter(
@@ -519,11 +524,13 @@ function renderDashboard() {
         record.type === "meal"
     );
 
+
   const glucose =
     records.filter(
       record =>
         record.type === "glucose"
     );
+
 
   const insulin =
     records.filter(
@@ -531,11 +538,13 @@ function renderDashboard() {
         record.type === "insulin"
     );
 
+
   const activities =
     records.filter(
       record =>
         record.type === "activity"
     );
+
 
   const mealCount =
     document.getElementById(
@@ -546,7 +555,9 @@ function renderDashboard() {
 
     mealCount.textContent =
       meals.length;
+
   }
+
 
   const glucoseCount =
     document.getElementById(
@@ -557,7 +568,9 @@ function renderDashboard() {
 
     glucoseCount.textContent =
       glucose.length;
+
   }
+
 
   const insulinCount =
     document.getElementById(
@@ -568,17 +581,23 @@ function renderDashboard() {
 
     insulinCount.textContent =
       insulin.length;
+
   }
+
 
   const totalMinutes =
     activities.reduce(
-      (total, record) =>
+      (
+        total,
+        record
+      ) =>
         total +
         Number(
           record.duration || 0
         ),
       0
     );
+
 
   const activityTotal =
     document.getElementById(
@@ -589,15 +608,20 @@ function renderDashboard() {
 
     activityTotal.textContent =
       `${totalMinutes} min`;
+
   }
+
 
   renderTimeline(
     records
   );
 
-  renderMedicationHome();
 
   renderMedicationHome();
+
+
+  renderConsultationsHome();
+
 }
 
 
@@ -605,7 +629,9 @@ function renderDashboard() {
    LINHA DO TEMPO
 ========================================================= */
 
-function renderTimeline(records) {
+function renderTimeline(
+  records
+) {
 
   const timeline =
     document.getElementById(
@@ -614,7 +640,10 @@ function renderTimeline(records) {
 
   if (!timeline) return;
 
-  if (records.length === 0) {
+
+  if (
+    records.length === 0
+  ) {
 
     timeline.innerHTML = `
       <div class="empty-state">
@@ -627,12 +656,14 @@ function renderTimeline(records) {
     return;
   }
 
+
   timeline.innerHTML =
     records
       .map(
         createTimelineItem
       )
       .join("");
+
 }
 
 
@@ -640,24 +671,35 @@ function renderTimeline(records) {
    ITEM DA LINHA DO TEMPO
 ========================================================= */
 
-function createTimelineItem(record) {
+function createTimelineItem(
+  record
+) {
 
   const icons = {
 
     meal: "🍽️",
+
     glucose: "🩸",
+
     insulin: "💉",
+
     activity: "🏋️",
+
     medication: "💊",
+
     consultation: "🩺"
+
   };
 
-  let title = "";
 
+  let title = "";
   let detail = "";
 
 
-  if (record.type === "meal") {
+  if (
+    record.type ===
+    "meal"
+  ) {
 
     title =
       record.mealType ||
@@ -671,12 +713,15 @@ function createTimelineItem(record) {
 
       detail +=
         ` · ${record.quantity}`;
+
     }
+
   }
 
 
   else if (
-    record.type === "glucose"
+    record.type ===
+    "glucose"
   ) {
 
     title =
@@ -685,11 +730,13 @@ function createTimelineItem(record) {
     detail =
       record.kind ||
       "Glicemia";
+
   }
 
 
   else if (
-    record.type === "insulin"
+    record.type ===
+    "insulin"
   ) {
 
     title =
@@ -703,12 +750,15 @@ function createTimelineItem(record) {
 
       detail +=
         ` · ${record.application}`;
+
     }
+
   }
 
 
   else if (
-    record.type === "activity"
+    record.type ===
+    "activity"
   ) {
 
     title =
@@ -722,12 +772,15 @@ function createTimelineItem(record) {
 
       detail +=
         ` · ${record.intensity}`;
+
     }
+
   }
 
 
   else if (
-    record.type === "medication"
+    record.type ===
+    "medication"
   ) {
 
     title =
@@ -742,8 +795,11 @@ function createTimelineItem(record) {
       const periodLabels = {
 
         morning: "Manhã",
+
         afternoon: "Tarde",
+
         night: "Noite"
+
       };
 
       detail +=
@@ -753,12 +809,15 @@ function createTimelineItem(record) {
           ] ||
           record.period
         }`;
+
     }
+
   }
 
 
   else if (
-    record.type === "consultation"
+    record.type ===
+    "consultation"
   ) {
 
     title =
@@ -773,7 +832,9 @@ function createTimelineItem(record) {
 
       detail +=
         ` · ${record.location}`;
+
     }
+
   }
 
 
@@ -782,50 +843,58 @@ function createTimelineItem(record) {
     <div class="timeline-item">
 
       <div class="timeline-icon">
+
         ${
           icons[
             record.type
           ] || "📝"
         }
+
       </div>
+
 
       <div class="timeline-content">
 
         <div class="timeline-title">
+
           ${escapeHTML(
             record.time
           )}
+
           ·
+
           ${escapeHTML(
             title
           )}
+
         </div>
 
+
         <div class="timeline-detail">
+
           ${escapeHTML(
             detail
           )}
+
         </div>
 
       </div>
+
 
       <div class="timeline-actions">
 
         <button
           type="button"
-          onclick="editRecord('${escapeHTML(
-            record.id
-          )}')"
+          onclick="editRecord('${escapeHTML(record.id)}')"
           title="Editar"
         >
           ✏️
         </button>
 
+
         <button
           type="button"
-          onclick="deleteRecord('${escapeHTML(
-            record.id
-          )}')"
+          onclick="deleteRecord('${escapeHTML(record.id)}')"
           title="Excluir"
         >
           🗑️
@@ -834,7 +903,9 @@ function createTimelineItem(record) {
       </div>
 
     </div>
+
   `;
+
 }
 
 
@@ -912,6 +983,7 @@ function getGlucoseOptions(
       "supper2",
       "2h após a ceia"
     ]
+
   ];
 
 
@@ -928,11 +1000,10 @@ function getGlucoseOptions(
       .map(
         item => ({
 
-          value:
-            item[1],
+          value: item[1],
 
-          label:
-            item[1]
+          label: item[1]
+
         })
       );
 
@@ -954,11 +1025,14 @@ function getGlucoseOptions(
 
       label:
         record.kind
+
     });
+
   }
 
 
   return options;
+
 }
 
 
@@ -982,32 +1056,40 @@ function openRecordForm(
 
   const titles = {
 
-    meal: record
-      ? "Editar refeição"
-      : "Nova refeição",
+    meal:
+      record
+        ? "Editar refeição"
+        : "Nova refeição",
 
-    glucose: record
-      ? "Editar glicemia"
-      : "Nova glicemia",
+    glucose:
+      record
+        ? "Editar glicemia"
+        : "Nova glicemia",
 
-    insulin: record
-      ? "Editar insulina"
-      : "Nova aplicação",
+    insulin:
+      record
+        ? "Editar insulina"
+        : "Nova aplicação",
 
-    activity: record
-      ? "Editar atividade"
-      : "Nova atividade",
+    activity:
+      record
+        ? "Editar atividade"
+        : "Nova atividade",
 
-    consultation: record
-      ? "Editar consulta"
-      : "Nova consulta"
+    consultation:
+      record
+        ? "Editar consulta"
+        : "Nova consulta"
+
   };
 
 
   if (modalTitle) {
 
     modalTitle.textContent =
-      titles[type];
+      titles[type] ||
+      "Novo registro";
+
   }
 
 
@@ -1036,13 +1118,12 @@ function openRecordForm(
       <input
         id="recordDate"
         type="date"
-        value="${escapeHTML(
-          date
-        )}"
+        value="${escapeHTML(date)}"
         required
       >
 
     </div>
+
 
     <div class="form-group">
 
@@ -1053,19 +1134,18 @@ function openRecordForm(
       <input
         id="recordTime"
         type="time"
-        value="${escapeHTML(
-          time
-        )}"
+        value="${escapeHTML(time)}"
         required
       >
 
     </div>
+
   `;
 
 
-  /* =======================================================
+  /* =====================================================
      REFEIÇÃO
-  ======================================================= */
+  ===================================================== */
 
   if (
     type === "meal"
@@ -1156,13 +1236,15 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
-  /* =======================================================
+  /* =====================================================
      GLICEMIA
-  ======================================================= */
+  ===================================================== */
 
   if (
     type === "glucose"
@@ -1181,9 +1263,7 @@ function openRecordForm(
           option => `
 
             <option
-              value="${escapeHTML(
-                option.value
-              )}"
+              value="${escapeHTML(option.value)}"
               ${
                 record &&
                 record.kind ===
@@ -1192,10 +1272,13 @@ function openRecordForm(
                   : ""
               }
             >
+
               ${escapeHTML(
                 option.label
               )}
+
             </option>
+
           `
         )
 
@@ -1227,8 +1310,12 @@ function openRecordForm(
           Momento da medição
         </label>
 
-        <select id="glucoseKind">
+        <select
+          id="glucoseKind"
+        >
+
           ${optionsHTML}
+
         </select>
 
       </div>
@@ -1246,13 +1333,15 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
-  /* =======================================================
+  /* =====================================================
      INSULINA
-  ======================================================= */
+  ===================================================== */
 
   if (
     type === "insulin"
@@ -1298,7 +1387,9 @@ function openRecordForm(
           Aplicação
         </label>
 
-        <select id="application">
+        <select
+          id="application"
+        >
 
           <option>
             Em jejum
@@ -1333,13 +1424,15 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
-  /* =======================================================
+  /* =====================================================
      ATIVIDADE
-  ======================================================= */
+  ===================================================== */
 
   if (
     type === "activity"
@@ -1353,7 +1446,9 @@ function openRecordForm(
           Atividade
         </label>
 
-        <select id="activityType">
+        <select
+          id="activityType"
+        >
 
           <option>
             Musculação
@@ -1406,7 +1501,9 @@ function openRecordForm(
           Intensidade
         </label>
 
-        <select id="intensity">
+        <select
+          id="intensity"
+        >
 
           <option>
             Leve
@@ -1437,13 +1534,15 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
-  /* =======================================================
+  /* =====================================================
      CONSULTA
-  ======================================================= */
+  ===================================================== */
 
   if (
     type === "consultation"
@@ -1525,7 +1624,9 @@ function openRecordForm(
         ></textarea>
 
       </div>
+
     `;
+
   }
 
 
@@ -1533,6 +1634,7 @@ function openRecordForm(
 
     formFields.innerHTML =
       html;
+
   }
 
 
@@ -1541,13 +1643,16 @@ function openRecordForm(
     fillEditFields(
       record
     );
+
   }
 
 
   if (modal) {
 
     modal.showModal();
+
   }
+
 }
 
 
@@ -1574,7 +1679,9 @@ function fillEditFields(
 
         element.value =
           value ?? "";
+
       }
+
     };
 
 
@@ -1582,6 +1689,7 @@ function fillEditFields(
     "recordDate",
     record.date
   );
+
 
   setValue(
     "recordTime",
@@ -1594,15 +1702,18 @@ function fillEditFields(
     record.mealType
   );
 
+
   setValue(
     "food",
     record.food
   );
 
+
   setValue(
     "quantity",
     record.quantity
   );
+
 
   setValue(
     "note",
@@ -1615,10 +1726,12 @@ function fillEditFields(
     record.value
   );
 
+
   setValue(
     "glucoseKind",
     record.kind
   );
+
 
   setValue(
     "glucoseNote",
@@ -1631,15 +1744,18 @@ function fillEditFields(
     record.insulin
   );
 
+
   setValue(
     "insulinDose",
     record.dose
   );
 
+
   setValue(
     "application",
     record.application
   );
+
 
   setValue(
     "insulinNote",
@@ -1652,15 +1768,18 @@ function fillEditFields(
     record.activity
   );
 
+
   setValue(
     "duration",
     record.duration
   );
 
+
   setValue(
     "intensity",
     record.intensity
   );
+
 
   setValue(
     "activityNote",
@@ -1673,25 +1792,30 @@ function fillEditFields(
     record.professional
   );
 
+
   setValue(
     "consultationSpecialty",
     record.specialty
   );
+
 
   setValue(
     "consultationLocation",
     record.location
   );
 
+
   setValue(
     "consultationReason",
     record.reason
   );
 
+
   setValue(
     "consultationNote",
     record.note
   );
+
 }
 
 
@@ -1713,6 +1837,7 @@ if (form) {
           "recordDate"
         );
 
+
       const timeElement =
         document.getElementById(
           "recordTime"
@@ -1723,7 +1848,9 @@ if (form) {
         !dateElement ||
         !timeElement
       ) {
+
         return;
+
       }
 
 
@@ -1744,12 +1871,13 @@ if (form) {
 
         updatedAt:
           new Date().toISOString()
+
       };
 
 
-      /* =====================================================
+      /* ===================================================
          REFEIÇÃO
-      ===================================================== */
+      =================================================== */
 
       if (
         currentRecordType ===
@@ -1761,26 +1889,30 @@ if (form) {
             "mealType"
           ).value;
 
+
         record.food =
           document.getElementById(
             "food"
           ).value.trim();
+
 
         record.quantity =
           document.getElementById(
             "quantity"
           ).value.trim();
 
+
         record.note =
           document.getElementById(
             "note"
           ).value.trim();
+
       }
 
 
-      /* =====================================================
+      /* ===================================================
          GLICEMIA
-      ===================================================== */
+      =================================================== */
 
       if (
         currentRecordType ===
@@ -1792,21 +1924,24 @@ if (form) {
             "glucoseValue"
           ).value;
 
+
         record.kind =
           document.getElementById(
             "glucoseKind"
           ).value;
 
+
         record.note =
           document.getElementById(
             "glucoseNote"
           ).value.trim();
+
       }
 
 
-      /* =====================================================
+      /* ===================================================
          INSULINA
-      ===================================================== */
+      =================================================== */
 
       if (
         currentRecordType ===
@@ -1818,26 +1953,30 @@ if (form) {
             "insulinName"
           ).value.trim();
 
+
         record.dose =
           document.getElementById(
             "insulinDose"
           ).value;
+
 
         record.application =
           document.getElementById(
             "application"
           ).value;
 
+
         record.note =
           document.getElementById(
             "insulinNote"
           ).value.trim();
+
       }
 
 
-      /* =====================================================
+      /* ===================================================
          ATIVIDADE
-      ===================================================== */
+      =================================================== */
 
       if (
         currentRecordType ===
@@ -1849,26 +1988,30 @@ if (form) {
             "activityType"
           ).value;
 
+
         record.duration =
           document.getElementById(
             "duration"
           ).value;
+
 
         record.intensity =
           document.getElementById(
             "intensity"
           ).value;
 
+
         record.note =
           document.getElementById(
             "activityNote"
           ).value.trim();
+
       }
 
 
-      /* =====================================================
+      /* ===================================================
          CONSULTA
-      ===================================================== */
+      =================================================== */
 
       if (
         currentRecordType ===
@@ -1880,31 +2023,36 @@ if (form) {
             "consultationProfessional"
           ).value.trim();
 
+
         record.specialty =
           document.getElementById(
             "consultationSpecialty"
           ).value.trim();
+
 
         record.location =
           document.getElementById(
             "consultationLocation"
           ).value.trim();
 
+
         record.reason =
           document.getElementById(
             "consultationReason"
           ).value.trim();
 
+
         record.note =
           document.getElementById(
             "consultationNote"
           ).value.trim();
+
       }
 
 
-      /* =====================================================
-         EDITAR OU CRIAR
-      ===================================================== */
+      /* ===================================================
+         EDITAR
+      =================================================== */
 
       if (editingId) {
 
@@ -1918,15 +2066,22 @@ if (form) {
 
         if (index !== -1) {
 
-          database.records[index] = {
+          database.records[index] =
+            {
+              ...database.records[index],
+              ...record
+            };
 
-            ...database.records[index],
-
-            ...record
-          };
         }
 
-      } else {
+      }
+
+
+      /* ===================================================
+         NOVO
+      =================================================== */
+
+      else {
 
         record.createdAt =
           new Date().toISOString();
@@ -1934,6 +2089,7 @@ if (form) {
         database.records.push(
           record
         );
+
       }
 
 
@@ -1943,21 +2099,28 @@ if (form) {
       if (modal) {
 
         modal.close();
+
       }
 
 
-      editingId = null;
+      editingId =
+        null;
 
-      currentRecordType = null;
+      currentRecordType =
+        null;
 
 
       renderDashboard();
 
       renderDiary();
 
+      renderTrash();
+
       renderConsultations();
+
     }
   );
+
 }
 
 
@@ -1965,7 +2128,9 @@ if (form) {
    EDITAR REGISTRO
 ========================================================= */
 
-function editRecord(id) {
+function editRecord(
+  id
+) {
 
   const record =
     database.records.find(
@@ -1995,6 +2160,7 @@ function editRecord(id) {
       openEditMedicationForm(
         medication.id
       );
+
     }
 
     return;
@@ -2005,6 +2171,7 @@ function editRecord(id) {
     record.type,
     record
   );
+
 }
 
 
@@ -2012,7 +2179,9 @@ function editRecord(id) {
    EXCLUIR REGISTRO
 ========================================================= */
 
-function deleteRecord(id) {
+function deleteRecord(
+  id
+) {
 
   const record =
     database.records.find(
@@ -2039,6 +2208,7 @@ function deleteRecord(id) {
 
     deletedAt:
       new Date().toISOString()
+
   });
 
 
@@ -2051,6 +2221,7 @@ function deleteRecord(id) {
 
   saveDatabase();
 
+
   renderDashboard();
 
   renderDiary();
@@ -2058,6 +2229,7 @@ function deleteRecord(id) {
   renderTrash();
 
   renderConsultations();
+
 }
 
 
@@ -2081,9 +2253,7 @@ function renderConsultationsHome() {
       );
 
 
-    if (!timeline) {
-      return;
-    }
+    if (!timeline) return;
 
 
     container =
@@ -2104,6 +2274,7 @@ function renderConsultationsHome() {
       "afterend",
       container
     );
+
   }
 
 
@@ -2115,6 +2286,7 @@ function renderConsultationsHome() {
 
   const consultations =
     database.records
+
       .filter(
         record =>
           record.type ===
@@ -2122,6 +2294,7 @@ function renderConsultationsHome() {
           record.date ===
             dateKey
       )
+
       .sort(
         (a, b) =>
           String(
@@ -2158,6 +2331,7 @@ function renderConsultationsHome() {
 
       </div>
 
+
       <button
         type="button"
         id="addConsultationHomeButton"
@@ -2167,23 +2341,30 @@ function renderConsultationsHome() {
       </button>
 
     </div>
+
   `;
 
 
   if (
-    consultations.length === 0
+    consultations.length ===
+    0
   ) {
 
     html += `
 
       <div class="empty-state">
 
-        Nenhuma consulta registrada para este dia.
+        Nenhuma consulta registrada
+        para este dia.
 
       </div>
+
     `;
 
-  } else {
+  }
+
+
+  else {
 
     consultations.forEach(
       consultation => {
@@ -2192,8 +2373,10 @@ function renderConsultationsHome() {
           createConsultationCard(
             consultation
           );
+
       }
     );
+
   }
 
 
@@ -2211,14 +2394,14 @@ function renderConsultationsHome() {
 
     addButton.addEventListener(
       "click",
-      () => {
-
+      () =>
         openRecordForm(
           "consultation"
-        );
-      }
+        )
     );
+
   }
+
 }
 
 
@@ -2252,44 +2435,52 @@ function createConsultationCard(
         <div>
 
           <strong>
+
             🩺
             ${escapeHTML(
               consultation.time
             )}
+
             ·
+
             ${escapeHTML(
               consultation.specialty ||
               "Consulta"
             )}
+
           </strong>
 
 
           <div
-            style="
-              margin-top:6px;
-            "
+            style="margin-top:6px;"
           >
+
             ${escapeHTML(
               consultation.professional ||
               ""
             )}
+
           </div>
 
 
           ${
             consultation.location
               ? `
+
                 <div
                   style="
                     margin-top:4px;
                     opacity:.7;
                   "
                 >
+
                   📍
                   ${escapeHTML(
                     consultation.location
                   )}
+
                 </div>
+
               `
               : ""
           }
@@ -2298,15 +2489,19 @@ function createConsultationCard(
           ${
             consultation.reason
               ? `
+
                 <div
                   style="
                     margin-top:6px;
                   "
                 >
+
                   ${escapeHTML(
                     consultation.reason
                   )}
+
                 </div>
+
               `
               : ""
           }
@@ -2323,9 +2518,7 @@ function createConsultationCard(
 
           <button
             type="button"
-            onclick="editRecord('${escapeHTML(
-              consultation.id
-            )}')"
+            onclick="editRecord('${escapeHTML(consultation.id)}')"
             title="Editar consulta"
           >
             ✏️
@@ -2334,9 +2527,7 @@ function createConsultationCard(
 
           <button
             type="button"
-            onclick="deleteRecord('${escapeHTML(
-              consultation.id
-            )}')"
+            onclick="deleteRecord('${escapeHTML(consultation.id)}')"
             title="Excluir consulta"
           >
             🗑️
@@ -2347,7 +2538,9 @@ function createConsultationCard(
       </div>
 
     </div>
+
   `;
+
 }
 
 
@@ -2371,9 +2564,7 @@ function renderConsultations() {
       );
 
 
-    if (!screen) {
-      return;
-    }
+    if (!screen) return;
 
 
     container =
@@ -2389,28 +2580,38 @@ function renderConsultations() {
     screen.appendChild(
       container
     );
+
   }
 
 
   const consultations =
     database.records
+
       .filter(
         record =>
           record.type ===
           "consultation"
       )
+
       .sort(
         (a, b) => {
 
           const dateA =
-            `${a.date} ${a.time || ""}`;
+            `${a.date} ${
+              a.time || ""
+            }`;
+
 
           const dateB =
-            `${b.date} ${b.time || ""}`;
+            `${b.date} ${
+              b.time || ""
+            }`;
+
 
           return dateA.localeCompare(
             dateB
           );
+
         }
       );
 
@@ -2435,7 +2636,8 @@ function renderConsultations() {
         </h2>
 
         <p>
-          Acompanhe suas consultas e compromissos de saúde.
+          Acompanhe suas consultas
+          e compromissos de saúde.
         </p>
 
       </div>
@@ -2450,11 +2652,13 @@ function renderConsultations() {
       </button>
 
     </div>
+
   `;
 
 
   if (
-    consultations.length === 0
+    consultations.length ===
+    0
   ) {
 
     html += `
@@ -2466,13 +2670,17 @@ function renderConsultations() {
         <br><br>
 
         Cadastre sua primeira consulta
-        para começar a organizar seus
-        compromissos de saúde.
+        para começar a organizar
+        seus compromissos de saúde.
 
       </div>
+
     `;
 
-  } else {
+  }
+
+
+  else {
 
     html += `
 
@@ -2484,6 +2692,7 @@ function renderConsultations() {
           margin-top:16px;
         "
       >
+
     `;
 
 
@@ -2494,9 +2703,7 @@ function renderConsultations() {
 
           <div
             class="card"
-            style="
-              padding:16px;
-            "
+            style="padding:16px;"
           >
 
             <div
@@ -2509,9 +2716,7 @@ function renderConsultations() {
             >
 
               <div
-                style="
-                  flex:1;
-                "
+                style="flex:1;"
               >
 
                 <div
@@ -2520,11 +2725,13 @@ function renderConsultations() {
                     font-size:1.05rem;
                   "
                 >
+
                   🩺
                   ${escapeHTML(
                     consultation.specialty ||
                     "Consulta"
                   )}
+
                 </div>
 
 
@@ -2533,31 +2740,39 @@ function renderConsultations() {
                     margin-top:8px;
                   "
                 >
+
                   📅
                   ${escapeHTML(
                     consultation.date
                   )}
+
                   ·
+
                   ⏰
                   ${escapeHTML(
                     consultation.time
                   )}
+
                 </div>
 
 
                 ${
                   consultation.professional
                     ? `
+
                       <div
                         style="
                           margin-top:6px;
                         "
                       >
+
                         👩‍⚕️
                         ${escapeHTML(
                           consultation.professional
                         )}
+
                       </div>
+
                     `
                     : ""
                 }
@@ -2566,17 +2781,21 @@ function renderConsultations() {
                 ${
                   consultation.location
                     ? `
+
                       <div
                         style="
                           margin-top:6px;
                           opacity:.75;
                         "
                       >
+
                         📍
                         ${escapeHTML(
                           consultation.location
                         )}
+
                       </div>
+
                     `
                     : ""
                 }
@@ -2585,18 +2804,23 @@ function renderConsultations() {
                 ${
                   consultation.reason
                     ? `
+
                       <div
                         style="
                           margin-top:8px;
                         "
                       >
+
                         <strong>
                           Motivo:
                         </strong>
+
                         ${escapeHTML(
                           consultation.reason
                         )}
+
                       </div>
+
                     `
                     : ""
                 }
@@ -2605,11 +2829,13 @@ function renderConsultations() {
                 ${
                   consultation.note
                     ? `
+
                       <div
                         style="
                           margin-top:8px;
                         "
                       >
+
                         <strong>
                           Observações:
                         </strong>
@@ -2620,11 +2846,15 @@ function renderConsultations() {
                             margin-top:4px;
                           "
                         >
+
                           ${escapeHTML(
                             consultation.note
                           )}
+
                         </div>
+
                       </div>
+
                     `
                     : ""
                 }
@@ -2642,9 +2872,7 @@ function renderConsultations() {
 
                 <button
                   type="button"
-                  onclick="editRecord('${escapeHTML(
-                    consultation.id
-                  )}')"
+                  onclick="editRecord('${escapeHTML(consultation.id)}')"
                   title="Editar"
                 >
                   ✏️
@@ -2653,9 +2881,7 @@ function renderConsultations() {
 
                 <button
                   type="button"
-                  onclick="deleteRecord('${escapeHTML(
-                    consultation.id
-                  )}')"
+                  onclick="deleteRecord('${escapeHTML(consultation.id)}')"
                   title="Excluir"
                 >
                   🗑️
@@ -2666,12 +2892,17 @@ function renderConsultations() {
             </div>
 
           </div>
+
         `;
+
       }
     );
 
 
-    html += `</div>`;
+    html += `
+      </div>
+    `;
+
   }
 
 
@@ -2689,14 +2920,14 @@ function renderConsultations() {
 
     newButton.addEventListener(
       "click",
-      () => {
-
+      () =>
         openRecordForm(
           "consultation"
-        );
-      }
+        )
     );
+
   }
+
 }
 
 
@@ -2741,6 +2972,7 @@ function renderMedicationHome() {
       "afterend",
       container
     );
+
   }
 
 
@@ -2765,14 +2997,17 @@ function renderMedicationHome() {
       <div>
 
         <h2>
-          💊 Medicamentos / Suplementos e Vitaminas
+          💊 Medicamentos /
+          Suplementos e Vitaminas
         </h2>
 
         <p>
-          Marque cada item conforme você tomar.
+          Marque cada item conforme
+          você tomar.
         </p>
 
       </div>
+
 
       <button
         type="button"
@@ -2783,18 +3018,21 @@ function renderMedicationHome() {
       </button>
 
     </div>
+
   `;
 
 
   if (
-    medications.length === 0
+    medications.length ===
+    0
   ) {
 
     html += `
 
       <div class="empty-state">
 
-        Nenhum medicamento ou vitamina cadastrado.
+        Nenhum medicamento ou
+        vitamina cadastrado.
 
         <br><br>
 
@@ -2803,10 +3041,12 @@ function renderMedicationHome() {
           id="addFirstMedicationButton"
           class="primary-button"
         >
-          + Adicionar medicamento, suplemento ou vitamina
+          + Adicionar medicamento,
+          suplemento ou vitamina
         </button>
 
       </div>
+
     `;
 
 
@@ -2817,6 +3057,7 @@ function renderMedicationHome() {
     attachMedicationHomeEvents();
 
     return;
+
   }
 
 
@@ -2836,6 +3077,7 @@ function renderMedicationHome() {
       key: "night",
       label: "🌙 Noite"
     }
+
   ];
 
 
@@ -2845,8 +3087,7 @@ function renderMedicationHome() {
       const periodMedications =
         medications.filter(
           medication =>
-            medication.active !==
-              false &&
+            medication.active !== false &&
             medication.period ===
               period.key
         );
@@ -2856,21 +3097,22 @@ function renderMedicationHome() {
         periodMedications.length ===
         0
       ) {
+
         return;
+
       }
 
 
       html += `
 
         <div
-          style="
-            margin-top:18px;
-          "
+          style="margin-top:18px;"
         >
 
           <h3>
             ${period.label}
           </h3>
+
       `;
 
 
@@ -2893,22 +3135,23 @@ function renderMedicationHome() {
                 gap:12px;
                 padding:12px 0;
                 cursor:pointer;
-                border-bottom:1px solid rgba(0,0,0,.08);
+                border-bottom:
+                  1px solid
+                  rgba(0,0,0,.08);
               "
             >
 
               <input
                 type="checkbox"
                 class="medication-check"
-                data-medication-id="${escapeHTML(
-                  medication.id
-                )}"
+                data-medication-id="${escapeHTML(medication.id)}"
                 ${
                   taken
                     ? "checked"
                     : ""
                 }
               >
+
 
               <span
                 style="
@@ -2920,18 +3163,25 @@ function renderMedicationHome() {
                   }
                 "
               >
+
                 ${escapeHTML(
                   medication.name
                 )}
+
               </span>
 
             </label>
+
           `;
+
         }
       );
 
 
-      html += `</div>`;
+      html += `
+        </div>
+      `;
+
     }
   );
 
@@ -2941,6 +3191,7 @@ function renderMedicationHome() {
 
 
   attachMedicationHomeEvents();
+
 }
 
 
@@ -2968,6 +3219,7 @@ function attachMedicationHomeEvents() {
       "click",
       openMedicationManager
     );
+
   }
 
 
@@ -2983,8 +3235,10 @@ function attachMedicationHomeEvents() {
           openAddMedicationForm,
           50
         );
+
       }
     );
+
   }
 
 
@@ -3002,12 +3256,16 @@ function attachMedicationHomeEvents() {
             toggleMedicationTaken(
               checkbox.dataset
                 .medicationId,
+
               checkbox.checked
             );
+
           }
         );
+
       }
     );
+
 }
 
 
@@ -3022,20 +3280,24 @@ function isMedicationTaken(
 
   return database.records.some(
     record =>
+
       record.type ===
         "medication" &&
+
       record.medicationId ===
         medicationId &&
+
       record.date ===
         dateKey &&
-      record.taken ===
-        true
+
+      record.taken === true
   );
+
 }
 
 
 /* =========================================================
-   MARCAR / DESMARCAR
+   MARCAR / DESMARCAR MEDICAMENTO
 ========================================================= */
 
 function toggleMedicationTaken(
@@ -3063,10 +3325,13 @@ function toggleMedicationTaken(
   const existingIndex =
     database.records.findIndex(
       record =>
+
         record.type ===
           "medication" &&
+
         record.medicationId ===
           medicationId &&
+
         record.date ===
           dateKey
     );
@@ -3106,17 +3371,17 @@ function toggleMedicationTaken(
 
       createdAt:
         existingIndex !== -1
-          ? database.records[
-              existingIndex
-            ].createdAt ||
-            new Date()
-              .toISOString()
-          : new Date()
-              .toISOString(),
+          ? (
+              database.records[
+                existingIndex
+              ].createdAt ||
+              new Date().toISOString()
+            )
+          : new Date().toISOString(),
 
       updatedAt:
-        new Date()
-          .toISOString()
+        new Date().toISOString()
+
     };
 
 
@@ -3133,16 +3398,24 @@ function toggleMedicationTaken(
         ],
 
         ...record
+
       };
 
-    } else {
+    }
+
+
+    else {
 
       database.records.push(
         record
       );
+
     }
 
-  } else {
+  }
+
+
+  else {
 
     if (
       existingIndex !== -1
@@ -3152,20 +3425,24 @@ function toggleMedicationTaken(
         existingIndex,
         1
       );
+
     }
+
   }
 
 
   saveDatabase();
 
+
   renderDashboard();
 
   renderDiary();
+
 }
 
 
 /* =========================================================
-   GERENCIADOR
+   GERENCIADOR DE MEDICAMENTOS
 ========================================================= */
 
 function openMedicationManager() {
@@ -3183,18 +3460,27 @@ function openMedicationManager() {
         "dialog"
       );
 
+
     manager.id =
       "medicationManager";
+
 
     document.body.appendChild(
       manager
     );
+
   }
 
 
   renderMedicationManager();
 
-  manager.showModal();
+
+  if (!manager.open) {
+
+    manager.showModal();
+
+  }
+
 }
 
 
@@ -3235,8 +3521,10 @@ function renderMedicationManager() {
       >
 
         <h2>
-          💊 Medicamentos / Suplementos e Vitaminas
+          💊 Medicamentos /
+          Suplementos e Vitaminas
         </h2>
+
 
         <button
           type="submit"
@@ -3249,20 +3537,10 @@ function renderMedicationManager() {
 
 
       <p>
-        Cadastre cada item separadamente e escolha
-        o período em que ele é tomado.
-      </p>/* =========================================================
-   ABRIR TELA DE CONSULTAS
-========================================================= */
-
-function openConsultationsScreen() {
-
-  showScreen(
-    "consultationScreen"
-  );
-
-  renderConsultations();
-}
+        Cadastre cada item separadamente
+        e escolha o período em que ele
+        é tomado.
+      </p>
 
 
       <button
@@ -3271,7 +3549,8 @@ function openConsultationsScreen() {
         class="primary-button"
         style="margin:16px 0;"
       >
-        + Adicionar medicamento, suplemento ou vitamina
+        + Adicionar medicamento,
+        suplemento ou vitamina
       </button>
 
 
@@ -3280,6 +3559,7 @@ function openConsultationsScreen() {
       ></div>
 
     </form>
+
   `;
 
 
@@ -3290,16 +3570,25 @@ function openConsultationsScreen() {
 
 
   if (
-    medications.length === 0
+    medications.length ===
+    0
   ) {
 
     list.innerHTML = `
+
       <div class="empty-state">
-        Nenhum medicamento ou vitamina cadastrado.
+
+        Nenhum medicamento
+        ou vitamina cadastrado.
+
       </div>
+
     `;
 
-  } else {
+  }
+
+
+  else {
 
     list.innerHTML =
       medications
@@ -3307,6 +3596,7 @@ function openConsultationsScreen() {
           createMedicationManagerItem
         )
         .join("");
+
   }
 
 
@@ -3329,14 +3619,13 @@ function openConsultationsScreen() {
 
         button.addEventListener(
           "click",
-          () => {
-
+          () =>
             openEditMedicationForm(
               button.dataset
                 .editMedication
-            );
-          }
+            )
         );
+
       }
     );
 
@@ -3350,16 +3639,16 @@ function openConsultationsScreen() {
 
         button.addEventListener(
           "click",
-          () => {
-
+          () =>
             deleteMedication(
               button.dataset
                 .deleteMedication
-            );
-          }
+            )
         );
+
       }
     );
+
 }
 
 
@@ -3373,9 +3662,15 @@ function createMedicationManagerItem(
 
   const periodLabels = {
 
-    morning: "Manhã",
-    afternoon: "Tarde",
-    night: "Noite"
+    morning:
+      "Manhã",
+
+    afternoon:
+      "Tarde",
+
+    night:
+      "Noite"
+
   };
 
 
@@ -3403,12 +3698,14 @@ function createMedicationManagerItem(
             )}
           </strong>
 
+
           <div
             style="
               margin-top:4px;
               opacity:.7;
             "
           >
+
             ${escapeHTML(
               periodLabels[
                 medication.period
@@ -3423,6 +3720,7 @@ function createMedicationManagerItem(
                   )}`
                 : ""
             }
+
           </div>
 
         </div>
@@ -3437,9 +3735,7 @@ function createMedicationManagerItem(
 
           <button
             type="button"
-            data-edit-medication="${escapeHTML(
-              medication.id
-            )}"
+            data-edit-medication="${escapeHTML(medication.id)}"
             title="Editar"
           >
             ✏️
@@ -3448,9 +3744,7 @@ function createMedicationManagerItem(
 
           <button
             type="button"
-            data-delete-medication="${escapeHTML(
-              medication.id
-            )}"
+            data-delete-medication="${escapeHTML(medication.id)}"
             title="Excluir"
           >
             🗑️
@@ -3461,23 +3755,22 @@ function createMedicationManagerItem(
       </div>
 
     </div>
+
   `;
+
 }
 
 
 /* =========================================================
-   NOVO MEDICAMENTO
+   FORMULÁRIO DE MEDICAMENTO
 ========================================================= */
 
 function openAddMedicationForm() {
 
   renderMedicationForm();
+
 }
 
-
-/* =========================================================
-   EDITAR MEDICAMENTO
-========================================================= */
 
 function openEditMedicationForm(
   id
@@ -3496,12 +3789,9 @@ function openEditMedicationForm(
   renderMedicationForm(
     medication
   );
+
 }
 
-
-/* =========================================================
-   FORMULÁRIO MEDICAMENTO
-========================================================= */
 
 function renderMedicationForm(
   medication = null
@@ -3541,11 +3831,13 @@ function renderMedicationForm(
       >
 
         <h2>
+
           ${
             isEditing
               ? "Editar medicamento / suplemento / vitamina"
               : "Novo medicamento / suplemento / vitamina"
           }
+
         </h2>
 
 
@@ -3690,6 +3982,7 @@ function renderMedicationForm(
       </div>
 
     </form>
+
   `;
 
 
@@ -3725,35 +4018,30 @@ function renderMedicationForm(
 
 
         const name =
-          document
-            .getElementById(
-              "medicationName"
-            )
-            .value
-            .trim();
+          document.getElementById(
+            "medicationName"
+          ).value.trim();
 
 
         const period =
-          document
-            .getElementById(
-              "medicationPeriod"
-            )
-            .value;
+          document.getElementById(
+            "medicationPeriod"
+          ).value;
 
 
         const time =
-          document
-            .getElementById(
-              "medicationTime"
-            )
-            .value;
+          document.getElementById(
+            "medicationTime"
+          ).value;
 
 
         if (
           !name ||
           !time
         ) {
+
           return;
+
         }
 
 
@@ -3773,18 +4061,16 @@ function renderMedicationForm(
 
               ...medications[index],
 
-              name:
-                name,
+              name,
 
-              period:
-                period,
+              period,
 
-              time:
-                time,
+              time,
 
-              active:
-                true
+              active: true
+
             };
+
           }
 
 
@@ -3806,35 +4092,39 @@ function renderMedicationForm(
                     medicationName:
                       name,
 
-                    period:
-                      period
+                    period
+
                   };
+
                 }
 
 
                 return record;
+
               }
             );
 
-        } else {
+        }
+
+
+        else {
 
           medications.push({
 
             id:
               generateMedicationId(),
 
-            name:
-              name,
+            name,
 
-            period:
-              period,
+            period,
 
-            time:
-              time,
+            time,
 
             active:
               true
+
           });
+
         }
 
 
@@ -3847,8 +4137,10 @@ function renderMedicationForm(
         renderMedicationHome();
 
         renderDashboard();
+
       }
     );
+
 }
 
 
@@ -3907,11 +4199,12 @@ function deleteMedication(
   renderMedicationHome();
 
   renderDashboard();
+
 }
 
 
 /* =========================================================
-   BOTÕES PRINCIPAIS
+   BOTÕES PRINCIPAIS — CRIAR REGISTROS
 ========================================================= */
 
 document
@@ -3929,8 +4222,10 @@ document
             button.dataset
               .recordType
           );
+
         }
       );
+
     }
   );
 
@@ -3945,44 +4240,21 @@ const consultationQuickButton =
   );
 
 
-if (consultationQuickButton) {
+if (
+  consultationQuickButton
+) {
 
   consultationQuickButton.addEventListener(
     "click",
-    () => {
+    event => {
 
-      const targetScreen =
-        "consultationScreen";
-
-
-      showScreen(
-        targetScreen
-      );
-
-
-      renderConsultations();
-    }
-  );
-}/* =========================================================
-   BOTÃO CONSULTAS — CORREÇÃO
-========================================================= */
-
-const consultationQuickButton =
-  document.getElementById(
-    "consultationQuickButton"
-  );
-
-
-if (consultationQuickButton) {
-
-  consultationQuickButton.addEventListener(
-    "click",
-    () => {
+      event.preventDefault();
 
       openConsultationsScreen();
 
     }
   );
+
 }
 
 
@@ -4005,9 +4277,12 @@ if (closeModal) {
       if (modal) {
 
         modal.close();
+
       }
+
     }
   );
+
 }
 
 
@@ -4026,14 +4301,17 @@ if (cancelButton) {
       if (modal) {
 
         modal.close();
+
       }
+
     }
   );
+
 }
 
 
 /* =========================================================
-   DIA ANTERIOR
+   NAVEGAÇÃO POR DIAS
 ========================================================= */
 
 const previousDay =
@@ -4049,19 +4327,17 @@ if (previousDay) {
     () => {
 
       selectedDate.setDate(
-        selectedDate.getDate() -
-          1
+        selectedDate.getDate() - 1
       );
 
+
       renderDashboard();
+
     }
   );
+
 }
 
-
-/* =========================================================
-   PRÓXIMO DIA
-========================================================= */
 
 const nextDay =
   document.getElementById(
@@ -4076,13 +4352,15 @@ if (nextDay) {
     () => {
 
       selectedDate.setDate(
-        selectedDate.getDate() +
-          1
+        selectedDate.getDate() + 1
       );
 
+
       renderDashboard();
+
     }
   );
+
 }
 
 
@@ -4107,12 +4385,17 @@ function renderDiary() {
   ) {
 
     container.innerHTML = `
+
       <div class="empty-state">
+
         Nenhum registro encontrado.
+
       </div>
+
     `;
 
     return;
+
   }
 
 
@@ -4121,14 +4404,21 @@ function renderDiary() {
       (a, b) => {
 
         const dateA =
-          `${a.date} ${a.time || ""}`;
+          `${a.date} ${
+            a.time || ""
+          }`;
+
 
         const dateB =
-          `${b.date} ${b.time || ""}`;
+          `${b.date} ${
+            b.time || ""
+          }`;
+
 
         return dateB.localeCompare(
           dateA
         );
+
       }
     );
 
@@ -4139,6 +4429,7 @@ function renderDiary() {
         createDiaryItem
       )
       .join("");
+
 }
 
 
@@ -4153,16 +4444,21 @@ function createDiaryItem(
   const icons = {
 
     meal: "🍽️",
+
     glucose: "🩸",
+
     insulin: "💉",
+
     activity: "🏋️",
+
     medication: "💊",
+
     consultation: "🩺"
+
   };
 
 
   let title = "";
-
   let detail = "";
 
 
@@ -4178,6 +4474,7 @@ function createDiaryItem(
     detail =
       record.food ||
       "Refeição registrada";
+
   }
 
 
@@ -4192,6 +4489,7 @@ function createDiaryItem(
     detail =
       record.kind ||
       "Glicemia";
+
   }
 
 
@@ -4207,14 +4505,13 @@ function createDiaryItem(
       record.insulin ||
       "Insulina";
 
-
-    if (
-      record.application
-    ) {
+    if (record.application) {
 
       detail +=
         ` · ${record.application}`;
+
     }
+
   }
 
 
@@ -4230,14 +4527,13 @@ function createDiaryItem(
     detail =
       `${record.duration || 0} min`;
 
-
-    if (
-      record.intensity
-    ) {
+    if (record.intensity) {
 
       detail +=
         ` · ${record.intensity}`;
+
     }
+
   }
 
 
@@ -4253,16 +4549,19 @@ function createDiaryItem(
     detail =
       "Tomado";
 
-
-    if (
-      record.period
-    ) {
+    if (record.period) {
 
       const periods = {
 
-        morning: "Manhã",
-        afternoon: "Tarde",
-        night: "Noite"
+        morning:
+          "Manhã",
+
+        afternoon:
+          "Tarde",
+
+        night:
+          "Noite"
+
       };
 
 
@@ -4273,7 +4572,9 @@ function createDiaryItem(
           ] ||
           record.period
         }`;
+
     }
+
   }
 
 
@@ -4290,14 +4591,13 @@ function createDiaryItem(
       record.professional ||
       "Consulta médica";
 
-
-    if (
-      record.location
-    ) {
+    if (record.location) {
 
       detail +=
         ` · ${record.location}`;
+
     }
+
   }
 
 
@@ -4309,11 +4609,13 @@ function createDiaryItem(
     >
 
       <div class="timeline-icon">
+
         ${
           icons[
             record.type
           ] || "📝"
         }
+
       </div>
 
 
@@ -4351,7 +4653,9 @@ function createDiaryItem(
       </div>
 
     </div>
+
   `;
+
 }
 
 
@@ -4377,12 +4681,17 @@ function renderTrash() {
   ) {
 
     container.innerHTML = `
+
       <div class="empty-state">
+
         A lixeira está vazia.
+
       </div>
+
     `;
 
     return;
+
   }
 
 
@@ -4420,13 +4729,12 @@ function renderTrash() {
     </div>
 
 
-    ${
-      sortedTrash
-        .map(
-          createTrashItem
-        )
-        .join("")
-    }
+    ${sortedTrash
+      .map(
+        createTrashItem
+      )
+      .join("")}
+
   `;
 
 
@@ -4442,7 +4750,9 @@ function renderTrash() {
       "click",
       emptyTrash
     );
+
   }
+
 }
 
 
@@ -4457,16 +4767,21 @@ function createTrashItem(
   const icons = {
 
     meal: "🍽️",
+
     glucose: "🩸",
+
     insulin: "💉",
+
     activity: "🏋️",
+
     medication: "💊",
+
     consultation: "🩺"
+
   };
 
 
   let title = "";
-
   let detail = "";
 
 
@@ -4482,6 +4797,7 @@ function createTrashItem(
     detail =
       record.food ||
       "Refeição registrada";
+
   }
 
 
@@ -4496,6 +4812,7 @@ function createTrashItem(
     detail =
       record.kind ||
       "Glicemia";
+
   }
 
 
@@ -4510,6 +4827,7 @@ function createTrashItem(
     detail =
       record.insulin ||
       "Insulina";
+
   }
 
 
@@ -4524,6 +4842,7 @@ function createTrashItem(
 
     detail =
       `${record.duration || 0} min`;
+
   }
 
 
@@ -4538,6 +4857,7 @@ function createTrashItem(
 
     detail =
       "Tomado";
+
   }
 
 
@@ -4553,6 +4873,7 @@ function createTrashItem(
     detail =
       record.professional ||
       "Consulta médica";
+
   }
 
 
@@ -4564,11 +4885,13 @@ function createTrashItem(
     >
 
       <div class="timeline-icon">
+
         ${
           icons[
             record.type
           ] || "📝"
         }
+
       </div>
 
 
@@ -4616,9 +4939,7 @@ function createTrashItem(
 
         <button
           type="button"
-          onclick="restoreRecord('${escapeHTML(
-            record.id
-          )}')"
+          onclick="restoreRecord('${escapeHTML(record.id)}')"
           title="Restaurar"
         >
           ↩️
@@ -4627,9 +4948,7 @@ function createTrashItem(
 
         <button
           type="button"
-          onclick="permanentlyDeleteRecord('${escapeHTML(
-            record.id
-          )}')"
+          onclick="permanentlyDeleteRecord('${escapeHTML(record.id)}')"
           title="Excluir definitivamente"
         >
           ❌
@@ -4638,12 +4957,14 @@ function createTrashItem(
       </div>
 
     </div>
+
   `;
+
 }
 
 
 /* =========================================================
-   RESTAURAR
+   RESTAURAR DA LIXEIRA
 ========================================================= */
 
 function restoreRecord(
@@ -4664,9 +4985,10 @@ function restoreRecord(
     database.trash[index];
 
 
-  const restoredRecord = {
-    ...record
-  };
+  const restoredRecord =
+    {
+      ...record
+    };
 
 
   delete restoredRecord.deletedAt;
@@ -4685,6 +5007,7 @@ function restoreRecord(
 
   saveDatabase();
 
+
   renderTrash();
 
   renderDashboard();
@@ -4697,6 +5020,7 @@ function restoreRecord(
   alert(
     "Registro restaurado."
   );
+
 }
 
 
@@ -4727,6 +5051,7 @@ function permanentlyDeleteRecord(
   saveDatabase();
 
   renderTrash();
+
 }
 
 
@@ -4741,7 +5066,9 @@ function emptyTrash() {
     database.trash.length ===
       0
   ) {
+
     return;
+
   }
 
 
@@ -4760,6 +5087,7 @@ function emptyTrash() {
   saveDatabase();
 
   renderTrash();
+
 }
 
 
@@ -4844,6 +5172,7 @@ function renderGlucoseSettings() {
       "supper2",
       "2h após a ceia"
     ]
+
   ];
 
 
@@ -4862,8 +5191,10 @@ function renderGlucoseSettings() {
 
 
       <p>
-        Ative somente os momentos em que você deseja
-        que apareçam no registro de glicemia.
+        Ative somente os momentos
+        em que você deseja que
+        apareçam no registro
+        de glicemia.
       </p>
 
 
@@ -4875,6 +5206,7 @@ function renderGlucoseSettings() {
           margin-top:16px;
         "
       >
+
   `;
 
 
@@ -4905,14 +5237,19 @@ function renderGlucoseSettings() {
             }
           >
 
+
           <span>
+
             ${escapeHTML(
               item[1]
             )}
+
           </span>
 
         </label>
+
       `;
+
     }
   );
 
@@ -4922,6 +5259,7 @@ function renderGlucoseSettings() {
       </div>
 
     </div>
+
   `;
 
 
@@ -4952,15 +5290,18 @@ function renderGlucoseSettings() {
 
 
             saveGlucoseSettings();
+
           }
         );
+
       }
     );
+
 }
 
 
 /* =========================================================
-   MAIS
+   TELA "MAIS"
 ========================================================= */
 
 function renderMoreScreen() {
@@ -4981,6 +5322,7 @@ function renderMoreScreen() {
 
     trashPanel.hidden =
       true;
+
   }
 
 
@@ -4988,7 +5330,9 @@ function renderMoreScreen() {
 
     settingsPanel.hidden =
       true;
+
   }
+
 }
 
 
@@ -5024,6 +5368,7 @@ if (openTrashButton) {
 
         trashPanel.hidden =
           false;
+
       }
 
 
@@ -5031,12 +5376,15 @@ if (openTrashButton) {
 
         settingsPanel.hidden =
           true;
+
       }
 
 
       renderTrash();
+
     }
   );
+
 }
 
 
@@ -5072,6 +5420,7 @@ if (settingsButton) {
 
         trashPanel.hidden =
           true;
+
       }
 
 
@@ -5080,15 +5429,19 @@ if (settingsButton) {
         settingsPanel.hidden =
           false;
 
-        renderGlucoseSettings();
       }
+
+
+      renderGlucoseSettings();
+
     }
   );
+
 }
 
 
 /* =========================================================
-   NAVEGAÇÃO
+   NAVEGAÇÃO PRINCIPAL
 ========================================================= */
 
 const navigationItems =
@@ -5102,28 +5455,41 @@ navigationItems.forEach(
 
     button.addEventListener(
       "click",
-      () => {
+      event => {
+
+        event.preventDefault();
+
 
         const targetScreen =
-          button.dataset
-            .screen;
+          button.dataset.screen;
 
 
-        if (!targetScreen)
-          return;
+        if (!targetScreen) return;
 
 
         showScreen(
           targetScreen
         );
+
       }
     );
+
   }
 );
 
 
 /* =========================================================
-   BOTÃO DE MEDICAMENTOS
+   DELEGAÇÃO DO BOTÃO DE MEDICAMENTOS
+=========================================================
+
+   Este bloco existe para garantir que o botão de
+   Medicamentos / Suplementos e Vitaminas continue
+   funcionando mesmo que o HTML tenha sido criado
+   de maneira diferente.
+
+   IMPORTANTE:
+   Não interceptamos o botão "Gerenciar", nem os
+   botões internos do gerenciador.
 ========================================================= */
 
 document.addEventListener(
@@ -5139,12 +5505,30 @@ document.addEventListener(
     if (!button) return;
 
 
+    if (
+      button.id ===
+        "manageMedicationsButton" ||
+
+      button.id ===
+        "addFirstMedicationButton" ||
+
+      button.id ===
+        "newMedicationButton"
+    ) {
+
+      return;
+
+    }
+
+
     const text =
       button.textContent
+
         .replace(
           /\s+/g,
           " "
         )
+
         .trim()
         .toLowerCase();
 
@@ -5153,6 +5537,7 @@ document.addEventListener(
       text.includes(
         "medicamentos / suplementos e vitaminas"
       ) ||
+
       text.includes(
         "medicamentos/suplementos e vitaminas"
       )
@@ -5161,7 +5546,9 @@ document.addEventListener(
       event.preventDefault();
 
       openMedicationManager();
+
     }
+
   }
 );
 
@@ -5182,6 +5569,7 @@ if (backupButton) {
     "click",
     createBackup
   );
+
 }
 
 
@@ -5196,8 +5584,7 @@ function createBackup() {
       "0.1",
 
     createdAt:
-      new Date()
-        .toISOString(),
+      new Date().toISOString(),
 
     data: {
 
@@ -5206,6 +5593,7 @@ function createBackup() {
 
       trash:
         database.trash
+
     },
 
     glucoseSettings:
@@ -5213,6 +5601,7 @@ function createBackup() {
 
     medications:
       medications
+
   };
 
 
@@ -5261,11 +5650,14 @@ function createBackup() {
 
   link.click();
 
+
   link.remove();
+
 
   URL.revokeObjectURL(
     url
   );
+
 }
 
 
@@ -5306,6 +5698,7 @@ function restoreBackupFile(
           );
 
           return;
+
         }
 
 
@@ -5315,8 +5708,7 @@ function restoreBackupFile(
           );
 
 
-        if (!confirmed)
-          return;
+        if (!confirmed) return;
 
 
         database = {
@@ -5326,6 +5718,7 @@ function restoreBackupFile(
 
           trash:
             backup.data.trash
+
         };
 
 
@@ -5334,6 +5727,7 @@ function restoreBackupFile(
           ...defaultGlucoseOptions,
 
           ...backup.glucoseSettings
+
         };
 
 
@@ -5341,7 +5735,9 @@ function restoreBackupFile(
           Array.isArray(
             backup.medications
           )
+
             ? backup.medications
+
             : [];
 
 
@@ -5351,6 +5747,7 @@ function restoreBackupFile(
 
         saveMedications();
 
+
         renderDashboard();
 
         renderDiary();
@@ -5359,11 +5756,15 @@ function restoreBackupFile(
 
         renderConsultations();
 
+
         alert(
           "Backup restaurado com sucesso."
         );
 
-      } catch (error) {
+      }
+
+
+      catch (error) {
 
         console.error(
           "Erro ao restaurar backup:",
@@ -5374,13 +5775,16 @@ function restoreBackupFile(
         alert(
           "Não foi possível ler este arquivo de backup."
         );
+
       }
+
     };
 
 
   reader.readAsText(
     file
   );
+
 }
 
 
@@ -5419,7 +5823,9 @@ function validateBackup(
 
     typeof backup.glucoseSettings ===
       "object"
+
   );
+
 }
 
 
@@ -5450,9 +5856,12 @@ if (restoreBackupButton) {
       ) {
 
         restoreBackupInput.click();
+
       }
+
     }
   );
+
 }
 
 
@@ -5474,13 +5883,15 @@ if (restoreBackupInput) {
 
       event.target.value =
         "";
+
     }
   );
+
 }
 
 
 /* =========================================================
-   INICIALIZAÇÃO
+   INICIALIZAÇÃO DO APLICATIVO
 ========================================================= */
 
 renderDashboard();

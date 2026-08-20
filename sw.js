@@ -4,16 +4,30 @@
    SERVICE WORKER — PWA
 ========================================================= */
 
-const CACHE_NAME = "recordatorio-registros-v01";
+const CACHE_NAME =
+  "recordatorio-registros-v02";
+
 
 const FILES_TO_CACHE = [
+
   "./",
+
   "./index.html",
+
   "./styles.css",
+
   "./app.js",
+
+  "./relatorios.js",
+
+  "./sincronizacao.js",
+
   "./manifest.json",
+
   "./icon-192.png",
+
   "./icon-512.png"
+
 ];
 
 
@@ -21,82 +35,178 @@ const FILES_TO_CACHE = [
    INSTALAÇÃO
 ========================================================= */
 
-self.addEventListener("install", event => {
+self.addEventListener(
+  "install",
+  event => {
 
-  event.waitUntil(
+    event.waitUntil(
 
-    caches.open(CACHE_NAME)
-      .then(cache => {
+      caches
+        .open(CACHE_NAME)
+        .then(
+          cache => {
 
-        return cache.addAll(FILES_TO_CACHE);
+            return cache.addAll(
+              FILES_TO_CACHE
+            );
 
-      })
+          }
+        )
 
-  );
+    );
 
-  self.skipWaiting();
 
-});
+    self.skipWaiting();
+
+  }
+);
 
 
 /* =========================================================
    ATIVAÇÃO
 ========================================================= */
 
-self.addEventListener("activate", event => {
+self.addEventListener(
+  "activate",
+  event => {
 
-  event.waitUntil(
+    event.waitUntil(
 
-    caches.keys()
-      .then(cacheNames => {
+      caches
+        .keys()
+        .then(
+          cacheNames => {
 
-        return Promise.all(
+            return Promise.all(
 
-          cacheNames
-            .filter(cacheName => {
+              cacheNames
+                .filter(
+                  cacheName => {
 
-              return cacheName !== CACHE_NAME;
+                    return (
+                      cacheName !==
+                      CACHE_NAME
+                    );
 
-            })
-            .map(cacheName => {
+                  }
+                )
+                .map(
+                  cacheName => {
 
-              return caches.delete(cacheName);
+                    return caches.delete(
+                      cacheName
+                    );
 
-            })
+                  }
+                )
 
-        );
+            );
 
-      })
+          }
+        )
 
-  );
+    );
 
-  self.clients.claim();
 
-});
+    self.clients.claim();
+
+  }
+);
 
 
 /* =========================================================
    BUSCA DE ARQUIVOS
 ========================================================= */
 
-self.addEventListener("fetch", event => {
+self.addEventListener(
+  "fetch",
+  event => {
 
-  event.respondWith(
+    /*
+     * Requisições ao Supabase não devem ser
+     * servidas pelo cache do PWA.
+     */
 
-    caches.match(event.request)
-      .then(cachedResponse => {
+    if (
+      event.request.url.includes(
+        ".supabase.co"
+      )
+    ) {
 
-        if (cachedResponse) {
+      return;
 
-          return cachedResponse;
+    }
 
-        }
 
-        return fetch(event.request);
+    event.respondWith(
 
-      })
+      caches
+        .match(
+          event.request
+        )
+        .then(
+          cachedResponse => {
 
-  );
+            if (
+              cachedResponse
+            ) {
 
-});
+              return cachedResponse;
+
+            }
+
+
+            return fetch(
+              event.request
+            )
+              .then(
+                response => {
+
+                  /*
+                   * Só armazenamos respostas
+                   * válidas de requisições GET.
+                   */
+
+                  if (
+                    event.request.method ===
+                      "GET" &&
+                    response &&
+                    response.status ===
+                      200
+                  ) {
+
+                    const responseClone =
+                      response.clone();
+
+
+                    caches
+                      .open(
+                        CACHE_NAME
+                      )
+                      .then(
+                        cache => {
+
+                          cache.put(
+                            event.request,
+                            responseClone
+                          );
+
+                        }
+                      );
+
+                  }
+
+
+                  return response;
+
+                }
+              );
+
+          }
+        )
+
+    );
+
+  }
+);
 ```

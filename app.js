@@ -3251,7 +3251,18 @@ function renderMedicationManager() {
       <p>
         Cadastre cada item separadamente e escolha
         o período em que ele é tomado.
-      </p>
+      </p>/* =========================================================
+   ABRIR TELA DE CONSULTAS
+========================================================= */
+
+function openConsultationsScreen() {
+
+  showScreen(
+    "consultationScreen"
+  );
+
+  renderConsultations();
+}
 
 
       <button

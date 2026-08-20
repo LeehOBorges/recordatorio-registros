@@ -3925,6 +3925,34 @@ document
 
 
 /* =========================================================
+   BOTÃO CONSULTAS
+========================================================= */
+
+const consultationQuickButton =
+  document.getElementById(
+    "consultationQuickButton"
+  );
+
+
+if (consultationQuickButton) {
+
+  consultationQuickButton.addEventListener(
+    "click",
+    () => {
+
+      const targetScreen =
+        "consultationScreen";
+
+
+      showScreen(
+        targetScreen
+      );
+
+
+      renderConsultations();
+    }
+  );
+}/* =========================================================
    BOTÃO CONSULTAS — CORREÇÃO
 ========================================================= */
 

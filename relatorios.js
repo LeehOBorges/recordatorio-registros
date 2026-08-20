@@ -1,4 +1,3 @@
-```javascript
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    MÓDULO DE RELATÓRIOS E PDF
@@ -1739,4 +1738,3 @@
 
 
 })();
-```

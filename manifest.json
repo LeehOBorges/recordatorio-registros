@@ -1,10 +1,11 @@
-```json
+```json id="n88h6k"
 {
+  "id": "./",
   "name": "Recordatório + Registros",
   "short_name": "Recordatório",
   "description": "Recordatório alimentar, glicêmico e de insulina",
   "lang": "pt-BR",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
@@ -12,7 +13,7 @@
   "theme_color": "#A85C5C",
   "icons": [
     {
-      "src": "ícone-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"

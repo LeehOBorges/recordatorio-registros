@@ -6,25 +6,16 @@
 const CACHE_NAME =
   "recordatorio-registros-v04";
 
-
 const FILES_TO_CACHE = [
 
   "./",
-
   "./index.html",
-
   "./styles.css",
-
   "./app.js",
-
   "./relatorios.js",
-
   "./sincronizacao.js",
-
   "./manifest.json",
-
   "./icon-192.png",
-
   "./icon-512.png"
 
 ];
@@ -41,9 +32,7 @@ self.addEventListener(
     event.waitUntil(
 
       caches
-        .open(
-          CACHE_NAME
-        )
+        .open(CACHE_NAME)
         .then(
           cache => {
 
@@ -121,10 +110,6 @@ self.addEventListener(
   "fetch",
   event => {
 
-    /*
-     * O Supabase deve acessar a internet diretamente.
-     */
-
     if (
       event.request.url.includes(
         ".supabase.co"
@@ -135,10 +120,6 @@ self.addEventListener(
 
     }
 
-
-    /*
-     * O cache será usado apenas para GET.
-     */
 
     if (
       event.request.method !==

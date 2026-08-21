@@ -2,20 +2,11 @@
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
 
-   VERSÃO PARA DESKTOP + CELULAR
-
-   Recursos:
-   - Inicialização robusta
-   - Funciona com telas criadas dinamicamente
-   - Funciona após navegação interna
-   - Detecta abertura da tela de Análises
+   Inclui:
    - Resumo geral
-   - Gráfico de glicemias
-   - Identificação de glicemia em jejum
+   - Gráfico de linha das glicemias
+   - Identificação visual de glicemia em jejum
    - Análise por período do dia
-   - Período de 7, 30, 90 dias ou personalizado
-   - Atualização após sincronização
-   - Compatível com toque em celular
 ========================================================= */
 
 (function () {
@@ -23,17 +14,9 @@
   "use strict";
 
 
-  /* =====================================================
-     CONFIGURAÇÃO
-  ====================================================== */
-
   const STORAGE_KEY =
     "recordatorio_registros_v01";
 
-
-  /* =====================================================
-     VARIÁVEIS
-  ====================================================== */
 
   let analysisScreen = null;
   let periodSelect = null;
@@ -42,309 +25,6 @@
   let refreshButton = null;
   let content = null;
 
-  let initialized = false;
-  let retryTimer = null;
-
-  let observerStarted = false;
-
-
-  /* =====================================================
-     LOCALIZAR TELA
-  ====================================================== */
-
-  function findAnalysisScreen() {
-
-    const possibleIds = [
-      "analysisScreen",
-      "analiseScreen",
-      "analysesScreen",
-      "analisesScreen"
-    ];
-
-    for (
-      const id of possibleIds
-    ) {
-
-      const element =
-        document.getElementById(id);
-
-      if (element) {
-
-        analysisScreen =
-          element;
-
-        return true;
-
-      }
-
-    }
-
-    return false;
-
-  }
-
-
-  /* =====================================================
-     LOCALIZAR BOTÃO DE ANÁLISE
-  ====================================================== */
-
-  function findAnalysisButtons() {
-
-    const ids = [
-
-      "analysisButton",
-      "analiseButton",
-      "analysesButton",
-      "analisesButton",
-      "analysisTab",
-      "analiseTab",
-      "analysesTab",
-      "analisesTab",
-      "btnAnalysis",
-      "btnAnalise"
-
-    ];
-
-
-    const buttons = [];
-
-
-    ids.forEach(
-      function (id) {
-
-        const element =
-          document.getElementById(id);
-
-        if (element) {
-
-          buttons.push(element);
-
-        }
-
-      }
-    );
-
-
-    return buttons;
-
-  }
-
-
-  /* =====================================================
-     TENTAR ABRIR A TELA
-  ====================================================== */
-
-  function openAnalysisScreen() {
-
-    if (!findAnalysisScreen()) {
-
-      console.warn(
-        "Tela analysisScreen não encontrada."
-      );
-
-      return false;
-
-    }
-
-
-    /*
-     * Algumas aplicações usam classes como
-     * .screen, .page ou .view.
-     *
-     * Removemos estados comuns de ocultação.
-     */
-
-    analysisScreen.hidden =
-      false;
-
-
-    analysisScreen.style.display =
-      "";
-
-
-    analysisScreen.classList.remove(
-      "hidden"
-    );
-
-
-    analysisScreen.classList.remove(
-      "d-none"
-    );
-
-
-    analysisScreen.classList.add(
-      "active"
-    );
-
-
-    /*
-     * Caso exista uma função global de navegação,
-     * tentamos utilizá-la somente se ela estiver
-     * disponível.
-     */
-
-    try {
-
-      if (
-        typeof window.showScreen ===
-        "function"
-      ) {
-
-        window.showScreen(
-          "analysisScreen"
-        );
-
-      }
-
-    } catch (error) {
-
-      console.warn(
-        "showScreen não pôde ser executada:",
-        error
-      );
-
-    }
-
-
-    try {
-
-      if (
-        typeof window.navigateTo ===
-        "function"
-      ) {
-
-        window.navigateTo(
-          "analysisScreen"
-        );
-
-      }
-
-    } catch (error) {
-
-      console.warn(
-        "navigateTo não pôde ser executada:",
-        error
-      );
-
-    }
-
-
-    try {
-
-      if (
-        typeof window.showPage ===
-        "function"
-      ) {
-
-        window.showPage(
-          "analysisScreen"
-        );
-
-      }
-
-    } catch (error) {
-
-      console.warn(
-        "showPage não pôde ser executada:",
-        error
-      );
-
-    }
-
-
-    initAnalysis();
-
-    renderAnalysis();
-
-
-    return true;
-
-  }
-
-
-  /* =====================================================
-     CLIQUE/TOQUE NO BOTÃO DE ANÁLISE
-  ====================================================== */
-
-  function bindAnalysisButtons() {
-
-    const buttons =
-      findAnalysisButtons();
-
-
-    buttons.forEach(
-      function (button) {
-
-        if (
-          button.dataset.analysisBound ===
-          "true"
-        ) {
-
-          return;
-
-        }
-
-
-        button.dataset.analysisBound =
-          "true";
-
-
-        /*
-         * click funciona tanto com mouse
-         * quanto com toque em celular.
-         */
-
-        button.addEventListener(
-          "click",
-          function (event) {
-
-            event.preventDefault();
-
-            event.stopPropagation();
-
-            openAnalysisScreen();
-
-          },
-          false
-        );
-
-
-        /*
-         * Alguns navegadores móveis podem
-         * trabalhar com pointerup.
-         */
-
-        button.addEventListener(
-          "pointerup",
-          function () {
-
-            setTimeout(
-              function () {
-
-                if (
-                  !analysisScreen ||
-                  !analysisScreen.classList.contains(
-                    "active"
-                  )
-                ) {
-
-                  openAnalysisScreen();
-
-                }
-
-              },
-              0
-            );
-
-          },
-          false
-        );
-
-      }
-    );
-
-  }
-
 
   /* =====================================================
      INICIALIZAÇÃO
@@ -352,241 +32,30 @@
 
   function initAnalysis() {
 
-    if (!findAnalysisScreen()) {
-
-      return false;
-
-    }
-
-
-    const main =
-      analysisScreen.querySelector(
-        "main"
+    analysisScreen =
+      document.getElementById(
+        "analysisScreen"
       );
 
 
-    if (!main) {
+    if (!analysisScreen) {
 
       console.warn(
-        "analysisScreen encontrada, mas <main> não existe."
+        "Tela de análises não encontrada."
       );
 
-      return false;
+      return;
 
     }
 
 
-    /*
-     * Se a interface já existe, não recriamos.
-     */
+    createInterface();
 
-    const existingPeriod =
-      document.getElementById(
-        "analysisPeriod"
-      );
+    bindEvents();
 
-
-    if (!existingPeriod) {
-
-      createInterface();
-
-    }
-
-
-    periodSelect =
-      document.getElementById(
-        "analysisPeriod"
-      );
-
-
-    startDateInput =
-      document.getElementById(
-        "analysisStartDate"
-      );
-
-
-    endDateInput =
-      document.getElementById(
-        "analysisEndDate"
-      );
-
-
-    refreshButton =
-      document.getElementById(
-        "refreshAnalysisButton"
-      );
-
-
-    content =
-      document.getElementById(
-        "analysisContent"
-      );
-
-
-    if (
-      !periodSelect ||
-      !content
-    ) {
-
-      return false;
-
-    }
-
-
-    if (!initialized) {
-
-      bindEvents();
-
-      setDefaultPeriod();
-
-      initialized = true;
-
-    }
-
+    setDefaultPeriod();
 
     renderAnalysis();
-
-
-    return true;
-
-  }
-
-
-  /* =====================================================
-     INICIAR MÓDULO
-  ====================================================== */
-
-  function startAnalysisModule() {
-
-    bindAnalysisButtons();
-
-
-    if (initAnalysis()) {
-
-      return;
-
-    }
-
-
-    let attempts = 0;
-
-
-    clearInterval(
-      retryTimer
-    );
-
-
-    retryTimer =
-      setInterval(
-        function () {
-
-          attempts++;
-
-
-          bindAnalysisButtons();
-
-
-          if (
-            initAnalysis()
-          ) {
-
-            clearInterval(
-              retryTimer
-            );
-
-            retryTimer = null;
-
-            return;
-
-          }
-
-
-          if (
-            attempts >= 40
-          ) {
-
-            clearInterval(
-              retryTimer
-            );
-
-            retryTimer = null;
-
-            console.warn(
-              "Não foi possível inicializar o módulo de análises."
-            );
-
-          }
-
-        },
-        300
-      );
-
-  }
-
-
-  /* =====================================================
-     OBSERVADOR
-  ====================================================== */
-
-  function observePageChanges() {
-
-    if (
-      observerStarted
-    ) {
-
-      return;
-
-    }
-
-
-    if (
-      typeof MutationObserver ===
-      "undefined"
-    ) {
-
-      return;
-
-    }
-
-
-    if (!document.body) {
-
-      return;
-
-    }
-
-
-    observerStarted = true;
-
-
-    const observer =
-      new MutationObserver(
-        function () {
-
-          bindAnalysisButtons();
-
-
-          if (!initialized) {
-
-            initAnalysis();
-
-          } else {
-
-            findAnalysisScreen();
-
-          }
-
-        }
-      );
-
-
-    observer.observe(
-      document.body,
-      {
-        childList: true,
-        subtree: true
-      }
-    );
 
   }
 
@@ -596,13 +65,6 @@
   ====================================================== */
 
   function createInterface() {
-
-    if (!analysisScreen) {
-
-      return;
-
-    }
-
 
     const main =
       analysisScreen.querySelector(
@@ -624,7 +86,6 @@
         <h2>
           📊 Análises
         </h2>
-
 
         <p
           style="
@@ -658,7 +119,6 @@
             Período
           </label>
 
-
           <select
             id="analysisPeriod"
             style="
@@ -669,9 +129,6 @@
               border-radius:12px;
               font-size:16px;
               background:#fff;
-              min-height:48px;
-              -webkit-appearance:none;
-              appearance:none;
             "
           >
 
@@ -720,7 +177,6 @@
               Data inicial
             </label>
 
-
             <input
               id="analysisStartDate"
               type="date"
@@ -732,7 +188,6 @@
                 border-radius:12px;
                 font-size:16px;
                 background:#fff;
-                min-height:48px;
               "
             >
 
@@ -754,7 +209,6 @@
               Data final
             </label>
 
-
             <input
               id="analysisEndDate"
               type="date"
@@ -766,7 +220,6 @@
                 border-radius:12px;
                 font-size:16px;
                 background:#fff;
-                min-height:48px;
               "
             >
 
@@ -789,9 +242,6 @@
             font-size:16px;
             font-weight:700;
             cursor:pointer;
-            min-height:48px;
-            touch-action:manipulation;
-            -webkit-tap-highlight-color:transparent;
           "
         >
           🔄 Atualizar análise
@@ -800,9 +250,41 @@
       </section>
 
 
-      <div id="analysisContent"></div>
+      <div
+        id="analysisContent"
+      ></div>
 
     `;
+
+
+    periodSelect =
+      document.getElementById(
+        "analysisPeriod"
+      );
+
+
+    startDateInput =
+      document.getElementById(
+        "analysisStartDate"
+      );
+
+
+    endDateInput =
+      document.getElementById(
+        "analysisEndDate"
+      );
+
+
+    refreshButton =
+      document.getElementById(
+        "refreshAnalysisButton"
+      );
+
+
+    content =
+      document.getElementById(
+        "analysisContent"
+      );
 
   }
 
@@ -859,9 +341,7 @@
 
       refreshButton.addEventListener(
         "click",
-        function (event) {
-
-          event.preventDefault();
+        function () {
 
           renderAnalysis();
 
@@ -897,7 +377,9 @@
      DATAS
   ====================================================== */
 
-  function dateToKey(date) {
+  function dateToKey(
+    date
+  ) {
 
     const year =
       date.getFullYear();
@@ -950,7 +432,9 @@
     if (startDateInput) {
 
       startDateInput.value =
-        dateToKey(start);
+        dateToKey(
+          start
+        );
 
     }
 
@@ -958,7 +442,9 @@
     if (endDateInput) {
 
       endDateInput.value =
-        dateToKey(end);
+        dateToKey(
+          end
+        );
 
     }
 
@@ -998,7 +484,9 @@
 
 
     const start =
-      new Date(end);
+      new Date(
+        end
+      );
 
 
     if (
@@ -1062,17 +550,23 @@
 
     start.setDate(
       start.getDate() -
-      (days - 1)
+      (
+        days - 1
+      )
     );
 
 
     return {
 
       start:
-        dateToKey(start),
+        dateToKey(
+          start
+        ),
 
       end:
-        dateToKey(end)
+        dateToKey(
+          end
+        )
 
     };
 
@@ -1096,15 +590,20 @@
       if (!stored) {
 
         return {
+
           records: [],
+
           trash: []
+
         };
 
       }
 
 
       const parsed =
-        JSON.parse(stored);
+        JSON.parse(
+          stored
+        );
 
 
       return {
@@ -1128,14 +627,17 @@
     } catch (error) {
 
       console.error(
-        "Erro ao carregar dados:",
+        "Erro ao carregar dados das análises:",
         error
       );
 
 
       return {
+
         records: [],
+
         trash: []
+
       };
 
     }
@@ -1171,8 +673,10 @@
 
 
         return (
-          date >= range.start &&
-          date <= range.end
+          date >=
+          range.start &&
+          date <=
+          range.end
         );
 
       }
@@ -1185,7 +689,9 @@
      FORMATAÇÕES
   ====================================================== */
 
-  function formatDate(value) {
+  function formatDate(
+    value
+  ) {
 
     if (!value) {
 
@@ -1195,11 +701,14 @@
 
 
     const parts =
-      String(value).split("-");
+      String(
+        value
+      ).split("-");
 
 
     if (
-      parts.length !== 3
+      parts.length !==
+      3
     ) {
 
       return value;
@@ -1218,10 +727,13 @@
   }
 
 
-  function escapeHTML(value) {
+  function escapeHTML(
+    value
+  ) {
 
     return String(
-      value ?? ""
+      value ??
+      ""
     )
       .replaceAll(
         "&",
@@ -1248,7 +760,7 @@
 
 
   /* =====================================================
-     CONTADORES
+     RESUMOS
   ====================================================== */
 
   function countType(
@@ -1315,82 +827,6 @@
   }
 
 
-  function getInsulinUnits(
-    records
-  ) {
-
-    return records
-      .filter(
-        function (record) {
-
-          return (
-            record.type ===
-            "insulin"
-          );
-
-        }
-      )
-      .reduce(
-        function (
-          total,
-          record
-        ) {
-
-          const candidates = [
-
-            record.dose,
-
-            record.units,
-
-            record.insulinDose
-
-          ];
-
-
-          let value = 0;
-
-
-          for (
-            const candidate
-            of candidates
-          ) {
-
-            const parsed =
-              Number(candidate);
-
-
-            if (
-              Number.isFinite(
-                parsed
-              )
-            ) {
-
-              value =
-                parsed;
-
-              break;
-
-            }
-
-          }
-
-
-          return (
-            total +
-            value
-          );
-
-        },
-        0
-      );
-
-  }
-
-
-  /* =====================================================
-     GLICEMIAS
-  ====================================================== */
-
   function getGlucoseRecords(
     records
   ) {
@@ -1432,7 +868,8 @@
               String(
                 record.kind ||
                 ""
-              ).trim()
+              )
+                .trim()
 
           };
 
@@ -1441,8 +878,10 @@
       .filter(
         function (item) {
 
-          return Number.isFinite(
-            item.value
+          return (
+            Number.isFinite(
+              item.value
+            )
           );
 
         }
@@ -1475,7 +914,9 @@
   }
 
 
-  function average(values) {
+  function average(
+    values
+  ) {
 
     if (
       !values.length
@@ -1507,6 +948,81 @@
   }
 
 
+  function getInsulinUnits(
+    records
+  ) {
+
+    return records
+      .filter(
+        function (record) {
+
+          return (
+            record.type ===
+            "insulin"
+          );
+
+        }
+      )
+      .reduce(
+        function (
+          total,
+          record
+        ) {
+
+          const candidates = [
+
+            record.dose,
+
+            record.units,
+
+            record.insulinDose
+
+          ];
+
+
+          let value =
+            0;
+
+
+          for (
+            const candidate
+            of candidates
+          ) {
+
+            const parsed =
+              Number(
+                candidate
+              );
+
+
+            if (
+              Number.isFinite(
+                parsed
+              )
+            ) {
+
+              value =
+                parsed;
+
+              break;
+
+            }
+
+          }
+
+
+          return (
+            total +
+            value
+          );
+
+        },
+        0
+      );
+
+  }
+
+
   /* =====================================================
      JEJUM
   ====================================================== */
@@ -1532,7 +1048,9 @@
      PERÍODO DO DIA
   ====================================================== */
 
-  function getDayPeriod(time) {
+  function getDayPeriod(
+    time
+  ) {
 
     if (!time) {
 
@@ -1542,7 +1060,9 @@
 
 
     const parts =
-      String(time).split(":");
+      String(
+        time
+      ).split(":");
 
 
     const hour =
@@ -1587,7 +1107,9 @@
   }
 
 
-  function getPeriodLabel(period) {
+  function getPeriodLabel(
+    period
+  ) {
 
     const labels = {
 
@@ -1661,9 +1183,7 @@
           );
 
 
-        periods[
-          period
-        ].push(
+        periods[period].push(
           record.value
         );
 
@@ -1698,7 +1218,6 @@
         <h2>
           🕐 Glicemias por período
         </h2>
-
 
         <p
           style="
@@ -1742,7 +1261,9 @@
 
 
         const avg =
-          average(values);
+          average(
+            values
+          );
 
 
         const min =
@@ -1806,12 +1327,18 @@
                   color:#777;
                 "
               >
-                ${values.length}
+
                 ${
-                  values.length === 1
+                  values.length
+                }
+
+                ${
+                  values.length ===
+                  1
                     ? "medição"
                     : "medições"
                 }
+
               </span>
 
             </div>
@@ -1821,7 +1348,7 @@
               style="
                 display:grid;
                 grid-template-columns:
-                  repeat(3,minmax(0,1fr));
+                  repeat(3, minmax(0, 1fr));
                 gap:8px;
               "
             >
@@ -1844,7 +1371,6 @@
                   Média
                 </div>
 
-
                 <strong
                   style="
                     display:block;
@@ -1855,7 +1381,9 @@
                   ${
                     avg === null
                       ? "—"
-                      : Math.round(avg) +
+                      : Math.round(
+                          avg
+                        ) +
                         " mg/dL"
                   }
                 </strong>
@@ -1880,7 +1408,6 @@
                 >
                   Mínima
                 </div>
-
 
                 <strong
                   style="
@@ -1917,7 +1444,6 @@
                 >
                   Máxima
                 </div>
-
 
                 <strong
                   style="
@@ -1961,7 +1487,7 @@
 
 
   /* =====================================================
-     GRÁFICO
+     GRÁFICO DE LINHA
   ====================================================== */
 
   function buildGlucoseLineChart(
@@ -1985,12 +1511,9 @@
             🩸 Evolução das glicemias
           </h2>
 
-
           <div class="empty-state">
-
             Não há glicemias registradas
             no período selecionado.
-
           </div>
 
         </section>
@@ -2002,7 +1525,9 @@
 
     const values =
       glucoseRecords.map(
-        function (item) {
+        function (
+          item
+        ) {
 
           return item.value;
 
@@ -2023,7 +1548,9 @@
 
 
     const averageValue =
-      average(values);
+      average(
+        values
+      );
 
 
     const chartWidth =
@@ -2096,7 +1623,9 @@
       );
 
 
-    function xFor(index) {
+    function xFor(
+      index
+    ) {
 
       if (
         glucoseRecords.length ===
@@ -2105,7 +1634,8 @@
 
         return (
           left +
-          plotWidth / 2
+          plotWidth /
+          2
         );
 
       }
@@ -2126,7 +1656,9 @@
     }
 
 
-    function yFor(value) {
+    function yFor(
+      value
+    ) {
 
       return (
         top +
@@ -2153,7 +1685,9 @@
           return {
 
             x:
-              xFor(index),
+              xFor(
+                index
+              ),
 
             y:
               yFor(
@@ -2186,7 +1720,9 @@
     const polyline =
       points
         .map(
-          function (point) {
+          function (
+            point
+          ) {
 
             return (
               point.x +
@@ -2196,14 +1732,17 @@
 
           }
         )
-        .join(" ");
+        .join(
+          " "
+        );
 
 
     /* =================================================
        GRADE
     ================================================== */
 
-    let gridHTML = "";
+    let gridHTML =
+      "";
 
 
     const numberOfGridLines =
@@ -2213,7 +1752,7 @@
     for (
       let index = 0;
       index <
-      numberOfGridLines;
+        numberOfGridLines;
       index++
     ) {
 
@@ -2234,7 +1773,9 @@
 
 
       const y =
-        yFor(value);
+        yFor(
+          value
+        );
 
 
       gridHTML += `
@@ -2242,7 +1783,10 @@
         <line
           x1="${left}"
           y1="${y}"
-          x2="${chartWidth - right}"
+          x2="${
+            chartWidth -
+            right
+          }"
           y2="${y}"
           stroke="#eeeeee"
           stroke-width="1"
@@ -2250,13 +1794,20 @@
 
 
         <text
-          x="${left - 8}"
-          y="${y + 4}"
+          x="${
+            left -
+            8
+          }"
+          y="${
+            y + 4
+          }"
           text-anchor="end"
           font-size="11"
           fill="#777"
         >
-          ${Math.round(value)}
+          ${Math.round(
+            value
+          )}
         </text>
 
       `;
@@ -2274,11 +1825,14 @@
        MARCADORES
     ================================================== */
 
-    let pointsHTML = "";
+    let pointsHTML =
+      "";
 
 
     points.forEach(
-      function (point) {
+      function (
+        point
+      ) {
 
         const label =
           formatDate(
@@ -2301,14 +1855,19 @@
           point.fasting
         ) {
 
+          /*
+           * Losango para JEJUM.
+           */
+
           const size =
             8;
 
 
           const diamondPoints = [
 
-            point.x +
-            "," +
+            (
+              point.x
+            ) + "," +
             (
               point.y -
               size
@@ -2317,12 +1876,12 @@
             (
               point.x +
               size
-            ) +
-            "," +
+            ) + "," +
             point.y,
 
-            point.x +
-            "," +
+            (
+              point.x
+            ) + "," +
             (
               point.y +
               size
@@ -2331,11 +1890,12 @@
             (
               point.x -
               size
-            ) +
-            "," +
+            ) + "," +
             point.y
 
-          ].join(" ");
+          ].join(
+            " "
+          );
 
 
           pointsHTML += `
@@ -2348,10 +1908,13 @@
             >
 
               <title>
-                ${escapeHTML(
-                  label
-                )}
-                — ${point.value} mg/dL
+                ${
+                  escapeHTML(
+                    label
+                  )
+                }
+                — ${point.value}
+                mg/dL
               </title>
 
             </polygon>
@@ -2359,7 +1922,10 @@
 
             <text
               x="${point.x}"
-              y="${point.y - 13}"
+              y="${
+                point.y -
+                13
+              }"
               text-anchor="middle"
               font-size="11"
               font-weight="700"
@@ -2384,10 +1950,13 @@
             >
 
               <title>
-                ${escapeHTML(
-                  label
-                )}
-                — ${point.value} mg/dL
+                ${
+                  escapeHTML(
+                    label
+                  )
+                }
+                — ${point.value}
+                mg/dL
               </title>
 
             </circle>
@@ -2395,7 +1964,10 @@
 
             <text
               x="${point.x}"
-              y="${point.y - 12}"
+              y="${
+                point.y -
+                12
+              }"
               text-anchor="middle"
               font-size="11"
               font-weight="700"
@@ -2413,10 +1985,11 @@
 
 
     /* =================================================
-       RÓTULOS
+       EIXO HORIZONTAL
     ================================================== */
 
-    let labelsHTML = "";
+    let labelsHTML =
+      "";
 
 
     const maximumLabels =
@@ -2458,7 +2031,8 @@
 
       for (
         let index = 0;
-        index < maximumLabels;
+        index <
+          maximumLabels;
         index++
       ) {
 
@@ -2483,7 +2057,9 @@
 
 
     labelIndexes.forEach(
-      function (index) {
+      function (
+        index
+      ) {
 
         const point =
           points[index];
@@ -2500,7 +2076,10 @@
 
           <text
             x="${point.x}"
-            y="${chartHeight - 30}"
+            y="${
+              chartHeight -
+              30
+            }"
             text-anchor="middle"
             font-size="10"
             fill="#777"
@@ -2510,12 +2089,16 @@
             )}
           </text>
 
+
           ${
             point.time
               ? `
                 <text
                   x="${point.x}"
-                  y="${chartHeight - 16}"
+                  y="${
+                    chartHeight -
+                    16
+                  }"
                   text-anchor="middle"
                   font-size="9"
                   fill="#999"
@@ -2595,12 +2178,17 @@
           "
         >
 
-          ${glucoseRecords.length}
           ${
-            glucoseRecords.length === 1
+            glucoseRecords.length
+          }
+
+          ${
+            glucoseRecords.length ===
+            1
               ? "medição"
               : "medições"
           }
+
           no período.
 
         </p>
@@ -2612,7 +2200,6 @@
             overflow-x:auto;
             overflow-y:hidden;
             margin-top:8px;
-            -webkit-overflow-scrolling:touch;
           "
         >
 
@@ -2638,7 +2225,10 @@
               x1="${left}"
               y1="${top}"
               x2="${left}"
-              y2="${chartHeight - bottom}"
+              y2="${
+                chartHeight -
+                bottom
+              }"
               stroke="#dddddd"
               stroke-width="1"
             ></line>
@@ -2646,9 +2236,18 @@
 
             <line
               x1="${left}"
-              y1="${chartHeight - bottom}"
-              x2="${chartWidth - right}"
-              y2="${chartHeight - bottom}"
+              y1="${
+                chartHeight -
+                bottom
+              }"
+              x2="${
+                chartWidth -
+                right
+              }"
+              y2="${
+                chartHeight -
+                bottom
+              }"
               stroke="#dddddd"
               stroke-width="1"
             ></line>
@@ -2657,7 +2256,10 @@
             <line
               x1="${left}"
               y1="${averageY}"
-              x2="${chartWidth - right}"
+              x2="${
+                chartWidth -
+                right
+              }"
               y2="${averageY}"
               stroke="#999999"
               stroke-width="1.5"
@@ -2666,8 +2268,14 @@
 
 
             <text
-              x="${chartWidth - right}"
-              y="${averageY - 7}"
+              x="${
+                chartWidth -
+                right
+              }"
+              y="${
+                averageY -
+                7
+              }"
               text-anchor="end"
               font-size="10"
               fill="#777"
@@ -2696,6 +2304,10 @@
         </div>
 
 
+        <!-- =================================================
+             LEGENDA
+        ================================================== -->
+
         <div
           style="
             display:flex;
@@ -2720,6 +2332,7 @@
           >
 
             <span
+              aria-hidden="true"
               style="
                 width:12px;
                 height:12px;
@@ -2743,6 +2356,7 @@
           >
 
             <span
+              aria-hidden="true"
               style="
                 width:10px;
                 height:10px;
@@ -2760,11 +2374,15 @@
         </div>
 
 
+        <!-- =================================================
+             RESUMO DO GRÁFICO
+        ================================================== -->
+
         <div
           style="
             display:grid;
             grid-template-columns:
-              repeat(2,minmax(0,1fr));
+              repeat(2, minmax(0, 1fr));
             gap:10px;
             margin-top:12px;
           "
@@ -2796,9 +2414,15 @@
                 color:#7f4444;
               "
             >
-              ${Math.round(
-                averageValue
-              )} mg/dL
+
+              ${
+                Math.round(
+                  averageValue
+                )
+              }
+
+              mg/dL
+
             </strong>
 
           </div>
@@ -2862,7 +2486,11 @@
                 color:#7f4444;
               "
             >
-              ${minValue} mg/dL
+
+              ${minValue}
+
+              mg/dL
+
             </strong>
 
           </div>
@@ -2894,7 +2522,11 @@
                 color:#7f4444;
               "
             >
-              ${maxValue} mg/dL
+
+              ${maxValue}
+
+              mg/dL
+
             </strong>
 
           </div>
@@ -2911,8 +2543,8 @@
           "
         >
           Os losangos representam glicemias em jejum.
-          No celular, deslize horizontalmente o gráfico
-          quando necessário.
+          Toque ou passe o cursor sobre um marcador
+          para ver os detalhes da medição.
         </p>
 
       </section>
@@ -2923,7 +2555,7 @@
 
 
   /* =====================================================
-     CARD DE RESUMO
+     CARDS DE RESUMO
   ====================================================== */
 
   function summaryCard(
@@ -2989,8 +2621,6 @@
 
     if (!content) {
 
-      initAnalysis();
-
       return;
 
     }
@@ -3038,7 +2668,9 @@
 
     const glucoseValues =
       glucoseRecords.map(
-        function (item) {
+        function (
+          item
+        ) {
 
           return item.value;
 
@@ -3166,7 +2798,7 @@
           style="
             display:grid;
             grid-template-columns:
-              repeat(2,minmax(0,1fr));
+              repeat(2, minmax(0, 1fr));
             gap:12px;
           "
         >
@@ -3274,7 +2906,8 @@
 
             <strong>
               ${
-                glucoseAverage === null
+                glucoseAverage ===
+                null
                   ? "—"
                   : Math.round(
                       glucoseAverage
@@ -3302,7 +2935,8 @@
 
             <strong>
               ${
-                glucoseMin === null
+                glucoseMin ===
+                null
                   ? "—"
                   : glucoseMin +
                     " mg/dL"
@@ -3328,7 +2962,8 @@
 
             <strong>
               ${
-                glucoseMax === null
+                glucoseMax ===
+                null
                   ? "—"
                   : glucoseMax +
                     " mg/dL"
@@ -3353,7 +2988,8 @@
 
 
             <strong>
-              ${activityMinutes} min
+              ${activityMinutes}
+              min
             </strong>
 
           </div>
@@ -3389,7 +3025,8 @@
 
 
       ${
-        glucoseAverage !== null
+        glucoseAverage !==
+        null
           ? buildGlucoseLineChart(
               glucoseRecords
             )
@@ -3408,10 +3045,8 @@
 
 
               <div class="empty-state">
-
                 Não há glicemias registradas
                 no período selecionado.
-
               </div>
 
             </section>
@@ -3426,7 +3061,8 @@
 
 
       ${
-        records.length === 0
+        records.length ===
+        0
           ? `
 
             <section
@@ -3455,158 +3091,16 @@
 
 
   /* =====================================================
-     SINCRONIZAÇÃO
+     ATUALIZAÇÃO APÓS SINCRONIZAÇÃO
   ====================================================== */
 
   document.addEventListener(
     "recordatorioSyncComplete",
     function () {
 
-      startAnalysisModule();
+      renderAnalysis();
 
     }
-  );
-
-
-  /* =====================================================
-     VISIBILIDADE
-  ====================================================== */
-
-  document.addEventListener(
-    "visibilitychange",
-    function () {
-
-      if (
-        document.visibilityState ===
-        "visible"
-      ) {
-
-        startAnalysisModule();
-
-      }
-
-    }
-  );
-
-
-  /* =====================================================
-     CLIQUE DELEGADO
-     AJUDA EM BOTÕES CRIADOS DEPOIS
-  ====================================================== */
-
-  document.addEventListener(
-    "click",
-    function (event) {
-
-      const target =
-        event.target;
-
-
-      if (!target) {
-
-        return;
-
-      }
-
-
-      const button =
-        target.closest
-          ? target.closest(
-              "button,a,[role='button']"
-            )
-          : null;
-
-
-      if (!button) {
-
-        return;
-
-      }
-
-
-      const id =
-        String(
-          button.id ||
-          ""
-        ).toLowerCase();
-
-
-      const text =
-        String(
-          button.textContent ||
-          ""
-        )
-          .trim()
-          .toLowerCase();
-
-
-      const looksLikeAnalysis =
-        id.includes(
-          "analysis"
-        ) ||
-        id.includes(
-          "analise"
-        ) ||
-        text ===
-          "análise" ||
-        text ===
-          "analise" ||
-        text.includes(
-          "análises"
-        ) ||
-        text.includes(
-          "analises"
-        );
-
-
-      if (
-        !looksLikeAnalysis
-      ) {
-
-        return;
-
-      }
-
-
-      /*
-       * Não interfere no botão de atualizar
-       * dentro da própria tela.
-       */
-
-      if (
-        id ===
-        "refreshAnalysisButton"
-      ) {
-
-        return;
-
-      }
-
-
-      /*
-       * Evita capturar o botão enquanto
-       * já estamos dentro da tela.
-       */
-
-      if (
-        analysisScreen &&
-        analysisScreen.contains(
-          button
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      event.preventDefault();
-
-
-      openAnalysisScreen();
-
-    },
-    true
   );
 
 
@@ -3621,35 +3115,13 @@
 
     document.addEventListener(
       "DOMContentLoaded",
-      function () {
-
-        startAnalysisModule();
-
-        observePageChanges();
-
-      }
+      initAnalysis
     );
 
   } else {
 
-    startAnalysisModule();
-
-    observePageChanges();
+    initAnalysis();
 
   }
-
-
-  /* =====================================================
-     DISPONIBILIZAR FUNÇÃO GLOBAL
-     PARA O RESTANTE DO APLICATIVO
-  ====================================================== */
-
-  window.openRecordatorioAnalysis =
-    function () {
-
-      return openAnalysisScreen();
-
-    };
-
 
 })();

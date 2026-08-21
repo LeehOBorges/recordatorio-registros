@@ -1,3127 +1,805 @@
 /* =========================================================
-   RECORDATÓRIO + REGISTROS
-   MÓDULO DE ANÁLISES
+   ANÁLISES
+   RECORDATÓRIO
+   VERSÃO 0.2
 
-   Inclui:
-   - Resumo geral
-   - Gráfico de linha das glicemias
-   - Identificação visual de glicemia em jejum
-   - Análise por período do dia
+   CORREÇÃO:
+   - Funciona ao abrir a tela de Análises no celular
+   - Inicialização independente do app.js
+   - Renderização segura
+   - Compatível com localStorage do app
 ========================================================= */
 
-(function () {
 
-  "use strict";
+/* =========================================================
+   CONFIGURAÇÃO
+========================================================= */
 
-
-  const STORAGE_KEY =
-    "recordatorio_registros_v01";
-
-
-  let analysisScreen = null;
-  let periodSelect = null;
-  let startDateInput = null;
-  let endDateInput = null;
-  let refreshButton = null;
-  let content = null;
+const ANALYSIS_STORAGE_KEY =
+  "recordatorio_registros_v01";
 
 
-  /* =====================================================
-     INICIALIZAÇÃO
-  ====================================================== */
+/* =========================================================
+   ESTADO
+========================================================= */
 
-  function initAnalysis() {
+let analysisInitialized =
+  false;
 
-    analysisScreen =
-      document.getElementById(
-        "analysisScreen"
+
+/* =========================================================
+   CARREGAR BANCO
+========================================================= */
+
+function loadAnalysisDatabase() {
+
+  try {
+
+    const stored =
+      localStorage.getItem(
+        ANALYSIS_STORAGE_KEY
       );
 
+    if (!stored) {
 
-    if (!analysisScreen) {
-
-      console.warn(
-        "Tela de análises não encontrada."
-      );
-
-      return;
-
+      return {
+        records: [],
+        trash: []
+      };
     }
 
+    const parsed =
+      JSON.parse(stored);
 
-    createInterface();
+    return {
 
-    bindEvents();
+      records:
+        Array.isArray(
+          parsed.records
+        )
+          ? parsed.records
+          : [],
 
-    setDefaultPeriod();
+      trash:
+        Array.isArray(
+          parsed.trash
+        )
+          ? parsed.trash
+          : []
+    };
 
-    renderAnalysis();
+  } catch (error) {
 
+    console.error(
+      "Erro ao carregar dados para análise:",
+      error
+    );
+
+    return {
+      records: [],
+      trash: []
+    };
   }
-
-
-  /* =====================================================
-     INTERFACE
-  ====================================================== */
-
-  function createInterface() {
-
-    const main =
-      analysisScreen.querySelector(
-        "main"
-      );
-
-
-    if (!main) {
-
-      return;
-
-    }
-
-
-    main.innerHTML = `
-
-      <section class="card">
-
-        <h2>
-          📊 Análises
-        </h2>
-
-        <p
-          style="
-            color:#777;
-            font-size:14px;
-            line-height:1.5;
-            margin-top:0;
-          "
-        >
-          Consulte um resumo dos seus registros
-          e acompanhe a evolução das glicemias.
-        </p>
-
-
-        <div
-          style="
-            margin-bottom:16px;
-          "
-        >
-
-          <label
-            for="analysisPeriod"
-            style="
-              display:block;
-              margin-bottom:7px;
-              font-size:14px;
-              font-weight:600;
-              color:#444;
-            "
-          >
-            Período
-          </label>
-
-          <select
-            id="analysisPeriod"
-            style="
-              width:100%;
-              box-sizing:border-box;
-              padding:13px 14px;
-              border:1px solid #ddd;
-              border-radius:12px;
-              font-size:16px;
-              background:#fff;
-            "
-          >
-
-            <option value="7">
-              Últimos 7 dias
-            </option>
-
-            <option value="30">
-              Últimos 30 dias
-            </option>
-
-            <option value="90">
-              Últimos 90 dias
-            </option>
-
-            <option value="custom">
-              Personalizado
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div
-          id="analysisCustomDates"
-          hidden
-        >
-
-          <div
-            style="
-              margin-bottom:14px;
-            "
-          >
-
-            <label
-              for="analysisStartDate"
-              style="
-                display:block;
-                margin-bottom:7px;
-                font-size:14px;
-                font-weight:600;
-                color:#444;
-              "
-            >
-              Data inicial
-            </label>
-
-            <input
-              id="analysisStartDate"
-              type="date"
-              style="
-                width:100%;
-                box-sizing:border-box;
-                padding:13px 14px;
-                border:1px solid #ddd;
-                border-radius:12px;
-                font-size:16px;
-                background:#fff;
-              "
-            >
-
-          </div>
-
-
-          <div>
-
-            <label
-              for="analysisEndDate"
-              style="
-                display:block;
-                margin-bottom:7px;
-                font-size:14px;
-                font-weight:600;
-                color:#444;
-              "
-            >
-              Data final
-            </label>
-
-            <input
-              id="analysisEndDate"
-              type="date"
-              style="
-                width:100%;
-                box-sizing:border-box;
-                padding:13px 14px;
-                border:1px solid #ddd;
-                border-radius:12px;
-                font-size:16px;
-                background:#fff;
-              "
-            >
-
-          </div>
-
-        </div>
-
-
-        <button
-          type="button"
-          id="refreshAnalysisButton"
-          style="
-            width:100%;
-            border:0;
-            border-radius:12px;
-            padding:14px;
-            margin-top:18px;
-            background:#A85C5C;
-            color:#fff;
-            font-size:16px;
-            font-weight:700;
-            cursor:pointer;
-          "
-        >
-          🔄 Atualizar análise
-        </button>
-
-      </section>
-
-
-      <div
-        id="analysisContent"
-      ></div>
-
-    `;
-
-
-    periodSelect =
-      document.getElementById(
-        "analysisPeriod"
-      );
-
-
-    startDateInput =
-      document.getElementById(
-        "analysisStartDate"
-      );
-
-
-    endDateInput =
-      document.getElementById(
-        "analysisEndDate"
-      );
-
-
-    refreshButton =
-      document.getElementById(
-        "refreshAnalysisButton"
-      );
-
-
-    content =
-      document.getElementById(
-        "analysisContent"
-      );
-
-  }
-
-
-  /* =====================================================
-     EVENTOS
-  ====================================================== */
-
-  function bindEvents() {
-
-    if (periodSelect) {
-
-      periodSelect.addEventListener(
-        "change",
-        function () {
-
-          const customDates =
-            document.getElementById(
-              "analysisCustomDates"
-            );
-
-
-          if (!customDates) {
-
-            return;
-
-          }
-
-
-          customDates.hidden =
-            periodSelect.value !==
-            "custom";
-
-
-          if (
-            periodSelect.value ===
-            "custom"
-          ) {
-
-            setDefaultCustomDates();
-
-          }
-
-
-          renderAnalysis();
-
-        }
-      );
-
-    }
-
-
-    if (refreshButton) {
-
-      refreshButton.addEventListener(
-        "click",
-        function () {
-
-          renderAnalysis();
-
-        }
-      );
-
-    }
-
-
-    if (startDateInput) {
-
-      startDateInput.addEventListener(
-        "change",
-        renderAnalysis
-      );
-
-    }
-
-
-    if (endDateInput) {
-
-      endDateInput.addEventListener(
-        "change",
-        renderAnalysis
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     DATAS
-  ====================================================== */
-
-  function dateToKey(
-    date
+}
+
+
+/* =========================================================
+   DATA
+========================================================= */
+
+function analysisDateKey(
+  date
+) {
+
+  const year =
+    date.getFullYear();
+
+  const month =
+    String(
+      date.getMonth() + 1
+    ).padStart(2, "0");
+
+  const day =
+    String(
+      date.getDate()
+    ).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+
+/* =========================================================
+   FILTRAR REGISTROS
+========================================================= */
+
+function getAnalysisRecords() {
+
+  const database =
+    loadAnalysisDatabase();
+
+  return database.records
+    .filter(
+      record =>
+        record &&
+        typeof record === "object"
+    );
+}
+
+
+/* =========================================================
+   GLICEMIAS
+========================================================= */
+
+function getAnalysisGlucoseRecords(
+  records
+) {
+
+  return records
+    .filter(
+      record =>
+        record.type ===
+        "glucose"
+    )
+    .map(
+      record => ({
+
+        ...record,
+
+        numericValue:
+          Number(
+            record.value
+          )
+      })
+    )
+    .filter(
+      record =>
+        Number.isFinite(
+          record.numericValue
+        )
+    );
+}
+
+
+/* =========================================================
+   MÉDIA
+========================================================= */
+
+function calculateAverage(
+  values
+) {
+
+  if (
+    !Array.isArray(values) ||
+    values.length === 0
   ) {
 
-    const year =
-      date.getFullYear();
+    return 0;
+  }
 
-
-    const month =
-      String(
-        date.getMonth() + 1
-      ).padStart(
-        2,
-        "0"
-      );
-
-
-    const day =
-      String(
-        date.getDate()
-      ).padStart(
-        2,
-        "0"
-      );
-
-
-    return (
-      year +
-      "-" +
-      month +
-      "-" +
-      day
+  const total =
+    values.reduce(
+      (
+        sum,
+        value
+      ) =>
+        sum +
+        Number(value),
+      0
     );
 
+  return total /
+    values.length;
+}
+
+
+/* =========================================================
+   MENOR VALOR
+========================================================= */
+
+function calculateMinimum(
+  values
+) {
+
+  if (
+    !Array.isArray(values) ||
+    values.length === 0
+  ) {
+
+    return 0;
   }
 
-
-  function setDefaultCustomDates() {
-
-    const end =
-      new Date();
-
-
-    const start =
-      new Date();
+  return Math.min(
+    ...values.map(
+      Number
+    )
+  );
+}
 
 
-    start.setDate(
-      start.getDate() - 6
+/* =========================================================
+   MAIOR VALOR
+========================================================= */
+
+function calculateMaximum(
+  values
+) {
+
+  if (
+    !Array.isArray(values) ||
+    values.length === 0
+  ) {
+
+    return 0;
+  }
+
+  return Math.max(
+    ...values.map(
+      Number
+    )
+  );
+}
+
+
+/* =========================================================
+   FORMATAÇÃO
+========================================================= */
+
+function formatAnalysisNumber(
+  value,
+  decimals = 0
+) {
+
+  if (
+    !Number.isFinite(
+      Number(value)
+    )
+  ) {
+
+    return "-";
+  }
+
+  return Number(value)
+    .toLocaleString(
+      "pt-BR",
+      {
+        minimumFractionDigits:
+          decimals,
+
+        maximumFractionDigits:
+          decimals
+      }
+    );
+}
+
+
+/* =========================================================
+   CRIAR RESUMO
+========================================================= */
+
+function createAnalysisSummary(
+  records
+) {
+
+  const glucose =
+    getAnalysisGlucoseRecords(
+      records
+    );
+
+  const values =
+    glucose.map(
+      record =>
+        record.numericValue
     );
 
 
-    if (startDateInput) {
+  const average =
+    calculateAverage(
+      values
+    );
 
-      startDateInput.value =
-        dateToKey(
-          start
-        );
+  const minimum =
+    calculateMinimum(
+      values
+    );
 
-    }
-
-
-    if (endDateInput) {
-
-      endDateInput.value =
-        dateToKey(
-          end
-        );
-
-    }
-
-  }
+  const maximum =
+    calculateMaximum(
+      values
+    );
 
 
-  function setDefaultPeriod() {
-
-    if (!periodSelect) {
-
-      return;
-
-    }
-
-
-    periodSelect.value =
-      "7";
+  const meals =
+    records.filter(
+      record =>
+        record.type ===
+        "meal"
+    );
 
 
-    setDefaultCustomDates();
-
-  }
-
-
-  function getDateRange() {
-
-    const end =
-      new Date();
+  const insulin =
+    records.filter(
+      record =>
+        record.type ===
+        "insulin"
+    );
 
 
-    end.setHours(
-      0,
-      0,
-      0,
+  const activities =
+    records.filter(
+      record =>
+        record.type ===
+        "activity"
+    );
+
+
+  const medication =
+    records.filter(
+      record =>
+        record.type ===
+        "medication"
+    );
+
+
+  const activityMinutes =
+    activities.reduce(
+      (
+        total,
+        record
+      ) =>
+        total +
+        Number(
+          record.duration || 0
+        ),
       0
     );
 
 
-    const start =
-      new Date(
-        end
-      );
+  return {
+
+    glucoseCount:
+      glucose.length,
+
+    glucoseAverage:
+      average,
+
+    glucoseMinimum:
+      minimum,
+
+    glucoseMaximum:
+      maximum,
+
+    mealCount:
+      meals.length,
+
+    insulinCount:
+      insulin.length,
+
+    activityCount:
+      activities.length,
+
+    activityMinutes:
+      activityMinutes,
+
+    medicationCount:
+      medication.length
+  };
+}
 
 
-    if (
-      periodSelect &&
-      periodSelect.value ===
-      "custom"
-    ) {
+/* =========================================================
+   ATUALIZAR ELEMENTO
+========================================================= */
 
-      const customStart =
-        startDateInput
-          ? startDateInput.value
-          : "";
+function updateAnalysisElement(
+  id,
+  value
+) {
 
+  const element =
+    document.getElementById(
+      id
+    );
 
-      const customEnd =
-        endDateInput
-          ? endDateInput.value
-          : "";
+  if (!element) {
+    return;
+  }
 
-
-      if (
-        !customStart ||
-        !customEnd
-      ) {
-
-        return null;
-
-      }
+  element.textContent =
+    value;
+}
 
 
-      if (
-        customStart >
-        customEnd
-      ) {
+/* =========================================================
+   RENDERIZAR RESUMO
+========================================================= */
 
-        return null;
+function renderAnalysisSummary(
+  records
+) {
 
-      }
-
-
-      return {
-
-        start:
-          customStart,
-
-        end:
-          customEnd
-
-      };
-
-    }
-
-
-    const days =
-      Number(
-        periodSelect
-          ? periodSelect.value
-          : 7
-      );
-
-
-    start.setDate(
-      start.getDate() -
-      (
-        days - 1
-      )
+  const summary =
+    createAnalysisSummary(
+      records
     );
 
 
-    return {
-
-      start:
-        dateToKey(
-          start
-        ),
-
-      end:
-        dateToKey(
-          end
-        )
-
-    };
-
-  }
+  updateAnalysisElement(
+    "analysisGlucoseCount",
+    summary.glucoseCount
+  );
 
 
-  /* =====================================================
-     BANCO LOCAL
-  ====================================================== */
-
-  function loadDatabase() {
-
-    try {
-
-      const stored =
-        localStorage.getItem(
-          STORAGE_KEY
-        );
+  updateAnalysisElement(
+    "analysisGlucoseAverage",
+    summary.glucoseCount > 0
+      ? `${formatAnalysisNumber(
+          summary.glucoseAverage,
+          1
+        )} mg/dL`
+      : "-"
+  );
 
 
-      if (!stored) {
-
-        return {
-
-          records: [],
-
-          trash: []
-
-        };
-
-      }
+  updateAnalysisElement(
+    "analysisGlucoseMinimum",
+    summary.glucoseCount > 0
+      ? `${formatAnalysisNumber(
+          summary.glucoseMinimum
+        )} mg/dL`
+      : "-"
+  );
 
 
-      const parsed =
-        JSON.parse(
-          stored
-        );
+  updateAnalysisElement(
+    "analysisGlucoseMaximum",
+    summary.glucoseCount > 0
+      ? `${formatAnalysisNumber(
+          summary.glucoseMaximum
+        )} mg/dL`
+      : "-"
+  );
 
 
-      return {
-
-        records:
-          Array.isArray(
-            parsed.records
-          )
-            ? parsed.records
-            : [],
-
-        trash:
-          Array.isArray(
-            parsed.trash
-          )
-            ? parsed.trash
-            : []
-
-      };
-
-    } catch (error) {
-
-      console.error(
-        "Erro ao carregar dados das análises:",
-        error
-      );
+  updateAnalysisElement(
+    "analysisMealCount",
+    summary.mealCount
+  );
 
 
-      return {
-
-        records: [],
-
-        trash: []
-
-      };
-
-    }
-
-  }
+  updateAnalysisElement(
+    "analysisInsulinCount",
+    summary.insulinCount
+  );
 
 
-  function getFilteredRecords() {
-
-    const database =
-      loadDatabase();
-
-
-    const range =
-      getDateRange();
+  updateAnalysisElement(
+    "analysisActivityCount",
+    summary.activityCount
+  );
 
 
-    if (!range) {
-
-      return [];
-
-    }
-
-
-    return database.records.filter(
-      function (record) {
-
-        const date =
-          String(
-            record.date ||
-            ""
-          );
+  updateAnalysisElement(
+    "analysisActivityMinutes",
+    `${summary.activityMinutes} min`
+  );
 
 
-        return (
-          date >=
-          range.start &&
-          date <=
-          range.end
-        );
+  updateAnalysisElement(
+    "analysisMedicationCount",
+    summary.medicationCount
+  );
+}
 
-      }
+
+/* =========================================================
+   RENDERIZAR LISTA DE GLICEMIAS
+========================================================= */
+
+function renderAnalysisGlucoseList(
+  records
+) {
+
+  const container =
+    document.getElementById(
+      "analysisGlucoseList"
     );
 
+  if (!container) {
+    return;
   }
 
 
-  /* =====================================================
-     FORMATAÇÕES
-  ====================================================== */
-
-  function formatDate(
-    value
-  ) {
-
-    if (!value) {
-
-      return "";
-
-    }
-
-
-    const parts =
-      String(
-        value
-      ).split("-");
-
-
-    if (
-      parts.length !==
-      3
-    ) {
-
-      return value;
-
-    }
-
-
-    return (
-      parts[2] +
-      "/" +
-      parts[1] +
-      "/" +
-      parts[0]
-    );
-
-  }
-
-
-  function escapeHTML(
-    value
-  ) {
-
-    return String(
-      value ??
-      ""
+  const glucose =
+    getAnalysisGlucoseRecords(
+      records
     )
-      .replaceAll(
-        "&",
-        "&amp;"
-      )
-      .replaceAll(
-        "<",
-        "&lt;"
-      )
-      .replaceAll(
-        ">",
-        "&gt;"
-      )
-      .replaceAll(
-        '"',
-        "&quot;"
-      )
-      .replaceAll(
-        "'",
-        "&#039;"
-      );
+    .sort(
+      (a, b) => {
 
-  }
+        const dateA =
+          `${a.date || ""} ${
+            a.time || ""
+          }`;
 
+        const dateB =
+          `${b.date || ""} ${
+            b.time || ""
+          }`;
 
-  /* =====================================================
-     RESUMOS
-  ====================================================== */
-
-  function countType(
-    records,
-    type
-  ) {
-
-    return records.filter(
-      function (record) {
-
-        return (
-          record.type ===
-          type
+        return dateB.localeCompare(
+          dateA
         );
-
-      }
-    ).length;
-
-  }
-
-
-  function getActivityMinutes(
-    records
-  ) {
-
-    return records
-      .filter(
-        function (record) {
-
-          return (
-            record.type ===
-            "activity"
-          );
-
-        }
-      )
-      .reduce(
-        function (
-          total,
-          record
-        ) {
-
-          const value =
-            Number(
-              record.duration
-            );
-
-
-          return (
-            total +
-            (
-              Number.isFinite(
-                value
-              )
-                ? value
-                : 0
-            )
-          );
-
-        },
-        0
-      );
-
-  }
-
-
-  function getGlucoseRecords(
-    records
-  ) {
-
-    return records
-      .filter(
-        function (record) {
-
-          return (
-            record.type ===
-            "glucose"
-          );
-
-        }
-      )
-      .map(
-        function (record) {
-
-          return {
-
-            date:
-              String(
-                record.date ||
-                ""
-              ),
-
-            time:
-              String(
-                record.time ||
-                ""
-              ),
-
-            value:
-              Number(
-                record.value
-              ),
-
-            kind:
-              String(
-                record.kind ||
-                ""
-              )
-                .trim()
-
-          };
-
-        }
-      )
-      .filter(
-        function (item) {
-
-          return (
-            Number.isFinite(
-              item.value
-            )
-          );
-
-        }
-      )
-      .sort(
-        function (
-          a,
-          b
-        ) {
-
-          const first =
-            a.date +
-            " " +
-            a.time;
-
-
-          const second =
-            b.date +
-            " " +
-            b.time;
-
-
-          return first.localeCompare(
-            second
-          );
-
-        }
-      );
-
-  }
-
-
-  function average(
-    values
-  ) {
-
-    if (
-      !values.length
-    ) {
-
-      return null;
-
-    }
-
-
-    return (
-      values.reduce(
-        function (
-          total,
-          value
-        ) {
-
-          return (
-            total +
-            value
-          );
-
-        },
-        0
-      ) /
-      values.length
-    );
-
-  }
-
-
-  function getInsulinUnits(
-    records
-  ) {
-
-    return records
-      .filter(
-        function (record) {
-
-          return (
-            record.type ===
-            "insulin"
-          );
-
-        }
-      )
-      .reduce(
-        function (
-          total,
-          record
-        ) {
-
-          const candidates = [
-
-            record.dose,
-
-            record.units,
-
-            record.insulinDose
-
-          ];
-
-
-          let value =
-            0;
-
-
-          for (
-            const candidate
-            of candidates
-          ) {
-
-            const parsed =
-              Number(
-                candidate
-              );
-
-
-            if (
-              Number.isFinite(
-                parsed
-              )
-            ) {
-
-              value =
-                parsed;
-
-              break;
-
-            }
-
-          }
-
-
-          return (
-            total +
-            value
-          );
-
-        },
-        0
-      );
-
-  }
-
-
-  /* =====================================================
-     JEJUM
-  ====================================================== */
-
-  function isFastingGlucose(
-    record
-  ) {
-
-    return (
-      String(
-        record.kind ||
-        ""
-      )
-        .trim()
-        .toLowerCase() ===
-      "jejum"
-    );
-
-  }
-
-
-  /* =====================================================
-     PERÍODO DO DIA
-  ====================================================== */
-
-  function getDayPeriod(
-    time
-  ) {
-
-    if (!time) {
-
-      return "unknown";
-
-    }
-
-
-    const parts =
-      String(
-        time
-      ).split(":");
-
-
-    const hour =
-      Number(
-        parts[0]
-      );
-
-
-    if (
-      !Number.isFinite(
-        hour
-      )
-    ) {
-
-      return "unknown";
-
-    }
-
-
-    if (
-      hour >= 5 &&
-      hour < 12
-    ) {
-
-      return "morning";
-
-    }
-
-
-    if (
-      hour >= 12 &&
-      hour < 18
-    ) {
-
-      return "afternoon";
-
-    }
-
-
-    return "night";
-
-  }
-
-
-  function getPeriodLabel(
-    period
-  ) {
-
-    const labels = {
-
-      morning:
-        "🌅 Manhã",
-
-      afternoon:
-        "☀️ Tarde",
-
-      night:
-        "🌙 Noite",
-
-      unknown:
-        "⏱️ Horário não informado"
-
-    };
-
-
-    return (
-      labels[period] ||
-      labels.unknown
-    );
-
-  }
-
-
-  /* =====================================================
-     ANÁLISE POR PERÍODO
-  ====================================================== */
-
-  function buildPeriodAnalysis(
-    glucoseRecords
-  ) {
-
-    const periods = {
-
-      fasting: [],
-
-      morning: [],
-
-      afternoon: [],
-
-      night: [],
-
-      unknown: []
-
-    };
-
-
-    glucoseRecords.forEach(
-      function (record) {
-
-        if (
-          isFastingGlucose(
-            record
-          )
-        ) {
-
-          periods.fasting.push(
-            record.value
-          );
-
-          return;
-
-        }
-
-
-        const period =
-          getDayPeriod(
-            record.time
-          );
-
-
-        periods[period].push(
-          record.value
-        );
-
       }
     );
 
 
-    const order = [
+  if (
+    glucose.length === 0
+  ) {
 
-      "fasting",
-
-      "morning",
-
-      "afternoon",
-
-      "night",
-
-      "unknown"
-
-    ];
-
-
-    let html = `
-
-      <section
-        class="card"
-        style="
-          margin-top:16px;
-        "
-      >
-
-        <h2>
-          🕐 Glicemias por período
-        </h2>
-
-        <p
-          style="
-            margin-top:0;
-            color:#777;
-            font-size:13px;
-            line-height:1.5;
-          "
-        >
-          As glicemias em jejum são separadas
-          das demais medições da manhã.
-        </p>
-
-
-        <div
-          style="
-            display:flex;
-            flex-direction:column;
-            gap:12px;
-          "
-        >
-
+    container.innerHTML = `
+      <div class="empty-state">
+        Nenhuma glicemia registrada.
+      </div>
     `;
 
-
-    order.forEach(
-      function (period) {
-
-        const values =
-          periods[period];
+    return;
+  }
 
 
-        if (
-          period === "unknown" &&
-          values.length === 0
-        ) {
+  container.innerHTML =
+    glucose
+      .map(
+        record => `
 
-          return;
+          <div class="analysis-glucose-item">
 
-        }
+            <div class="analysis-glucose-value">
 
+              ${formatAnalysisNumber(
+                record.numericValue
+              )}
+              mg/dL
 
-        const avg =
-          average(
-            values
-          );
+            </div>
 
+            <div class="analysis-glucose-info">
 
-        const min =
-          values.length
-            ? Math.min(
-                ...values
-              )
-            : null;
-
-
-        const max =
-          values.length
-            ? Math.max(
-                ...values
-              )
-            : null;
-
-
-        const label =
-          period === "fasting"
-            ? "🩸 Jejum"
-            : getPeriodLabel(
-                period
-              );
-
-
-        html += `
-
-          <div
-            style="
-              border:1px solid #eee;
-              border-radius:14px;
-              padding:14px;
-              background:#fff;
-            "
-          >
-
-            <div
-              style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                gap:10px;
-                margin-bottom:10px;
-              "
-            >
-
-              <strong
-                style="
-                  color:#7f4444;
-                  font-size:16px;
-                "
-              >
-                ${label}
+              <strong>
+                ${escapeAnalysisHTML(
+                  record.kind ||
+                  "Glicemia"
+                )}
               </strong>
 
-
-              <span
-                style="
-                  font-size:12px;
-                  color:#777;
-                "
-              >
-
-                ${
-                  values.length
-                }
-
-                ${
-                  values.length ===
-                  1
-                    ? "medição"
-                    : "medições"
-                }
-
+              <span>
+                ${escapeAnalysisHTML(
+                  record.date ||
+                  ""
+                )}
+                ${escapeAnalysisHTML(
+                  record.time ||
+                  ""
+                )}
               </span>
 
             </div>
 
-
-            <div
-              style="
-                display:grid;
-                grid-template-columns:
-                  repeat(3, minmax(0, 1fr));
-                gap:8px;
-              "
-            >
-
-              <div
-                style="
-                  padding:10px;
-                  background:#f8eeee;
-                  border-radius:10px;
-                  text-align:center;
-                "
-              >
-
-                <div
-                  style="
-                    font-size:10px;
-                    color:#777;
-                  "
-                >
-                  Média
-                </div>
-
-                <strong
-                  style="
-                    display:block;
-                    margin-top:4px;
-                    color:#7f4444;
-                  "
-                >
-                  ${
-                    avg === null
-                      ? "—"
-                      : Math.round(
-                          avg
-                        ) +
-                        " mg/dL"
-                  }
-                </strong>
-
-              </div>
-
-
-              <div
-                style="
-                  padding:10px;
-                  background:#f8eeee;
-                  border-radius:10px;
-                  text-align:center;
-                "
-              >
-
-                <div
-                  style="
-                    font-size:10px;
-                    color:#777;
-                  "
-                >
-                  Mínima
-                </div>
-
-                <strong
-                  style="
-                    display:block;
-                    margin-top:4px;
-                    color:#7f4444;
-                  "
-                >
-                  ${
-                    min === null
-                      ? "—"
-                      : min +
-                        " mg/dL"
-                  }
-                </strong>
-
-              </div>
-
-
-              <div
-                style="
-                  padding:10px;
-                  background:#f8eeee;
-                  border-radius:10px;
-                  text-align:center;
-                "
-              >
-
-                <div
-                  style="
-                    font-size:10px;
-                    color:#777;
-                  "
-                >
-                  Máxima
-                </div>
-
-                <strong
-                  style="
-                    display:block;
-                    margin-top:4px;
-                    color:#7f4444;
-                  "
-                >
-                  ${
-                    max === null
-                      ? "—"
-                      : max +
-                        " mg/dL"
-                  }
-                </strong>
-
-              </div>
-
-            </div>
-
           </div>
 
-        `;
+        `
+      )
+      .join("");
+}
 
-      }
+
+/* =========================================================
+   SEGURANÇA
+========================================================= */
+
+function escapeAnalysisHTML(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
     );
+}
 
 
-    html += `
+/* =========================================================
+   ANÁLISE POR PERÍODO
+========================================================= */
 
-        </div>
+function getAnalysisPeriodRecords(
+  records,
+  days
+) {
 
-      </section>
+  const now =
+    new Date();
 
-    `;
+  const start =
+    new Date(now);
 
+  start.setHours(
+    0,
+    0,
+    0,
+    0
+  );
 
-    return html;
-
-  }
-
-
-  /* =====================================================
-     GRÁFICO DE LINHA
-  ====================================================== */
-
-  function buildGlucoseLineChart(
-    glucoseRecords
-  ) {
-
-    if (
-      !glucoseRecords.length
-    ) {
-
-      return `
-
-        <section
-          class="card"
-          style="
-            margin-top:16px;
-          "
-        >
-
-          <h2>
-            🩸 Evolução das glicemias
-          </h2>
-
-          <div class="empty-state">
-            Não há glicemias registradas
-            no período selecionado.
-          </div>
-
-        </section>
-
-      `;
-
-    }
-
-
-    const values =
-      glucoseRecords.map(
-        function (
-          item
-        ) {
-
-          return item.value;
-
-        }
-      );
-
-
-    const minValue =
-      Math.min(
-        ...values
-      );
-
-
-    const maxValue =
-      Math.max(
-        ...values
-      );
-
-
-    const averageValue =
-      average(
-        values
-      );
-
-
-    const chartWidth =
-      760;
-
-
-    const chartHeight =
-      360;
-
-
-    const left =
-      58;
-
-
-    const right =
-      22;
-
-
-    const top =
-      34;
-
-
-    const bottom =
-      60;
-
-
-    const plotWidth =
-      chartWidth -
-      left -
-      right;
-
-
-    const plotHeight =
-      chartHeight -
-      top -
-      bottom;
-
-
-    const valueRange =
-      Math.max(
-        maxValue -
-        minValue,
-        20
-      );
-
-
-    const chartMin =
-      minValue -
-      Math.max(
-        valueRange *
-        0.12,
-        5
-      );
-
-
-    const chartMax =
-      maxValue +
-      Math.max(
-        valueRange *
-        0.12,
-        5
-      );
-
-
-    const chartRange =
-      Math.max(
-        chartMax -
-        chartMin,
-        1
-      );
-
-
-    function xFor(
-      index
-    ) {
-
-      if (
-        glucoseRecords.length ===
-        1
-      ) {
-
-        return (
-          left +
-          plotWidth /
-          2
-        );
-
-      }
-
-
-      return (
-        left +
-        (
-          index /
-          (
-            glucoseRecords.length -
-            1
-          )
-        ) *
-        plotWidth
-      );
-
-    }
-
-
-    function yFor(
-      value
-    ) {
-
-      return (
-        top +
-        (
-          (
-            chartMax -
-            value
-          ) /
-          chartRange
-        ) *
-        plotHeight
-      );
-
-    }
-
-
-    const points =
-      glucoseRecords.map(
-        function (
-          item,
-          index
-        ) {
-
-          return {
-
-            x:
-              xFor(
-                index
-              ),
-
-            y:
-              yFor(
-                item.value
-              ),
-
-            value:
-              item.value,
-
-            date:
-              item.date,
-
-            time:
-              item.time,
-
-            kind:
-              item.kind,
-
-            fasting:
-              isFastingGlucose(
-                item
-              )
-
-          };
-
-        }
-      );
-
-
-    const polyline =
-      points
-        .map(
-          function (
-            point
-          ) {
-
-            return (
-              point.x +
-              "," +
-              point.y
-            );
-
-          }
-        )
-        .join(
-          " "
-        );
-
-
-    /* =================================================
-       GRADE
-    ================================================== */
-
-    let gridHTML =
-      "";
-
-
-    const numberOfGridLines =
-      5;
-
-
-    for (
-      let index = 0;
-      index <
-        numberOfGridLines;
-      index++
-    ) {
-
-      const ratio =
-        index /
-        (
-          numberOfGridLines -
-          1
-        );
-
-
-      const value =
-        chartMax -
-        (
-          ratio *
-          chartRange
-        );
-
-
-      const y =
-        yFor(
-          value
-        );
-
-
-      gridHTML += `
-
-        <line
-          x1="${left}"
-          y1="${y}"
-          x2="${
-            chartWidth -
-            right
-          }"
-          y2="${y}"
-          stroke="#eeeeee"
-          stroke-width="1"
-        ></line>
-
-
-        <text
-          x="${
-            left -
-            8
-          }"
-          y="${
-            y + 4
-          }"
-          text-anchor="end"
-          font-size="11"
-          fill="#777"
-        >
-          ${Math.round(
-            value
-          )}
-        </text>
-
-      `;
-
-    }
-
-
-    const averageY =
-      yFor(
-        averageValue
-      );
-
-
-    /* =================================================
-       MARCADORES
-    ================================================== */
-
-    let pointsHTML =
-      "";
-
-
-    points.forEach(
-      function (
-        point
-      ) {
-
-        const label =
-          formatDate(
-            point.date
-          ) +
-          (
-            point.time
-              ? " · " +
-                point.time
-              : ""
-          ) +
-          (
-            point.fasting
-              ? " · Jejum"
-              : ""
-          );
-
-
-        if (
-          point.fasting
-        ) {
-
-          /*
-           * Losango para JEJUM.
-           */
-
-          const size =
-            8;
-
-
-          const diamondPoints = [
-
-            (
-              point.x
-            ) + "," +
-            (
-              point.y -
-              size
-            ),
-
-            (
-              point.x +
-              size
-            ) + "," +
-            point.y,
-
-            (
-              point.x
-            ) + "," +
-            (
-              point.y +
-              size
-            ),
-
-            (
-              point.x -
-              size
-            ) + "," +
-            point.y
-
-          ].join(
-            " "
-          );
-
-
-          pointsHTML += `
-
-            <polygon
-              points="${diamondPoints}"
-              fill="#ffffff"
-              stroke="#A85C5C"
-              stroke-width="3"
-            >
-
-              <title>
-                ${
-                  escapeHTML(
-                    label
-                  )
-                }
-                — ${point.value}
-                mg/dL
-              </title>
-
-            </polygon>
-
-
-            <text
-              x="${point.x}"
-              y="${
-                point.y -
-                13
-              }"
-              text-anchor="middle"
-              font-size="11"
-              font-weight="700"
-              fill="#7f4444"
-            >
-              ${point.value}
-            </text>
-
-          `;
-
-        } else {
-
-          pointsHTML += `
-
-            <circle
-              cx="${point.x}"
-              cy="${point.y}"
-              r="6"
-              fill="#A85C5C"
-              stroke="#ffffff"
-              stroke-width="3"
-            >
-
-              <title>
-                ${
-                  escapeHTML(
-                    label
-                  )
-                }
-                — ${point.value}
-                mg/dL
-              </title>
-
-            </circle>
-
-
-            <text
-              x="${point.x}"
-              y="${
-                point.y -
-                12
-              }"
-              text-anchor="middle"
-              font-size="11"
-              font-weight="700"
-              fill="#7f4444"
-            >
-              ${point.value}
-            </text>
-
-          `;
-
-        }
-
-      }
-    );
-
-
-    /* =================================================
-       EIXO HORIZONTAL
-    ================================================== */
-
-    let labelsHTML =
-      "";
-
-
-    const maximumLabels =
-      6;
-
-
-    let labelIndexes = [];
-
-
-    if (
-      glucoseRecords.length <=
-      maximumLabels
-    ) {
-
-      labelIndexes =
-        glucoseRecords.map(
-          function (
-            item,
-            index
-          ) {
-
-            return index;
-
-          }
-        );
-
-    } else {
-
-      const step =
-        (
-          glucoseRecords.length -
-          1
-        ) /
-        (
-          maximumLabels -
-          1
-        );
-
-
-      for (
-        let index = 0;
-        index <
-          maximumLabels;
-        index++
-      ) {
-
-        labelIndexes.push(
-          Math.round(
-            index *
-            step
-          )
-        );
-
-      }
-
-    }
-
-
-    labelIndexes =
-      [
-        ...new Set(
-          labelIndexes
-        )
-      ];
-
-
-    labelIndexes.forEach(
-      function (
-        index
-      ) {
-
-        const point =
-          points[index];
-
-
-        if (!point) {
-
-          return;
-
-        }
-
-
-        labelsHTML += `
-
-          <text
-            x="${point.x}"
-            y="${
-              chartHeight -
-              30
-            }"
-            text-anchor="middle"
-            font-size="10"
-            fill="#777"
-          >
-            ${formatDate(
-              point.date
-            )}
-          </text>
-
-
-          ${
-            point.time
-              ? `
-                <text
-                  x="${point.x}"
-                  y="${
-                    chartHeight -
-                    16
-                  }"
-                  text-anchor="middle"
-                  font-size="9"
-                  fill="#999"
-                >
-                  ${escapeHTML(
-                    point.time
-                  )}
-                </text>
-              `
-              : ""
-          }
-
-        `;
-
-      }
-    );
-
-
-    /* =================================================
-       TENDÊNCIA
-    ================================================== */
-
-    const firstValue =
-      glucoseRecords[0].value;
-
-
-    const lastValue =
-      glucoseRecords[
-        glucoseRecords.length -
-        1
-      ].value;
-
-
-    let trendText =
-      "Estável";
-
-
-    if (
-      lastValue >
-      firstValue
-    ) {
-
-      trendText =
-        "Tendência de alta";
-
-    } else if (
-      lastValue <
-      firstValue
-    ) {
-
-      trendText =
-        "Tendência de queda";
-
-    }
-
-
-    return `
-
-      <section
-        class="card"
-        style="
-          margin-top:16px;
-        "
-      >
-
-        <h2>
-          🩸 Evolução das glicemias
-        </h2>
-
-
-        <p
-          style="
-            margin-top:0;
-            color:#777;
-            font-size:13px;
-            line-height:1.5;
-          "
-        >
-
-          ${
-            glucoseRecords.length
-          }
-
-          ${
-            glucoseRecords.length ===
-            1
-              ? "medição"
-              : "medições"
-          }
-
-          no período.
-
-        </p>
-
-
-        <div
-          style="
-            width:100%;
-            overflow-x:auto;
-            overflow-y:hidden;
-            margin-top:8px;
-          "
-        >
-
-          <svg
-            viewBox="
-              0 0
-              ${chartWidth}
-              ${chartHeight}
-            "
-            width="100%"
-            role="img"
-            aria-label="Evolução das glicemias"
-            style="
-              display:block;
-              min-width:640px;
-            "
-          >
-
-            ${gridHTML}
-
-
-            <line
-              x1="${left}"
-              y1="${top}"
-              x2="${left}"
-              y2="${
-                chartHeight -
-                bottom
-              }"
-              stroke="#dddddd"
-              stroke-width="1"
-            ></line>
-
-
-            <line
-              x1="${left}"
-              y1="${
-                chartHeight -
-                bottom
-              }"
-              x2="${
-                chartWidth -
-                right
-              }"
-              y2="${
-                chartHeight -
-                bottom
-              }"
-              stroke="#dddddd"
-              stroke-width="1"
-            ></line>
-
-
-            <line
-              x1="${left}"
-              y1="${averageY}"
-              x2="${
-                chartWidth -
-                right
-              }"
-              y2="${averageY}"
-              stroke="#999999"
-              stroke-width="1.5"
-              stroke-dasharray="7 6"
-            ></line>
-
-
-            <text
-              x="${
-                chartWidth -
-                right
-              }"
-              y="${
-                averageY -
-                7
-              }"
-              text-anchor="end"
-              font-size="10"
-              fill="#777"
-            >
-              Média
-            </text>
-
-
-            <polyline
-              points="${polyline}"
-              fill="none"
-              stroke="#A85C5C"
-              stroke-width="4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></polyline>
-
-
-            ${pointsHTML}
-
-
-            ${labelsHTML}
-
-          </svg>
-
-        </div>
-
-
-        <!-- =================================================
-             LEGENDA
-        ================================================== -->
-
-        <div
-          style="
-            display:flex;
-            flex-wrap:wrap;
-            gap:16px;
-            align-items:center;
-            margin-top:12px;
-            padding:10px 12px;
-            background:#faf7f5;
-            border-radius:12px;
-            font-size:12px;
-            color:#666;
-          "
-        >
-
-          <span
-            style="
-              display:inline-flex;
-              align-items:center;
-              gap:7px;
-            "
-          >
-
-            <span
-              aria-hidden="true"
-              style="
-                width:12px;
-                height:12px;
-                border-radius:50%;
-                background:#A85C5C;
-                display:inline-block;
-              "
-            ></span>
-
-            Glicemia
-
-          </span>
-
-
-          <span
-            style="
-              display:inline-flex;
-              align-items:center;
-              gap:7px;
-            "
-          >
-
-            <span
-              aria-hidden="true"
-              style="
-                width:10px;
-                height:10px;
-                border:2px solid #A85C5C;
-                background:#fff;
-                transform:rotate(45deg);
-                display:inline-block;
-              "
-            ></span>
-
-            Glicemia em jejum
-
-          </span>
-
-        </div>
-
-
-        <!-- =================================================
-             RESUMO DO GRÁFICO
-        ================================================== -->
-
-        <div
-          style="
-            display:grid;
-            grid-template-columns:
-              repeat(2, minmax(0, 1fr));
-            gap:10px;
-            margin-top:12px;
-          "
-        >
-
-          <div
-            style="
-              padding:13px;
-              background:#f8eeee;
-              border-radius:12px;
-            "
-          >
-
-            <div
-              style="
-                font-size:11px;
-                color:#777;
-              "
-            >
-              Média
-            </div>
-
-
-            <strong
-              style="
-                display:block;
-                margin-top:4px;
-                font-size:18px;
-                color:#7f4444;
-              "
-            >
-
-              ${
-                Math.round(
-                  averageValue
-                )
-              }
-
-              mg/dL
-
-            </strong>
-
-          </div>
-
-
-          <div
-            style="
-              padding:13px;
-              background:#f8eeee;
-              border-radius:12px;
-            "
-          >
-
-            <div
-              style="
-                font-size:11px;
-                color:#777;
-              "
-            >
-              Tendência
-            </div>
-
-
-            <strong
-              style="
-                display:block;
-                margin-top:4px;
-                font-size:15px;
-                color:#7f4444;
-              "
-            >
-              ${trendText}
-            </strong>
-
-          </div>
-
-
-          <div
-            style="
-              padding:13px;
-              background:#f8eeee;
-              border-radius:12px;
-            "
-          >
-
-            <div
-              style="
-                font-size:11px;
-                color:#777;
-              "
-            >
-              Mínima
-            </div>
-
-
-            <strong
-              style="
-                display:block;
-                margin-top:4px;
-                font-size:18px;
-                color:#7f4444;
-              "
-            >
-
-              ${minValue}
-
-              mg/dL
-
-            </strong>
-
-          </div>
-
-
-          <div
-            style="
-              padding:13px;
-              background:#f8eeee;
-              border-radius:12px;
-            "
-          >
-
-            <div
-              style="
-                font-size:11px;
-                color:#777;
-              "
-            >
-              Máxima
-            </div>
-
-
-            <strong
-              style="
-                display:block;
-                margin-top:4px;
-                font-size:18px;
-                color:#7f4444;
-              "
-            >
-
-              ${maxValue}
-
-              mg/dL
-
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <p
-          style="
-            margin-bottom:0;
-            margin-top:14px;
-            color:#999;
-            font-size:11px;
-          "
-        >
-          Os losangos representam glicemias em jejum.
-          Toque ou passe o cursor sobre um marcador
-          para ver os detalhes da medição.
-        </p>
-
-      </section>
-
-    `;
-
-  }
-
-
-  /* =====================================================
-     CARDS DE RESUMO
-  ====================================================== */
-
-  function summaryCard(
-    icon,
-    label,
-    value
-  ) {
-
-    return `
-
-      <div
-        style="
-          padding:14px;
-          background:#fff;
-          border:1px solid #eee;
-          border-radius:14px;
-        "
-      >
-
-        <div
-          style="
-            font-size:20px;
-            margin-bottom:5px;
-          "
-        >
-          ${icon}
-        </div>
-
-
-        <div
-          style="
-            font-size:12px;
-            color:#777;
-          "
-        >
-          ${label}
-        </div>
-
-
-        <strong
-          style="
-            display:block;
-            margin-top:4px;
-            color:#7f4444;
-            font-size:22px;
-          "
-        >
-          ${value}
-        </strong>
-
-      </div>
-
-    `;
-
-  }
-
-
-  /* =====================================================
-     RENDERIZAÇÃO
-  ====================================================== */
-
-  function renderAnalysis() {
-
-    if (!content) {
-
-      return;
-
-    }
-
-
-    const range =
-      getDateRange();
-
-
-    if (!range) {
-
-      content.innerHTML = `
-
-        <section
-          class="card"
-          style="
-            margin-top:16px;
-          "
-        >
-
-          <div class="empty-state">
-
-            Confira as datas selecionadas.
-
-          </div>
-
-        </section>
-
-      `;
-
-      return;
-
-    }
-
-
-    const records =
-      getFilteredRecords();
-
-
-    const glucoseRecords =
-      getGlucoseRecords(
-        records
-      );
-
-
-    const glucoseValues =
-      glucoseRecords.map(
-        function (
-          item
-        ) {
-
-          return item.value;
-
-        }
-      );
-
-
-    const glucoseAverage =
-      average(
-        glucoseValues
-      );
-
-
-    const glucoseMin =
-      glucoseValues.length
-        ? Math.min(
-            ...glucoseValues
-          )
-        : null;
-
-
-    const glucoseMax =
-      glucoseValues.length
-        ? Math.max(
-            ...glucoseValues
-          )
-        : null;
-
-
-    const meals =
-      countType(
-        records,
-        "meal"
-      );
-
-
-    const glucose =
-      countType(
-        records,
-        "glucose"
-      );
-
-
-    const insulin =
-      countType(
-        records,
-        "insulin"
-      );
-
-
-    const activity =
-      countType(
-        records,
-        "activity"
-      );
-
-
-    const medication =
-      countType(
-        records,
-        "medication"
-      );
-
-
-    const consultation =
-      countType(
-        records,
-        "consultation"
-      );
-
-
-    const activityMinutes =
-      getActivityMinutes(
-        records
-      );
-
-
-    const insulinUnits =
-      getInsulinUnits(
-        records
-      );
-
-
-    content.innerHTML = `
-
-      <section
-        class="card"
-        style="
-          margin-top:16px;
-        "
-      >
-
-        <div
-          style="
-            font-size:13px;
-            color:#777;
-            margin-bottom:14px;
-          "
-        >
-
-          Período:
-
-          <strong>
-            ${escapeHTML(
-              formatDate(
-                range.start
-              )
-            )}
-          </strong>
-
-          até
-
-          <strong>
-            ${escapeHTML(
-              formatDate(
-                range.end
-              )
-            )}
-          </strong>
-
-        </div>
-
-
-        <div
-          style="
-            display:grid;
-            grid-template-columns:
-              repeat(2, minmax(0, 1fr));
-            gap:12px;
-          "
-        >
-
-          ${summaryCard(
-            "🍽️",
-            "Refeições",
-            meals
-          )}
-
-
-          ${summaryCard(
-            "🩸",
-            "Glicemias",
-            glucose
-          )}
-
-
-          ${summaryCard(
-            "💉",
-            "Aplicações",
-            insulin
-          )}
-
-
-          ${summaryCard(
-            "🏋️",
-            "Atividades",
-            activity
-          )}
-
-
-          ${summaryCard(
-            "💊",
-            "Medicamentos",
-            medication
-          )}
-
-
-          ${summaryCard(
-            "🩺",
-            "Consultas",
-            consultation
-          )}
-
-        </div>
-
-      </section>
-
-
-      <section
-        class="card"
-        style="
-          margin-top:16px;
-        "
-      >
-
-        <h2>
-          📈 Resumo
-        </h2>
-
-
-        <div
-          style="
-            display:flex;
-            flex-direction:column;
-            gap:10px;
-          "
-        >
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:10px 0;
-              border-bottom:1px solid #eee;
-            "
-          >
-
-            <span>
-              Total de registros
-            </span>
-
-
-            <strong>
-              ${records.length}
-            </strong>
-
-          </div>
-
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:10px 0;
-              border-bottom:1px solid #eee;
-            "
-          >
-
-            <span>
-              Média das glicemias
-            </span>
-
-
-            <strong>
-              ${
-                glucoseAverage ===
-                null
-                  ? "—"
-                  : Math.round(
-                      glucoseAverage
-                    ) +
-                    " mg/dL"
-              }
-            </strong>
-
-          </div>
-
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:10px 0;
-              border-bottom:1px solid #eee;
-            "
-          >
-
-            <span>
-              Menor glicemia
-            </span>
-
-
-            <strong>
-              ${
-                glucoseMin ===
-                null
-                  ? "—"
-                  : glucoseMin +
-                    " mg/dL"
-              }
-            </strong>
-
-          </div>
-
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:10px 0;
-              border-bottom:1px solid #eee;
-            "
-          >
-
-            <span>
-              Maior glicemia
-            </span>
-
-
-            <strong>
-              ${
-                glucoseMax ===
-                null
-                  ? "—"
-                  : glucoseMax +
-                    " mg/dL"
-              }
-            </strong>
-
-          </div>
-
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:10px 0;
-              border-bottom:1px solid #eee;
-            "
-          >
-
-            <span>
-              Atividade
-            </span>
-
-
-            <strong>
-              ${activityMinutes}
-              min
-            </strong>
-
-          </div>
-
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:10px 0;
-            "
-          >
-
-            <span>
-              Insulina
-            </span>
-
-
-            <strong>
-              ${
-                insulinUnits
-                  ? insulinUnits +
-                    " U"
-                  : "—"
-              }
-            </strong>
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-      ${
-        glucoseAverage !==
-        null
-          ? buildGlucoseLineChart(
-              glucoseRecords
-            )
-          : `
-
-            <section
-              class="card"
-              style="
-                margin-top:16px;
-              "
-            >
-
-              <h2>
-                🩸 Evolução das glicemias
-              </h2>
-
-
-              <div class="empty-state">
-                Não há glicemias registradas
-                no período selecionado.
-              </div>
-
-            </section>
-
-          `
-      }
-
-
-      ${buildPeriodAnalysis(
-        glucoseRecords
-      )}
-
-
-      ${
-        records.length ===
-        0
-          ? `
-
-            <section
-              class="card"
-              style="
-                margin-top:16px;
-              "
-            >
-
-              <div class="empty-state">
-
-                Nenhum registro encontrado
-                no período selecionado.
-
-              </div>
-
-            </section>
-
-          `
-          : ""
-      }
-
-    `;
-
-  }
-
-
-  /* =====================================================
-     ATUALIZAÇÃO APÓS SINCRONIZAÇÃO
-  ====================================================== */
-
-  document.addEventListener(
-    "recordatorioSyncComplete",
-    function () {
-
-      renderAnalysis();
-
-    }
+  start.setDate(
+    start.getDate() -
+    (days - 1)
   );
 
 
-  /* =====================================================
-     INICIAR
-  ====================================================== */
+  return records.filter(
+    record => {
 
-  if (
-    document.readyState ===
-    "loading"
-  ) {
+      if (!record.date) {
+        return false;
+      }
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      initAnalysis
+      const date =
+        new Date(
+          `${record.date}T00:00:00`
+        );
+
+      return (
+        date >= start &&
+        date <= now
+      );
+    }
+  );
+}
+
+
+/* =========================================================
+   RENDERIZAR PERÍODO
+========================================================= */
+
+function renderAnalysisPeriod(
+  days = 7
+) {
+
+  const records =
+    getAnalysisRecords();
+
+  const periodRecords =
+    getAnalysisPeriodRecords(
+      records,
+      days
     );
 
-  } else {
+
+  renderAnalysisSummary(
+    periodRecords
+  );
+
+  renderAnalysisGlucoseList(
+    periodRecords
+  );
+
+
+  const periodElement =
+    document.getElementById(
+      "analysisPeriod"
+    );
+
+  if (periodElement) {
+
+    periodElement.textContent =
+      days === 7
+        ? "Últimos 7 dias"
+        : `Últimos ${days} dias`;
+  }
+}
+
+
+/* =========================================================
+   RENDER PRINCIPAL
+========================================================= */
+
+function renderAnalysis() {
+
+  try {
+
+    const records =
+      getAnalysisRecords();
+
+
+    renderAnalysisSummary(
+      records
+    );
+
+
+    renderAnalysisGlucoseList(
+      records
+    );
+
+
+    analysisInitialized =
+      true;
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao renderizar análises:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   INICIALIZAÇÃO
+========================================================= */
+
+function initAnalysis() {
+
+  if (
+    analysisInitialized
+  ) {
+
+    renderAnalysis();
+
+    return;
+  }
+
+
+  analysisInitialized =
+    true;
+
+
+  renderAnalysis();
+}
+
+
+/* =========================================================
+   COMPATIBILIDADE
+========================================================= */
+
+window.initAnalysis =
+  initAnalysis;
+
+window.renderAnalysis =
+  renderAnalysis;
+
+window.renderAnalysisPeriod =
+  renderAnalysisPeriod;
+
+
+/* =========================================================
+   DOM READY
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
     initAnalysis();
 
   }
-
-})();
+);

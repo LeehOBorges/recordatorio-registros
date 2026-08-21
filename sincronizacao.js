@@ -1,112 +1,76 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    SINCRONIZAÇÃO COM SUPABASE
-   VERSÃO CORRIGIDA
 
+   - Usa o cliente criado no index.html
    - Mantém localStorage como cópia local
-   - Usa Supabase como banco central
-   - Não apaga registros existentes
+   - Supabase é o banco central
    - Mantém lixeira
    - Evita duplicação por user_id + local_id
-   - Atualiza o database em memória do app.js
-   - Evita criar múltiplos clientes Supabase quando possível
+   - Sincroniza após salvar
+   - Sincroniza ao entrar no aplicativo
+   - Sincroniza ao recuperar internet
+   - Não depende de alterar o app.js
 ========================================================= */
 
 (function () {
 
   "use strict";
 
-
-  /* =====================================================
-     CONFIGURAÇÃO
-  ====================================================== */
-
-  const SUPABASE_URL =
-    "https://gutbveorftpahuyjonnv.supabase.co";
-
-  const SUPABASE_PUBLISHABLE_KEY =
-    "sb_publishable_L8XMa2cXo2aWaGHHMdP1Tw_JtjABUQi";
-
   const STORAGE_KEY =
     "recordatorio_registros_v01";
+
+  let syncing = false;
+  let saveHookInstalled = false;
+  let authListenerInstalled = false;
+  let periodicTimer = null;
 
 
   /* =====================================================
      CLIENTE SUPABASE
   ====================================================== */
 
-  let syncClient = null;
-
-  try {
-
-    /*
-     * Se já existir um cliente criado pela página,
-     * reutilizamos esse cliente.
-     */
+  function getSupabaseClient() {
 
     if (
-      window.supabase &&
-      window.supabase.auth &&
-      typeof window.supabase.from === "function"
+      window.supabaseClient &&
+      window.supabaseClient.auth &&
+      typeof window.supabaseClient.from === "function"
     ) {
 
-      syncClient =
-        window.supabase;
+      return window.supabaseClient;
 
     }
-
-    /*
-     * Caso window.supabase seja apenas a biblioteca,
-     * criamos um único cliente para a sincronização.
-     */
-
-    else if (
-      window.supabase &&
-      typeof window.supabase.createClient ===
-        "function"
-    ) {
-
-      syncClient =
-        window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_PUBLISHABLE_KEY,
-          {
-            auth: {
-              persistSession: true,
-              autoRefreshToken: true,
-              detectSessionInUrl: true
-            }
-          }
-        );
-
-    }
-
-  } catch (error) {
 
     console.error(
-      "Erro ao iniciar cliente Supabase:",
-      error
+      "Cliente Supabase não encontrado em window.supabaseClient."
     );
+
+    return null;
 
   }
 
 
   /* =====================================================
-     CONTROLE
-  ====================================================== */
-
-  let syncing = false;
-
-  let syncTimer = null;
-
-  let authListenerInstalled = false;
-
-  let saveHookInstalled = false;
-
-
-  /* =====================================================
      UTILITÁRIOS
   ====================================================== */
+
+  function clone(value) {
+
+    try {
+
+      return JSON.parse(
+        JSON.stringify(value)
+      );
+
+    } catch (error) {
+
+      return value;
+
+    }
+
+  }
+
 
   function nowISO() {
 
@@ -115,43 +79,24 @@
   }
 
 
-  function cloneObject(object) {
-
-    try {
-
-      return JSON.parse(
-        JSON.stringify(object)
-      );
-
-    } catch (error) {
-
-      return {};
-
-    }
-
-  }
-
-
-  function getTimestamp(record) {
+  function timestamp(record) {
 
     if (!record) {
-      return nowISO();
+
+      return 0;
+
     }
 
-    return (
+    const value =
       record.deletedAt ||
       record.updatedAt ||
-      record.createdAt ||
-      nowISO()
-    );
+      record.createdAt;
 
-  }
+    if (!value) {
 
+      return 0;
 
-  function getTimestampNumber(record) {
-
-    const value =
-      getTimestamp(record);
+    }
 
     const time =
       new Date(value).getTime();
@@ -159,6 +104,24 @@
     return Number.isFinite(time)
       ? time
       : 0;
+
+  }
+
+
+  function ensureId(record) {
+
+    if (
+      !record ||
+      !record.id
+    ) {
+
+      return null;
+
+    }
+
+    return String(
+      record.id
+    );
 
   }
 
@@ -176,7 +139,6 @@
           STORAGE_KEY
         );
 
-
       if (!stored) {
 
         return {
@@ -186,24 +148,18 @@
 
       }
 
-
       const parsed =
         JSON.parse(stored);
-
 
       return {
 
         records:
-          Array.isArray(
-            parsed.records
-          )
+          Array.isArray(parsed.records)
             ? parsed.records
             : [],
 
         trash:
-          Array.isArray(
-            parsed.trash
-          )
+          Array.isArray(parsed.trash)
             ? parsed.trash
             : []
 
@@ -212,10 +168,9 @@
     } catch (error) {
 
       console.error(
-        "Erro ao ler banco local:",
+        "Erro ao carregar banco local:",
         error
       );
-
 
       return {
         records: [],
@@ -228,8 +183,7 @@
 
 
   function saveLocalDatabase(
-    records,
-    trash
+    database
   ) {
 
     try {
@@ -237,8 +191,11 @@
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
-          records,
-          trash
+          records:
+            database.records || [],
+
+          trash:
+            database.trash || []
         })
       );
 
@@ -259,42 +216,32 @@
 
 
   /* =====================================================
-     ATUALIZAR ESTADO DO APP.JS
+     ATUALIZAR APP.JS
   ====================================================== */
 
-  function updateAppDatabase(
-    records,
-    trash
+  function notifyApp(
+    database
   ) {
 
     /*
-     * O app.js possui:
+     * Primeiro tentamos window.database.
      *
-     * let database = loadDatabase();
-     *
-     * Essa variável fica em memória.
-     *
-     * Alterar apenas o localStorage NÃO altera
-     * essa variável.
-     *
-     * Aqui fazemos a ponte entre a sincronização
-     * e o estado real utilizado pelo aplicativo.
+     * Se o app.js tiver essa variável disponível,
+     * atualizamos diretamente.
      */
 
     try {
 
       if (
-        typeof window.database !==
-        "undefined"
+        window.database &&
+        typeof window.database === "object"
       ) {
 
         window.database.records =
-          cloneObject(records);
+          clone(database.records);
 
         window.database.trash =
-          cloneObject(trash);
-
-        return true;
+          clone(database.trash);
 
       }
 
@@ -309,10 +256,11 @@
 
 
     /*
-     * Como database foi declarado com let no app.js,
-     * ele pode não estar disponível como window.database.
+     * Como o app.js pode ter declarado
+     * "let database", ele pode não aparecer
+     * em window.
      *
-     * Nesse caso, usamos eventos para avisar o app.js.
+     * Por isso também enviamos um evento.
      */
 
     try {
@@ -323,10 +271,10 @@
           {
             detail: {
               records:
-                cloneObject(records),
+                clone(database.records),
 
               trash:
-                cloneObject(trash)
+                clone(database.trash)
             }
           }
         )
@@ -335,14 +283,53 @@
     } catch (error) {
 
       console.warn(
-        "Erro ao enviar atualização para o app.js:",
+        "Erro ao comunicar com app.js:",
         error
       );
 
     }
 
 
-    return false;
+    /*
+     * Tentamos atualizar as telas, se essas
+     * funções estiverem disponíveis.
+     */
+
+    const functions = [
+      "renderDashboard",
+      "renderDiary",
+      "renderConsultations",
+      "renderTrash"
+    ];
+
+
+    functions.forEach(
+      function (name) {
+
+        try {
+
+          if (
+            typeof window[name] ===
+            "function"
+          ) {
+
+            window[name]();
+
+          }
+
+        } catch (error) {
+
+          console.warn(
+            "Erro ao executar " +
+            name +
+            ":",
+            error
+          );
+
+        }
+
+      }
+    );
 
   }
 
@@ -351,14 +338,20 @@
      CONVERTER LOCAL → SUPABASE
   ====================================================== */
 
-  function localToCloudRow(
+  function toCloudRow(
     record,
     userId,
     excluded
   ) {
 
-    const timestamp =
-      getTimestamp(record);
+    const now =
+      nowISO();
+
+    const updatedAt =
+      record.updatedAt ||
+      record.deletedAt ||
+      record.createdAt ||
+      now;
 
 
     return {
@@ -367,9 +360,7 @@
         userId,
 
       local_id:
-        String(
-          record.id
-        ),
+        String(record.id),
 
       data:
         record.date ||
@@ -380,17 +371,13 @@
         null,
 
       dados:
-        cloneObject(
-          record
-        ),
+        clone(record),
 
       excluido:
-        Boolean(
-          excluded
-        ),
+        Boolean(excluded),
 
       atualizado_em:
-        timestamp
+        updatedAt
 
     };
 
@@ -401,38 +388,36 @@
      CONVERTER SUPABASE → LOCAL
   ====================================================== */
 
-  function cloudRowToLocal(
+  function fromCloudRow(
     row
   ) {
 
-    const original =
+    const record =
       row &&
       row.dados &&
       typeof row.dados === "object"
-        ? cloneObject(
-            row.dados
-          )
+        ? clone(row.dados)
         : {};
 
 
-    original.id =
+    record.id =
       row.local_id ||
-      original.id ||
+      record.id ||
       "";
 
 
-    if (!original.date) {
+    if (!record.date) {
 
-      original.date =
+      record.date =
         row.data ||
         "";
 
     }
 
 
-    if (!original.type) {
+    if (!record.type) {
 
-      original.type =
+      record.type =
         row.tipo ||
         "";
 
@@ -443,12 +428,7 @@
       row.atualizado_em
     ) {
 
-      /*
-       * O timestamp da nuvem é a referência
-       * quando o registro vem do Supabase.
-       */
-
-      original.updatedAt =
+      record.updatedAt =
         row.atualizado_em;
 
     }
@@ -456,10 +436,10 @@
 
     if (
       row.criado_em &&
-      !original.createdAt
+      !record.createdAt
     ) {
 
-      original.createdAt =
+      record.createdAt =
         row.criado_em;
 
     }
@@ -469,26 +449,29 @@
       row.excluido
     ) {
 
-      original.deletedAt =
-        original.deletedAt ||
+      record.deletedAt =
+        record.deletedAt ||
         row.atualizado_em ||
         nowISO();
 
     }
 
 
-    return original;
+    return record;
 
   }
 
 
   /* =====================================================
-     USUÁRIO ATUAL
+     USUÁRIO
   ====================================================== */
 
-  async function getCurrentUser() {
+  async function getUser() {
 
-    if (!syncClient) {
+    const client =
+      getSupabaseClient();
+
+    if (!client) {
 
       return null;
 
@@ -497,16 +480,11 @@
 
     try {
 
-      /*
-       * Primeiro tentamos getUser().
-       */
-
       const result =
-        await syncClient.auth.getUser();
+        await client.auth.getUser();
 
 
       if (
-        result &&
         result.data &&
         result.data.user
       ) {
@@ -516,32 +494,12 @@
       }
 
 
-      /*
-       * Fallback para getSession().
-       */
-
-      const sessionResult =
-        await syncClient.auth.getSession();
-
-
-      if (
-        sessionResult &&
-        sessionResult.data &&
-        sessionResult.data.session &&
-        sessionResult.data.session.user
-      ) {
-
-        return sessionResult.data.session.user;
-
-      }
-
-
       return null;
 
     } catch (error) {
 
       console.error(
-        "Erro ao identificar usuário:",
+        "Erro ao obter usuário:",
         error
       );
 
@@ -556,7 +514,7 @@
      MAPA LOCAL
   ====================================================== */
 
-  function createLocalMap(
+  function buildLocalMap(
     database
   ) {
 
@@ -564,73 +522,42 @@
       new Map();
 
 
-    function addRecord(
+    function add(
       record,
       excluded
     ) {
 
-      if (
-        !record ||
-        !record.id
-      ) {
+      const id =
+        ensureId(record);
+
+      if (!id) {
 
         return;
 
       }
 
 
-      const id =
-        String(
-          record.id
-        );
-
-
-      const existing =
+      const current =
         map.get(id);
 
 
       const item = {
 
         record:
-          cloneObject(
-            record
-          ),
+          clone(record),
 
         excluded:
-          Boolean(
-            excluded
-          )
+          Boolean(excluded),
+
+        time:
+          timestamp(record)
 
       };
 
 
-      if (!existing) {
-
-        map.set(
-          id,
-          item
-        );
-
-        return;
-
-      }
-
-
-      const existingTime =
-        getTimestampNumber(
-          existing.record
-        );
-
-
-      const newTime =
-        getTimestampNumber(
-          item.record
-        );
-
-
       if (
-        newTime >=
-        existingTime
+        !current ||
+        item.time >= current.time
       ) {
 
         map.set(
@@ -646,7 +573,7 @@
     database.records.forEach(
       function (record) {
 
-        addRecord(
+        add(
           record,
           false
         );
@@ -658,7 +585,7 @@
     database.trash.forEach(
       function (record) {
 
-        addRecord(
+        add(
           record,
           true
         );
@@ -676,12 +603,24 @@
      BUSCAR NUVEM
   ====================================================== */
 
-  async function loadCloudRows(
+  async function loadCloud(
     userId
   ) {
 
+    const client =
+      getSupabaseClient();
+
+    if (!client) {
+
+      throw new Error(
+        "Cliente Supabase não disponível."
+      );
+
+    }
+
+
     const result =
-      await syncClient
+      await client
         .from("registros")
         .select(
           "id,user_id,local_id,data,tipo,dados,criado_em,atualizado_em,excluido"
@@ -692,20 +631,14 @@
         );
 
 
-    if (
-      result.error
-    ) {
+    if (result.error) {
 
       throw result.error;
 
     }
 
 
-    return Array.isArray(
-      result.data
-    )
-      ? result.data
-      : [];
+    return result.data || [];
 
   }
 
@@ -714,15 +647,15 @@
      MAPA DA NUVEM
   ====================================================== */
 
-  function createCloudMap(
-    cloudRows
+  function buildCloudMap(
+    rows
   ) {
 
     const map =
       new Map();
 
 
-    cloudRows.forEach(
+    rows.forEach(
       function (row) {
 
         if (
@@ -742,54 +675,43 @@
 
 
         const record =
-          cloudRowToLocal(
+          fromCloudRow(
             row
           );
 
 
-        const item = {
-
-          record,
-
-          excluded:
-            Boolean(
-              row.excluido
-            ),
-
-          cloudUpdatedAt:
-            row.atualizado_em
-              ? new Date(
-                  row.atualizado_em
-                ).getTime()
-              : 0
-
-        };
+        const cloudTime =
+          row.atualizado_em
+            ? new Date(
+                row.atualizado_em
+              ).getTime()
+            : timestamp(record);
 
 
-        const existing =
+        const current =
           map.get(id);
 
 
-        if (!existing) {
-
-          map.set(
-            id,
-            item
-          );
-
-          return;
-
-        }
-
-
         if (
-          item.cloudUpdatedAt >=
-          existing.cloudUpdatedAt
+          !current ||
+          cloudTime >= current.time
         ) {
 
           map.set(
             id,
-            item
+            {
+
+              record,
+
+              excluded:
+                Boolean(
+                  row.excluido
+                ),
+
+              time:
+                cloudTime
+
+            }
           );
 
         }
@@ -804,22 +726,22 @@
 
 
   /* =====================================================
-     UNIFICAR LOCAL + NUVEM
+     MESCLAR
   ====================================================== */
 
-  function mergeData(
+  function merge(
     localMap,
     cloudRows
   ) {
 
-    const merged =
+    const result =
       new Map(
         localMap
       );
 
 
     const cloudMap =
-      createCloudMap(
+      buildCloudMap(
         cloudRows
       );
 
@@ -830,23 +752,26 @@
         id
       ) {
 
-        const existing =
-          merged.get(id);
+        const localItem =
+          result.get(id);
 
 
-        if (!existing) {
+        if (!localItem) {
 
-          merged.set(
+          result.set(
             id,
             {
 
               record:
-                cloneObject(
+                clone(
                   cloudItem.record
                 ),
 
               excluded:
-                cloudItem.excluded
+                cloudItem.excluded,
+
+              time:
+                cloudItem.time
 
             }
           );
@@ -857,42 +782,31 @@
 
 
         const localTime =
-          getTimestampNumber(
-            existing.record
+          localItem.time ||
+          timestamp(
+            localItem.record
           );
 
-
-        const cloudTime =
-          cloudItem.cloudUpdatedAt ||
-          getTimestampNumber(
-            cloudItem.record
-          );
-
-
-        /*
-         * Se a nuvem é mais recente,
-         * ela vence.
-         *
-         * Se o local é mais recente,
-         * o local será enviado posteriormente.
-         */
 
         if (
-          cloudTime >
+          cloudItem.time >
           localTime
         ) {
 
-          merged.set(
+          result.set(
             id,
             {
 
               record:
-                cloneObject(
+                clone(
                   cloudItem.record
                 ),
 
               excluded:
-                cloudItem.excluded
+                cloudItem.excluded,
+
+              time:
+                cloudItem.time
 
             }
           );
@@ -903,25 +817,24 @@
     );
 
 
-    return merged;
+    return result;
 
   }
 
 
   /* =====================================================
-     MAPA → BANCO LOCAL
+     MAPA → DATABASE
   ====================================================== */
 
-  function buildLocalDatabase(
-    merged
+  function mapToDatabase(
+    map
   ) {
 
     const records = [];
-
     const trash = [];
 
 
-    merged.forEach(
+    map.forEach(
       function (item) {
 
         if (
@@ -936,18 +849,12 @@
 
 
         const record =
-          cloneObject(
-            item.record
-          );
+          clone(item.record);
 
 
         if (
           item.excluded
         ) {
-
-          /*
-           * Garantimos deletedAt para a lixeira.
-           */
 
           if (
             !record.deletedAt
@@ -966,11 +873,6 @@
 
         } else {
 
-          /*
-           * Se um registro voltou a ficar ativo,
-           * removemos deletedAt.
-           */
-
           delete record.deletedAt;
 
           records.push(
@@ -986,25 +888,21 @@
     records.sort(
       function (a, b) {
 
-        const dateA =
+        const dateCompare =
           String(
             a.date || ""
-          );
-
-        const dateB =
-          String(
-            b.date || ""
+          ).localeCompare(
+            String(
+              b.date || ""
+            )
           );
 
 
         if (
-          dateA !==
-          dateB
+          dateCompare !== 0
         ) {
 
-          return dateA.localeCompare(
-            dateB
-          );
+          return dateCompare;
 
         }
 
@@ -1024,41 +922,46 @@
     trash.sort(
       function (a, b) {
 
-        return getTimestampNumber(
-          b
-        ) -
-        getTimestampNumber(
-          a
-        );
+        return timestamp(b) -
+               timestamp(a);
 
       }
     );
 
 
     return {
-
       records,
-
       trash
-
     };
 
   }
 
 
   /* =====================================================
-     ENVIAR MAPA COMPLETO PARA SUPABASE
+     ENVIAR PARA SUPABASE
   ====================================================== */
 
-  async function uploadMergedData(
-    merged,
+  async function upload(
+    map,
     userId
   ) {
+
+    const client =
+      getSupabaseClient();
+
+    if (!client) {
+
+      throw new Error(
+        "Cliente Supabase não disponível."
+      );
+
+    }
+
 
     const rows = [];
 
 
-    merged.forEach(
+    map.forEach(
       function (item) {
 
         if (
@@ -1073,7 +976,7 @@
 
 
         rows.push(
-          localToCloudRow(
+          toCloudRow(
             item.record,
             userId,
             item.excluded
@@ -1094,7 +997,7 @@
 
 
     const result =
-      await syncClient
+      await client
         .from("registros")
         .upsert(
           rows,
@@ -1105,164 +1008,9 @@
         );
 
 
-    if (
-      result.error
-    ) {
+    if (result.error) {
 
       throw result.error;
-
-    }
-
-  }
-
-
-  /* =====================================================
-     ATUALIZAR INTERFACE
-  ====================================================== */
-
-  function refreshApplication(
-    mergedDatabase
-  ) {
-
-    /*
-     * Primeiro salvamos no localStorage.
-     */
-
-    saveLocalDatabase(
-      mergedDatabase.records,
-      mergedDatabase.trash
-    );
-
-
-    /*
-     * Depois tentamos atualizar o estado
-     * em memória do aplicativo.
-     */
-
-    updateAppDatabase(
-      mergedDatabase.records,
-      mergedDatabase.trash
-    );
-
-
-    /*
-     * Se o app.js possuir funções públicas,
-     * atualizamos as telas.
-     */
-
-    try {
-
-      if (
-        typeof window.renderDashboard ===
-        "function"
-      ) {
-
-        window.renderDashboard();
-
-      }
-
-    } catch (error) {
-
-      console.warn(
-        "Erro ao atualizar dashboard:",
-        error
-      );
-
-    }
-
-
-    try {
-
-      if (
-        typeof window.renderDiary ===
-        "function"
-      ) {
-
-        window.renderDiary();
-
-      }
-
-    } catch (error) {
-
-      console.warn(
-        "Erro ao atualizar diário:",
-        error
-      );
-
-    }
-
-
-    try {
-
-      if (
-        typeof window.renderConsultations ===
-        "function"
-      ) {
-
-        window.renderConsultations();
-
-      }
-
-    } catch (error) {
-
-      console.warn(
-        "Erro ao atualizar consultas:",
-        error
-      );
-
-    }
-
-
-    try {
-
-      if (
-        typeof window.renderTrash ===
-        "function"
-      ) {
-
-        window.renderTrash();
-
-      }
-
-    } catch (error) {
-
-      console.warn(
-        "Erro ao atualizar lixeira:",
-        error
-      );
-
-    }
-
-
-    /*
-     * Avisamos o restante do aplicativo.
-     */
-
-    try {
-
-      document.dispatchEvent(
-        new CustomEvent(
-          "recordatorioSyncComplete",
-          {
-            detail: {
-
-              registros:
-                mergedDatabase.records.length,
-
-              lixeira:
-                mergedDatabase.trash.length
-
-            }
-          }
-        )
-      );
-
-    } catch (error) {
-
-      console.warn(
-        "Erro ao disparar evento de sincronização:",
-        error
-      );
 
     }
 
@@ -1273,14 +1021,9 @@
      SINCRONIZAÇÃO PRINCIPAL
   ====================================================== */
 
-  async function syncNow(
+  async function sync(
     reason
   ) {
-
-    reason =
-      reason ||
-      "manual";
-
 
     if (syncing) {
 
@@ -1294,7 +1037,7 @@
     ) {
 
       console.log(
-        "Sincronização ignorada: sem internet."
+        "Sem internet. Sincronização aguardará conexão."
       );
 
       return;
@@ -1302,11 +1045,10 @@
     }
 
 
-    if (!syncClient) {
+    const client =
+      getSupabaseClient();
 
-      console.warn(
-        "Cliente Supabase não disponível."
-      );
+    if (!client) {
 
       return;
 
@@ -1319,13 +1061,13 @@
     try {
 
       const user =
-        await getCurrentUser();
+        await getUser();
 
 
       if (!user) {
 
         console.log(
-          "Nenhum usuário autenticado. Sincronização aguardando login."
+          "Nenhum usuário autenticado."
         );
 
         return;
@@ -1334,101 +1076,117 @@
 
 
       /*
-       * 1. Lemos o localStorage novamente.
+       * Banco local atual.
        */
 
       const localDatabase =
         loadLocalDatabase();
 
 
-      /*
-       * 2. Criamos mapa dos dados locais.
-       */
-
       const localMap =
-        createLocalMap(
+        buildLocalMap(
           localDatabase
         );
 
 
       /*
-       * 3. Buscamos TODOS os registros do usuário.
+       * Banco remoto.
        */
 
       const cloudRows =
-        await loadCloudRows(
+        await loadCloud(
           user.id
         );
 
 
       /*
-       * 4. Unimos local + nuvem.
+       * União.
        */
 
-      const merged =
-        mergeData(
+      const mergedMap =
+        merge(
           localMap,
           cloudRows
         );
 
 
-      /*
-       * 5. Transformamos em database.
-       */
-
       const mergedDatabase =
-        buildLocalDatabase(
-          merged
+        mapToDatabase(
+          mergedMap
         );
 
 
       /*
-       * 6. Atualizamos o aplicativo ANTES do upload.
-       *
-       * Isso é importante para que o celular
-       * mostre os registros imediatamente.
+       * Salva localmente.
        */
 
-      refreshApplication(
+      saveLocalDatabase(
         mergedDatabase
       );
 
 
       /*
-       * 7. Enviamos a união para o Supabase.
+       * Atualiza o aplicativo.
        */
 
-      await uploadMergedData(
-        merged,
+      notifyApp(
+        mergedDatabase
+      );
+
+
+      /*
+       * Envia para o Supabase.
+       */
+
+      await upload(
+        mergedMap,
         user.id
       );
 
 
       console.log(
         "Sincronização concluída:",
+        reason,
         {
-          motivo:
-            reason,
-
           registros:
             mergedDatabase.records.length,
 
           lixeira:
             mergedDatabase.trash.length,
 
-          nuvemAntes:
+          remoto:
             cloudRows.length,
 
-          totalUnificado:
-            merged.size
+          total:
+            mergedMap.size
         }
       );
+
+
+      try {
+
+        document.dispatchEvent(
+          new CustomEvent(
+            "recordatorioSyncComplete",
+            {
+              detail: {
+                registros:
+                  mergedDatabase.records.length,
+
+                lixeira:
+                  mergedDatabase.trash.length
+              }
+            }
+          )
+        );
+
+      } catch (_) {}
 
 
     } catch (error) {
 
       console.error(
-        "Erro na sincronização:",
+        "ERRO NA SINCRONIZAÇÃO:",
         error
       );
 
@@ -1476,12 +1234,6 @@
       "function"
     ) {
 
-      /*
-       * saveDatabase foi declarado como função
-       * global no app.js. Se ainda não estiver
-       * disponível, tentaremos novamente.
-       */
-
       return false;
 
     }
@@ -1494,22 +1246,26 @@
     window.saveDatabase =
       function () {
 
-        originalSaveDatabase.apply(
-          this,
-          arguments
-        );
+        const result =
+          originalSaveDatabase.apply(
+            this,
+            arguments
+          );
 
 
         setTimeout(
           function () {
 
-            syncNow(
+            sync(
               "salvamento"
             );
 
           },
-          100
+          300
         );
+
+
+        return result;
 
       };
 
@@ -1518,8 +1274,9 @@
       true;
 
 
-    window.__recordatorioSaveHookInstalled =
-      true;
+    console.log(
+      "Hook de sincronização instalado."
+    );
 
 
     return true;
@@ -1527,11 +1284,7 @@
   }
 
 
-  /* =====================================================
-     TENTAR INSTALAR HOOK
-  ====================================================== */
-
-  function tryInstallSaveHook() {
+  function waitForSaveDatabase() {
 
     if (
       installSaveHook()
@@ -1543,7 +1296,7 @@
 
 
     setTimeout(
-      tryInstallSaveHook,
+      waitForSaveDatabase,
       500
     );
 
@@ -1557,7 +1310,6 @@
   function installAuthListener() {
 
     if (
-      !syncClient ||
       authListenerInstalled
     ) {
 
@@ -1566,9 +1318,19 @@
     }
 
 
+    const client =
+      getSupabaseClient();
+
+    if (!client) {
+
+      return;
+
+    }
+
+
     if (
-      !syncClient.auth ||
-      typeof syncClient.auth.onAuthStateChange !==
+      !client.auth ||
+      typeof client.auth.onAuthStateChange !==
         "function"
     ) {
 
@@ -1581,21 +1343,21 @@
       true;
 
 
-    syncClient.auth.onAuthStateChange(
+    client.auth.onAuthStateChange(
       function (
         event,
         session
       ) {
 
         console.log(
-          "Supabase Auth:",
+          "Sincronização Auth:",
           event
         );
 
 
         if (
           event ===
-          "INITIAL_SESSION"
+          "SIGNED_IN"
         ) {
 
           if (session) {
@@ -1603,8 +1365,8 @@
             setTimeout(
               function () {
 
-                syncNow(
-                  "initial_session"
+                sync(
+                  "login"
                 );
 
               },
@@ -1618,7 +1380,7 @@
 
         if (
           event ===
-          "SIGNED_IN"
+          "INITIAL_SESSION"
         ) {
 
           if (session) {
@@ -1626,34 +1388,15 @@
             setTimeout(
               function () {
 
-                syncNow(
-                  "login"
+                sync(
+                  "sessao_inicial"
                 );
 
               },
-              300
+              800
             );
 
           }
-
-        }
-
-
-        if (
-          event ===
-          "TOKEN_REFRESHED"
-        ) {
-
-          setTimeout(
-            function () {
-
-              syncNow(
-                "token"
-              );
-
-            },
-            300
-          );
 
         }
 
@@ -1664,10 +1407,10 @@
 
 
   /* =====================================================
-     VISIBILIDADE / INTERNET / FOCO
+     EVENTOS DO NAVEGADOR
   ====================================================== */
 
-  function installVisibilityListener() {
+  function installBrowserListeners() {
 
     document.addEventListener(
       "visibilitychange",
@@ -1681,12 +1424,12 @@
           setTimeout(
             function () {
 
-              syncNow(
-                "voltar_para_pagina"
+              sync(
+                "pagina_visivel"
               );
 
             },
-            300
+            500
           );
 
         }
@@ -1702,12 +1445,12 @@
         setTimeout(
           function () {
 
-            syncNow(
+            sync(
               "internet_restaurada"
             );
 
           },
-          300
+          500
         );
 
       }
@@ -1721,12 +1464,12 @@
         setTimeout(
           function () {
 
-            syncNow(
-              "janela_ativa"
+            sync(
+              "foco"
             );
 
           },
-          300
+          500
         );
 
       }
@@ -1741,22 +1484,20 @@
 
   function installPeriodicSync() {
 
-    if (
-      syncTimer
-    ) {
+    if (periodicTimer) {
 
       clearInterval(
-        syncTimer
+        periodicTimer
       );
 
     }
 
 
-    syncTimer =
+    periodicTimer =
       setInterval(
         function () {
 
-          syncNow(
+          sync(
             "periodica"
           );
 
@@ -1774,7 +1515,7 @@
   window.recordatorioSyncNow =
     function () {
 
-      return syncNow(
+      return sync(
         "manual"
       );
 
@@ -1787,11 +1528,16 @@
 
   function init() {
 
-    tryInstallSaveHook();
+    console.log(
+      "Sincronização Supabase iniciada."
+    );
+
+
+    waitForSaveDatabase();
 
     installAuthListener();
 
-    installVisibilityListener();
+    installBrowserListeners();
 
     installPeriodicSync();
 
@@ -1799,7 +1545,7 @@
     setTimeout(
       function () {
 
-        syncNow(
+        sync(
           "inicializacao"
         );
 
@@ -1809,10 +1555,6 @@
 
   }
 
-
-  /* =====================================================
-     INICIAR
-  ====================================================== */
 
   if (
     document.readyState ===

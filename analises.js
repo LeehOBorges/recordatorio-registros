@@ -2,7 +2,9 @@
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
 
-   Inclui:
+   Versão corrigida:
+   - Inicialização robusta em celular
+   - Funciona quando a tela é criada depois do carregamento
    - Resumo geral
    - Gráfico de linha das glicemias
    - Identificação visual de glicemia em jejum
@@ -13,10 +15,8 @@
 
   "use strict";
 
-
   const STORAGE_KEY =
     "recordatorio_registros_v01";
-
 
   let analysisScreen = null;
   let periodSelect = null;
@@ -25,37 +25,144 @@
   let refreshButton = null;
   let content = null;
 
+  let initialized = false;
+  let retryTimer = null;
+
 
   /* =====================================================
      INICIALIZAÇÃO
   ====================================================== */
 
-  function initAnalysis() {
+  function findAnalysisScreen() {
 
     analysisScreen =
-      document.getElementById(
-        "analysisScreen"
-      );
+      document.getElementById("analysisScreen");
+
+    return !!analysisScreen;
+  }
 
 
-    if (!analysisScreen) {
+  function initAnalysis() {
 
-      console.warn(
-        "Tela de análises não encontrada."
-      );
-
-      return;
-
+    if (initialized) {
+      return true;
     }
 
+    if (!findAnalysisScreen()) {
+      return false;
+    }
 
     createInterface();
+
+    if (!periodSelect || !content) {
+      return false;
+    }
 
     bindEvents();
 
     setDefaultPeriod();
 
     renderAnalysis();
+
+    initialized = true;
+
+    console.log(
+      "Módulo de análises inicializado."
+    );
+
+    return true;
+  }
+
+
+  /*
+   * Em celulares, a tela pode ser criada depois
+   * do DOMContentLoaded. Por isso fazemos algumas
+   * tentativas adicionais.
+   */
+  function startAnalysisModule() {
+
+    if (initAnalysis()) {
+      return;
+    }
+
+    let attempts = 0;
+
+    clearInterval(retryTimer);
+
+    retryTimer =
+      setInterval(
+        function () {
+
+          attempts++;
+
+          if (initAnalysis()) {
+
+            clearInterval(
+              retryTimer
+            );
+
+            retryTimer = null;
+
+            return;
+
+          }
+
+          if (attempts >= 30) {
+
+            clearInterval(
+              retryTimer
+            );
+
+            retryTimer = null;
+
+            console.warn(
+              "Não foi possível localizar a tela de análises."
+            );
+
+          }
+
+        },
+        300
+      );
+
+  }
+
+
+  /* =====================================================
+     OBSERVADOR PARA TELAS CRIADAS DINAMICAMENTE
+  ====================================================== */
+
+  function observePageChanges() {
+
+    if (
+      typeof MutationObserver ===
+      "undefined"
+    ) {
+
+      return;
+
+    }
+
+    const observer =
+      new MutationObserver(
+        function () {
+
+          if (!initialized) {
+
+            initAnalysis();
+
+          }
+
+        }
+      );
+
+    observer.observe(
+      document.body,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
 
   }
 
@@ -67,17 +174,11 @@
   function createInterface() {
 
     const main =
-      analysisScreen.querySelector(
-        "main"
-      );
-
+      analysisScreen.querySelector("main");
 
     if (!main) {
-
       return;
-
     }
-
 
     main.innerHTML = `
 
@@ -250,9 +351,7 @@
       </section>
 
 
-      <div
-        id="analysisContent"
-      ></div>
+      <div id="analysisContent"></div>
 
     `;
 
@@ -262,24 +361,20 @@
         "analysisPeriod"
       );
 
-
     startDateInput =
       document.getElementById(
         "analysisStartDate"
       );
-
 
     endDateInput =
       document.getElementById(
         "analysisEndDate"
       );
 
-
     refreshButton =
       document.getElementById(
         "refreshAnalysisButton"
       );
-
 
     content =
       document.getElementById(
@@ -306,18 +401,12 @@
               "analysisCustomDates"
             );
 
-
           if (!customDates) {
-
             return;
-
           }
 
-
           customDates.hidden =
-            periodSelect.value !==
-            "custom";
-
+            periodSelect.value !== "custom";
 
           if (
             periodSelect.value ===
@@ -327,7 +416,6 @@
             setDefaultCustomDates();
 
           }
-
 
           renderAnalysis();
 
@@ -377,31 +465,20 @@
      DATAS
   ====================================================== */
 
-  function dateToKey(
-    date
-  ) {
+  function dateToKey(date) {
 
     const year =
       date.getFullYear();
 
-
     const month =
       String(
         date.getMonth() + 1
-      ).padStart(
-        2,
-        "0"
-      );
-
+      ).padStart(2, "0");
 
     const day =
       String(
         date.getDate()
-      ).padStart(
-        2,
-        "0"
-      );
-
+      ).padStart(2, "0");
 
     return (
       year +
@@ -419,32 +496,24 @@
     const end =
       new Date();
 
-
     const start =
       new Date();
-
 
     start.setDate(
       start.getDate() - 6
     );
 
-
     if (startDateInput) {
 
       startDateInput.value =
-        dateToKey(
-          start
-        );
+        dateToKey(start);
 
     }
-
 
     if (endDateInput) {
 
       endDateInput.value =
-        dateToKey(
-          end
-        );
+        dateToKey(end);
 
     }
 
@@ -454,15 +523,11 @@
   function setDefaultPeriod() {
 
     if (!periodSelect) {
-
       return;
-
     }
-
 
     periodSelect.value =
       "7";
-
 
     setDefaultCustomDates();
 
@@ -474,7 +539,6 @@
     const end =
       new Date();
 
-
     end.setHours(
       0,
       0,
@@ -482,11 +546,8 @@
       0
     );
 
-
     const start =
-      new Date(
-        end
-      );
+      new Date(end);
 
 
     if (
@@ -500,12 +561,10 @@
           ? startDateInput.value
           : "";
 
-
       const customEnd =
         endDateInput
           ? endDateInput.value
           : "";
-
 
       if (
         !customStart ||
@@ -516,7 +575,6 @@
 
       }
 
-
       if (
         customStart >
         customEnd
@@ -525,7 +583,6 @@
         return null;
 
       }
-
 
       return {
 
@@ -547,26 +604,18 @@
           : 7
       );
 
-
     start.setDate(
       start.getDate() -
-      (
-        days - 1
-      )
+      (days - 1)
     );
-
 
     return {
 
       start:
-        dateToKey(
-          start
-        ),
+        dateToKey(start),
 
       end:
-        dateToKey(
-          end
-        )
+        dateToKey(end)
 
     };
 
@@ -586,25 +635,17 @@
           STORAGE_KEY
         );
 
-
       if (!stored) {
 
         return {
-
           records: [],
-
           trash: []
-
         };
 
       }
 
-
       const parsed =
-        JSON.parse(
-          stored
-        );
-
+        JSON.parse(stored);
 
       return {
 
@@ -631,13 +672,9 @@
         error
       );
 
-
       return {
-
         records: [],
-
         trash: []
-
       };
 
     }
@@ -650,17 +687,12 @@
     const database =
       loadDatabase();
 
-
     const range =
       getDateRange();
 
-
     if (!range) {
-
       return [];
-
     }
-
 
     return database.records.filter(
       function (record) {
@@ -671,12 +703,9 @@
             ""
           );
 
-
         return (
-          date >=
-          range.start &&
-          date <=
-          range.end
+          date >= range.start &&
+          date <= range.end
         );
 
       }
@@ -689,32 +718,22 @@
      FORMATAÇÕES
   ====================================================== */
 
-  function formatDate(
-    value
-  ) {
+  function formatDate(value) {
 
     if (!value) {
-
       return "";
-
     }
 
-
     const parts =
-      String(
-        value
-      ).split("-");
-
+      String(value).split("-");
 
     if (
-      parts.length !==
-      3
+      parts.length !== 3
     ) {
 
       return value;
 
     }
-
 
     return (
       parts[2] +
@@ -727,34 +746,16 @@
   }
 
 
-  function escapeHTML(
-    value
-  ) {
+  function escapeHTML(value) {
 
     return String(
-      value ??
-      ""
+      value ?? ""
     )
-      .replaceAll(
-        "&",
-        "&amp;"
-      )
-      .replaceAll(
-        "<",
-        "&lt;"
-      )
-      .replaceAll(
-        ">",
-        "&gt;"
-      )
-      .replaceAll(
-        '"',
-        "&quot;"
-      )
-      .replaceAll(
-        "'",
-        "&#039;"
-      );
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
 
   }
 
@@ -808,13 +809,10 @@
               record.duration
             );
 
-
           return (
             total +
             (
-              Number.isFinite(
-                value
-              )
+              Number.isFinite(value)
                 ? value
                 : 0
             )
@@ -868,8 +866,7 @@
               String(
                 record.kind ||
                 ""
-              )
-                .trim()
+              ).trim()
 
           };
 
@@ -878,10 +875,8 @@
       .filter(
         function (item) {
 
-          return (
-            Number.isFinite(
-              item.value
-            )
+          return Number.isFinite(
+            item.value
           );
 
         }
@@ -897,12 +892,10 @@
             " " +
             a.time;
 
-
           const second =
             b.date +
             " " +
             b.time;
-
 
           return first.localeCompare(
             second
@@ -914,18 +907,11 @@
   }
 
 
-  function average(
-    values
-  ) {
+  function average(values) {
 
-    if (
-      !values.length
-    ) {
-
+    if (!values.length) {
       return null;
-
     }
-
 
     return (
       values.reduce(
@@ -934,10 +920,7 @@
           value
         ) {
 
-          return (
-            total +
-            value
-          );
+          return total + value;
 
         },
         0
@@ -970,19 +953,12 @@
         ) {
 
           const candidates = [
-
             record.dose,
-
             record.units,
-
             record.insulinDose
-
           ];
 
-
-          let value =
-            0;
-
+          let value = 0;
 
           for (
             const candidate
@@ -990,10 +966,7 @@
           ) {
 
             const parsed =
-              Number(
-                candidate
-              );
-
+              Number(candidate);
 
             if (
               Number.isFinite(
@@ -1001,20 +974,14 @@
               )
             ) {
 
-              value =
-                parsed;
-
+              value = parsed;
               break;
 
             }
 
           }
 
-
-          return (
-            total +
-            value
-          );
+          return total + value;
 
         },
         0
@@ -1048,39 +1015,25 @@
      PERÍODO DO DIA
   ====================================================== */
 
-  function getDayPeriod(
-    time
-  ) {
+  function getDayPeriod(time) {
 
     if (!time) {
-
       return "unknown";
-
     }
 
-
     const parts =
-      String(
-        time
-      ).split(":");
-
+      String(time).split(":");
 
     const hour =
-      Number(
-        parts[0]
-      );
-
+      Number(parts[0]);
 
     if (
-      !Number.isFinite(
-        hour
-      )
+      !Number.isFinite(hour)
     ) {
 
       return "unknown";
 
     }
-
 
     if (
       hour >= 5 &&
@@ -1091,7 +1044,6 @@
 
     }
 
-
     if (
       hour >= 12 &&
       hour < 18
@@ -1101,15 +1053,12 @@
 
     }
 
-
     return "night";
 
   }
 
 
-  function getPeriodLabel(
-    period
-  ) {
+  function getPeriodLabel(period) {
 
     const labels = {
 
@@ -1126,7 +1075,6 @@
         "⏱️ Horário não informado"
 
     };
-
 
     return (
       labels[period] ||
@@ -1147,13 +1095,9 @@
     const periods = {
 
       fasting: [],
-
       morning: [],
-
       afternoon: [],
-
       night: [],
-
       unknown: []
 
     };
@@ -1176,12 +1120,10 @@
 
         }
 
-
         const period =
           getDayPeriod(
             record.time
           );
-
 
         periods[period].push(
           record.value
@@ -1192,17 +1134,11 @@
 
 
     const order = [
-
       "fasting",
-
       "morning",
-
       "afternoon",
-
       "night",
-
       "unknown"
-
     ];
 
 
@@ -1231,7 +1167,6 @@
           das demais medições da manhã.
         </p>
 
-
         <div
           style="
             display:flex;
@@ -1249,7 +1184,6 @@
         const values =
           periods[period];
 
-
         if (
           period === "unknown" &&
           values.length === 0
@@ -1259,28 +1193,18 @@
 
         }
 
-
         const avg =
-          average(
-            values
-          );
-
+          average(values);
 
         const min =
           values.length
-            ? Math.min(
-                ...values
-              )
+            ? Math.min(...values)
             : null;
-
 
         const max =
           values.length
-            ? Math.max(
-                ...values
-              )
+            ? Math.max(...values)
             : null;
-
 
         const label =
           period === "fasting"
@@ -1320,25 +1244,18 @@
                 ${label}
               </strong>
 
-
               <span
                 style="
                   font-size:12px;
                   color:#777;
                 "
               >
-
+                ${values.length}
                 ${
-                  values.length
-                }
-
-                ${
-                  values.length ===
-                  1
+                  values.length === 1
                     ? "medição"
                     : "medições"
                 }
-
               </span>
 
             </div>
@@ -1381,9 +1298,7 @@
                   ${
                     avg === null
                       ? "—"
-                      : Math.round(
-                          avg
-                        ) +
+                      : Math.round(avg) +
                         " mg/dL"
                   }
                 </strong>
@@ -1487,7 +1402,7 @@
 
 
   /* =====================================================
-     GRÁFICO DE LINHA
+     GRÁFICO
   ====================================================== */
 
   function buildGlucoseLineChart(
@@ -1525,121 +1440,79 @@
 
     const values =
       glucoseRecords.map(
-        function (
-          item
-        ) {
-
+        function (item) {
           return item.value;
-
         }
       );
 
 
     const minValue =
-      Math.min(
-        ...values
-      );
-
+      Math.min(...values);
 
     const maxValue =
-      Math.max(
-        ...values
-      );
-
+      Math.max(...values);
 
     const averageValue =
-      average(
-        values
-      );
+      average(values);
 
 
-    const chartWidth =
-      760;
+    const chartWidth = 760;
+    const chartHeight = 360;
 
-
-    const chartHeight =
-      360;
-
-
-    const left =
-      58;
-
-
-    const right =
-      22;
-
-
-    const top =
-      34;
-
-
-    const bottom =
-      60;
-
+    const left = 58;
+    const right = 22;
+    const top = 34;
+    const bottom = 60;
 
     const plotWidth =
       chartWidth -
       left -
       right;
 
-
     const plotHeight =
       chartHeight -
       top -
       bottom;
 
-
     const valueRange =
       Math.max(
-        maxValue -
-        minValue,
+        maxValue - minValue,
         20
       );
-
 
     const chartMin =
       minValue -
       Math.max(
-        valueRange *
-        0.12,
+        valueRange * 0.12,
         5
       );
-
 
     const chartMax =
       maxValue +
       Math.max(
-        valueRange *
-        0.12,
+        valueRange * 0.12,
         5
       );
 
-
     const chartRange =
       Math.max(
-        chartMax -
-        chartMin,
+        chartMax - chartMin,
         1
       );
 
 
-    function xFor(
-      index
-    ) {
+    function xFor(index) {
 
       if (
-        glucoseRecords.length ===
-        1
+        glucoseRecords.length === 1
       ) {
 
         return (
           left +
-          plotWidth /
-          2
+          plotWidth / 2
         );
 
       }
-
 
       return (
         left +
@@ -1656,9 +1529,7 @@
     }
 
 
-    function yFor(
-      value
-    ) {
+    function yFor(value) {
 
       return (
         top +
@@ -1685,14 +1556,10 @@
           return {
 
             x:
-              xFor(
-                index
-              ),
+              xFor(index),
 
             y:
-              yFor(
-                item.value
-              ),
+              yFor(item.value),
 
             value:
               item.value,
@@ -1720,9 +1587,7 @@
     const polyline =
       points
         .map(
-          function (
-            point
-          ) {
+          function (point) {
 
             return (
               point.x +
@@ -1732,27 +1597,20 @@
 
           }
         )
-        .join(
-          " "
-        );
+        .join(" ");
 
 
     /* =================================================
        GRADE
     ================================================== */
 
-    let gridHTML =
-      "";
+    let gridHTML = "";
 
-
-    const numberOfGridLines =
-      5;
-
+    const numberOfGridLines = 5;
 
     for (
       let index = 0;
-      index <
-        numberOfGridLines;
+      index < numberOfGridLines;
       index++
     ) {
 
@@ -1763,7 +1621,6 @@
           1
         );
 
-
       const value =
         chartMax -
         (
@@ -1771,43 +1628,28 @@
           chartRange
         );
 
-
       const y =
-        yFor(
-          value
-        );
-
+        yFor(value);
 
       gridHTML += `
 
         <line
           x1="${left}"
           y1="${y}"
-          x2="${
-            chartWidth -
-            right
-          }"
+          x2="${chartWidth - right}"
           y2="${y}"
           stroke="#eeeeee"
           stroke-width="1"
         ></line>
 
-
         <text
-          x="${
-            left -
-            8
-          }"
-          y="${
-            y + 4
-          }"
+          x="${left - 8}"
+          y="${y + 4}"
           text-anchor="end"
           font-size="11"
           fill="#777"
         >
-          ${Math.round(
-            value
-          )}
+          ${Math.round(value)}
         </text>
 
       `;
@@ -1816,28 +1658,21 @@
 
 
     const averageY =
-      yFor(
-        averageValue
-      );
+      yFor(averageValue);
 
 
     /* =================================================
        MARCADORES
     ================================================== */
 
-    let pointsHTML =
-      "";
+    let pointsHTML = "";
 
 
     points.forEach(
-      function (
-        point
-      ) {
+      function (point) {
 
         const label =
-          formatDate(
-            point.date
-          ) +
+          formatDate(point.date) +
           (
             point.time
               ? " · " +
@@ -1851,23 +1686,14 @@
           );
 
 
-        if (
-          point.fasting
-        ) {
+        if (point.fasting) {
 
-          /*
-           * Losango para JEJUM.
-           */
-
-          const size =
-            8;
-
+          const size = 8;
 
           const diamondPoints = [
 
-            (
-              point.x
-            ) + "," +
+            point.x +
+            "," +
             (
               point.y -
               size
@@ -1876,12 +1702,12 @@
             (
               point.x +
               size
-            ) + "," +
+            ) +
+            "," +
             point.y,
 
-            (
-              point.x
-            ) + "," +
+            point.x +
+            "," +
             (
               point.y +
               size
@@ -1890,12 +1716,11 @@
             (
               point.x -
               size
-            ) + "," +
+            ) +
+            "," +
             point.y
 
-          ].join(
-            " "
-          );
+          ].join(" ");
 
 
           pointsHTML += `
@@ -1908,13 +1733,8 @@
             >
 
               <title>
-                ${
-                  escapeHTML(
-                    label
-                  )
-                }
-                — ${point.value}
-                mg/dL
+                ${escapeHTML(label)}
+                — ${point.value} mg/dL
               </title>
 
             </polygon>
@@ -1922,10 +1742,7 @@
 
             <text
               x="${point.x}"
-              y="${
-                point.y -
-                13
-              }"
+              y="${point.y - 13}"
               text-anchor="middle"
               font-size="11"
               font-weight="700"
@@ -1950,13 +1767,8 @@
             >
 
               <title>
-                ${
-                  escapeHTML(
-                    label
-                  )
-                }
-                — ${point.value}
-                mg/dL
+                ${escapeHTML(label)}
+                — ${point.value} mg/dL
               </title>
 
             </circle>
@@ -1964,10 +1776,7 @@
 
             <text
               x="${point.x}"
-              y="${
-                point.y -
-                12
-              }"
+              y="${point.y - 12}"
               text-anchor="middle"
               font-size="11"
               font-weight="700"
@@ -1988,13 +1797,9 @@
        EIXO HORIZONTAL
     ================================================== */
 
-    let labelsHTML =
-      "";
+    let labelsHTML = "";
 
-
-    const maximumLabels =
-      6;
-
+    const maximumLabels = 6;
 
     let labelIndexes = [];
 
@@ -2028,18 +1833,15 @@
           1
         );
 
-
       for (
         let index = 0;
-        index <
-          maximumLabels;
+        index < maximumLabels;
         index++
       ) {
 
         labelIndexes.push(
           Math.round(
-            index *
-            step
+            index * step
           )
         );
 
@@ -2057,18 +1859,13 @@
 
 
     labelIndexes.forEach(
-      function (
-        index
-      ) {
+      function (index) {
 
         const point =
           points[index];
 
-
         if (!point) {
-
           return;
-
         }
 
 
@@ -2076,29 +1873,20 @@
 
           <text
             x="${point.x}"
-            y="${
-              chartHeight -
-              30
-            }"
+            y="${chartHeight - 30}"
             text-anchor="middle"
             font-size="10"
             fill="#777"
           >
-            ${formatDate(
-              point.date
-            )}
+            ${formatDate(point.date)}
           </text>
-
 
           ${
             point.time
               ? `
                 <text
                   x="${point.x}"
-                  y="${
-                    chartHeight -
-                    16
-                  }"
+                  y="${chartHeight - 16}"
                   text-anchor="middle"
                   font-size="9"
                   fill="#999"
@@ -2124,11 +1912,9 @@
     const firstValue =
       glucoseRecords[0].value;
 
-
     const lastValue =
       glucoseRecords[
-        glucoseRecords.length -
-        1
+        glucoseRecords.length - 1
       ].value;
 
 
@@ -2178,17 +1964,12 @@
           "
         >
 
+          ${glucoseRecords.length}
           ${
-            glucoseRecords.length
-          }
-
-          ${
-            glucoseRecords.length ===
-            1
+            glucoseRecords.length === 1
               ? "medição"
               : "medições"
           }
-
           no período.
 
         </p>
@@ -2225,10 +2006,7 @@
               x1="${left}"
               y1="${top}"
               x2="${left}"
-              y2="${
-                chartHeight -
-                bottom
-              }"
+              y2="${chartHeight - bottom}"
               stroke="#dddddd"
               stroke-width="1"
             ></line>
@@ -2236,18 +2014,9 @@
 
             <line
               x1="${left}"
-              y1="${
-                chartHeight -
-                bottom
-              }"
-              x2="${
-                chartWidth -
-                right
-              }"
-              y2="${
-                chartHeight -
-                bottom
-              }"
+              y1="${chartHeight - bottom}"
+              x2="${chartWidth - right}"
+              y2="${chartHeight - bottom}"
               stroke="#dddddd"
               stroke-width="1"
             ></line>
@@ -2256,10 +2025,7 @@
             <line
               x1="${left}"
               y1="${averageY}"
-              x2="${
-                chartWidth -
-                right
-              }"
+              x2="${chartWidth - right}"
               y2="${averageY}"
               stroke="#999999"
               stroke-width="1.5"
@@ -2268,14 +2034,8 @@
 
 
             <text
-              x="${
-                chartWidth -
-                right
-              }"
-              y="${
-                averageY -
-                7
-              }"
+              x="${chartWidth - right}"
+              y="${averageY - 7}"
               text-anchor="end"
               font-size="10"
               fill="#777"
@@ -2296,17 +2056,12 @@
 
             ${pointsHTML}
 
-
             ${labelsHTML}
 
           </svg>
 
         </div>
 
-
-        <!-- =================================================
-             LEGENDA
-        ================================================== -->
 
         <div
           style="
@@ -2374,10 +2129,6 @@
         </div>
 
 
-        <!-- =================================================
-             RESUMO DO GRÁFICO
-        ================================================== -->
-
         <div
           style="
             display:grid;
@@ -2405,7 +2156,6 @@
               Média
             </div>
 
-
             <strong
               style="
                 display:block;
@@ -2414,15 +2164,9 @@
                 color:#7f4444;
               "
             >
-
-              ${
-                Math.round(
-                  averageValue
-                )
-              }
-
-              mg/dL
-
+              ${Math.round(
+                averageValue
+              )} mg/dL
             </strong>
 
           </div>
@@ -2444,7 +2188,6 @@
             >
               Tendência
             </div>
-
 
             <strong
               style="
@@ -2477,7 +2220,6 @@
               Mínima
             </div>
 
-
             <strong
               style="
                 display:block;
@@ -2486,11 +2228,7 @@
                 color:#7f4444;
               "
             >
-
-              ${minValue}
-
-              mg/dL
-
+              ${minValue} mg/dL
             </strong>
 
           </div>
@@ -2513,7 +2251,6 @@
               Máxima
             </div>
 
-
             <strong
               style="
                 display:block;
@@ -2522,11 +2259,7 @@
                 color:#7f4444;
               "
             >
-
-              ${maxValue}
-
-              mg/dL
-
+              ${maxValue} mg/dL
             </strong>
 
           </div>
@@ -2619,7 +2352,16 @@
 
   function renderAnalysis() {
 
+    /*
+     * Se a tela ainda não existir, não fazemos nada.
+     * O MutationObserver / retryTimer cuidará disso.
+     */
+
     if (!content) {
+
+      if (!initialized) {
+        initAnalysis();
+      }
 
       return;
 
@@ -2642,9 +2384,7 @@
         >
 
           <div class="empty-state">
-
             Confira as datas selecionadas.
-
           </div>
 
         </section>
@@ -2668,12 +2408,8 @@
 
     const glucoseValues =
       glucoseRecords.map(
-        function (
-          item
-        ) {
-
+        function (item) {
           return item.value;
-
         }
       );
 
@@ -2686,17 +2422,13 @@
 
     const glucoseMin =
       glucoseValues.length
-        ? Math.min(
-            ...glucoseValues
-          )
+        ? Math.min(...glucoseValues)
         : null;
 
 
     const glucoseMax =
       glucoseValues.length
-        ? Math.max(
-            ...glucoseValues
-          )
+        ? Math.max(...glucoseValues)
         : null;
 
 
@@ -2809,13 +2541,11 @@
             meals
           )}
 
-
           ${summaryCard(
             "🩸",
             "Glicemias",
             glucose
           )}
-
 
           ${summaryCard(
             "💉",
@@ -2823,20 +2553,17 @@
             insulin
           )}
 
-
           ${summaryCard(
             "🏋️",
             "Atividades",
             activity
           )}
 
-
           ${summaryCard(
             "💊",
             "Medicamentos",
             medication
           )}
-
 
           ${summaryCard(
             "🩺",
@@ -2882,7 +2609,6 @@
               Total de registros
             </span>
 
-
             <strong>
               ${records.length}
             </strong>
@@ -2903,11 +2629,9 @@
               Média das glicemias
             </span>
 
-
             <strong>
               ${
-                glucoseAverage ===
-                null
+                glucoseAverage === null
                   ? "—"
                   : Math.round(
                       glucoseAverage
@@ -2932,11 +2656,9 @@
               Menor glicemia
             </span>
 
-
             <strong>
               ${
-                glucoseMin ===
-                null
+                glucoseMin === null
                   ? "—"
                   : glucoseMin +
                     " mg/dL"
@@ -2959,11 +2681,9 @@
               Maior glicemia
             </span>
 
-
             <strong>
               ${
-                glucoseMax ===
-                null
+                glucoseMax === null
                   ? "—"
                   : glucoseMax +
                     " mg/dL"
@@ -2986,10 +2706,8 @@
               Atividade
             </span>
 
-
             <strong>
-              ${activityMinutes}
-              min
+              ${activityMinutes} min
             </strong>
 
           </div>
@@ -3007,12 +2725,10 @@
               Insulina
             </span>
 
-
             <strong>
               ${
                 insulinUnits
-                  ? insulinUnits +
-                    " U"
+                  ? insulinUnits + " U"
                   : "—"
               }
             </strong>
@@ -3025,8 +2741,7 @@
 
 
       ${
-        glucoseAverage !==
-        null
+        glucoseAverage !== null
           ? buildGlucoseLineChart(
               glucoseRecords
             )
@@ -3042,7 +2757,6 @@
               <h2>
                 🩸 Evolução das glicemias
               </h2>
-
 
               <div class="empty-state">
                 Não há glicemias registradas
@@ -3061,8 +2775,7 @@
 
 
       ${
-        records.length ===
-        0
+        records.length === 0
           ? `
 
             <section
@@ -3098,7 +2811,49 @@
     "recordatorioSyncComplete",
     function () {
 
+      /*
+       * Caso o evento aconteça antes da tela
+       * de análises existir, tentamos inicializar.
+       */
+
+      if (!initialized) {
+
+        startAnalysisModule();
+
+        return;
+
+      }
+
       renderAnalysis();
+
+    }
+  );
+
+
+  /* =====================================================
+     VISIBILIDADE DA PÁGINA
+  ====================================================== */
+
+  document.addEventListener(
+    "visibilitychange",
+    function () {
+
+      if (
+        document.visibilityState ===
+        "visible"
+      ) {
+
+        if (!initialized) {
+
+          startAnalysisModule();
+
+        } else {
+
+          renderAnalysis();
+
+        }
+
+      }
 
     }
   );
@@ -3115,13 +2870,24 @@
 
     document.addEventListener(
       "DOMContentLoaded",
-      initAnalysis
+      function () {
+
+        startAnalysisModule();
+
+        observePageChanges();
+
+      }
     );
 
   } else {
 
-    initAnalysis();
+    startAnalysisModule();
+
+    if (document.body) {
+      observePageChanges();
+    }
 
   }
+
 
 })();

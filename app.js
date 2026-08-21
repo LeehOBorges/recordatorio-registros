@@ -5,7 +5,6 @@
    MEDICAMENTOS / SUPLEMENTOS / VITAMINAS
    CONSULTAS
    BACKUP E RESTAURAÇÃO
-   INTEGRAÇÃO COM SINCRONIZAÇÃO SUPABASE
 ========================================================= */
 
 const STORAGE_KEY = "recordatorio_registros_v01";
@@ -129,11 +128,59 @@ function saveDatabase() {
   } catch (error) {
 
     console.error(
-      "Erro ao salvar banco local:",
+      "Erro ao salvar banco:",
       error
     );
 
   }
+
+}
+
+
+/* =========================================================
+   RECARREGAR BANCO APÓS SINCRONIZAÇÃO
+========================================================= */
+
+function reloadDatabaseFromStorage() {
+
+  const updatedDatabase =
+    loadDatabase();
+
+  if (
+    !updatedDatabase ||
+    typeof updatedDatabase !== "object"
+  ) {
+    return;
+  }
+
+  database = {
+
+    records:
+      Array.isArray(
+        updatedDatabase.records
+      )
+        ? updatedDatabase.records
+        : [],
+
+    trash:
+      Array.isArray(
+        updatedDatabase.trash
+      )
+        ? updatedDatabase.trash
+        : []
+
+  };
+
+  console.log(
+    "Banco local atualizado após sincronização:",
+    {
+      registros:
+        database.records.length,
+
+      lixeira:
+        database.trash.length
+    }
+  );
 
 }
 
@@ -187,24 +234,12 @@ function loadGlucoseSettings() {
 
 function saveGlucoseSettings() {
 
-  try {
-
-    localStorage.setItem(
-      GLUCOSE_SETTINGS_KEY,
-      JSON.stringify(
-        glucoseSettings
-      )
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Erro ao salvar configurações de glicemia:",
-      error
-    );
-
-  }
-
+  localStorage.setItem(
+    GLUCOSE_SETTINGS_KEY,
+    JSON.stringify(
+      glucoseSettings
+    )
+  );
 }
 
 
@@ -246,24 +281,12 @@ function loadMedications() {
 
 function saveMedications() {
 
-  try {
-
-    localStorage.setItem(
-      MEDICATION_SETTINGS_KEY,
-      JSON.stringify(
-        medications
-      )
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Erro ao salvar medicamentos:",
-      error
-    );
-
-  }
-
+  localStorage.setItem(
+    MEDICATION_SETTINGS_KEY,
+    JSON.stringify(
+      medications
+    )
+  );
 }
 
 
@@ -284,39 +307,25 @@ function generateMedicationId() {
    ELEMENTOS
 ========================================================= */
 
-let modal = null;
-let form = null;
-let formFields = null;
-let modalTitle = null;
+const modal =
+  document.getElementById(
+    "recordModal"
+  );
 
+const form =
+  document.getElementById(
+    "recordForm"
+  );
 
-/* =========================================================
-   INICIALIZAR REFERÊNCIAS DO DOM
-========================================================= */
+const formFields =
+  document.getElementById(
+    "formFields"
+  );
 
-function initializeDOMReferences() {
-
-  modal =
-    document.getElementById(
-      "recordModal"
-    );
-
-  form =
-    document.getElementById(
-      "recordForm"
-    );
-
-  formFields =
-    document.getElementById(
-      "formFields"
-    );
-
-  modalTitle =
-    document.getElementById(
-      "modalTitle"
-    );
-
-}
+const modalTitle =
+  document.getElementById(
+    "modalTitle"
+  );
 
 
 /* =========================================================
@@ -1750,403 +1759,265 @@ function fillEditFields(
    SALVAR REGISTRO
 ========================================================= */
 
-function handleRecordSubmit(event) {
-
-  event.preventDefault();
-
-
-  const dateElement =
-    document.getElementById(
-      "recordDate"
-    );
-
-  const timeElement =
-    document.getElementById(
-      "recordTime"
-    );
-
-
-  if (
-    !dateElement ||
-    !timeElement
-  ) {
-
-    return;
-  }
-
-
-  const now =
-    new Date().toISOString();
-
-
-  const record = {
-
-    id:
-      editingId ||
-      generateId(),
-
-    type:
-      currentRecordType,
-
-    date:
-      dateElement.value,
-
-    time:
-      timeElement.value,
-
-    updatedAt:
-      now
-  };
-
-
-  /* =====================================================
-     REFEIÇÃO
-  ===================================================== */
-
-  if (
-    currentRecordType ===
-    "meal"
-  ) {
-
-    const mealType =
-      document.getElementById(
-        "mealType"
-      );
-
-    const food =
-      document.getElementById(
-        "food"
-      );
-
-    const quantity =
-      document.getElementById(
-        "quantity"
-      );
-
-    const note =
-      document.getElementById(
-        "note"
-      );
-
-    record.mealType =
-      mealType
-        ? mealType.value
-        : "";
-
-    record.food =
-      food
-        ? food.value.trim()
-        : "";
-
-    record.quantity =
-      quantity
-        ? quantity.value.trim()
-        : "";
-
-    record.note =
-      note
-        ? note.value.trim()
-        : "";
-  }
-
-
-  /* =====================================================
-     GLICEMIA
-  ===================================================== */
-
-  if (
-    currentRecordType ===
-    "glucose"
-  ) {
-
-    const glucoseValue =
-      document.getElementById(
-        "glucoseValue"
-      );
-
-    const glucoseKind =
-      document.getElementById(
-        "glucoseKind"
-      );
-
-    const glucoseNote =
-      document.getElementById(
-        "glucoseNote"
-      );
-
-    record.value =
-      glucoseValue
-        ? glucoseValue.value
-        : "";
-
-    record.kind =
-      glucoseKind
-        ? glucoseKind.value
-        : "";
-
-    record.note =
-      glucoseNote
-        ? glucoseNote.value.trim()
-        : "";
-  }
-
-
-  /* =====================================================
-     INSULINA
-  ===================================================== */
-
-  if (
-    currentRecordType ===
-    "insulin"
-  ) {
-
-    const insulinName =
-      document.getElementById(
-        "insulinName"
-      );
-
-    const insulinDose =
-      document.getElementById(
-        "insulinDose"
-      );
-
-    const application =
-      document.getElementById(
-        "application"
-      );
-
-    const insulinNote =
-      document.getElementById(
-        "insulinNote"
-      );
-
-    record.insulin =
-      insulinName
-        ? insulinName.value.trim()
-        : "";
-
-    record.dose =
-      insulinDose
-        ? insulinDose.value
-        : "";
-
-    record.application =
-      application
-        ? application.value
-        : "";
-
-    record.note =
-      insulinNote
-        ? insulinNote.value.trim()
-        : "";
-  }
-
-
-  /* =====================================================
-     ATIVIDADE
-  ===================================================== */
-
-  if (
-    currentRecordType ===
-    "activity"
-  ) {
-
-    const activityType =
-      document.getElementById(
-        "activityType"
-      );
-
-    const duration =
-      document.getElementById(
-        "duration"
-      );
-
-    const intensity =
-      document.getElementById(
-        "intensity"
-      );
-
-    const activityNote =
-      document.getElementById(
-        "activityNote"
-      );
-
-    record.activity =
-      activityType
-        ? activityType.value
-        : "";
-
-    record.duration =
-      duration
-        ? duration.value
-        : "";
-
-    record.intensity =
-      intensity
-        ? intensity.value
-        : "";
-
-    record.note =
-      activityNote
-        ? activityNote.value.trim()
-        : "";
-  }
-
-
-  /* =====================================================
-     CONSULTA
-  ===================================================== */
-
-  if (
-    currentRecordType ===
-    "consultation"
-  ) {
-
-    const professional =
-      document.getElementById(
-        "consultationProfessional"
-      );
-
-    const specialty =
-      document.getElementById(
-        "consultationSpecialty"
-      );
-
-    const location =
-      document.getElementById(
-        "consultationLocation"
-      );
-
-    const reason =
-      document.getElementById(
-        "consultationReason"
-      );
-
-    const note =
-      document.getElementById(
-        "consultationNote"
-      );
-
-    record.professional =
-      professional
-        ? professional.value.trim()
-        : "";
-
-    record.specialty =
-      specialty
-        ? specialty.value.trim()
-        : "";
-
-    record.location =
-      location
-        ? location.value.trim()
-        : "";
-
-    record.reason =
-      reason
-        ? reason.value.trim()
-        : "";
-
-    record.note =
-      note
-        ? note.value.trim()
-        : "";
-  }
-
-
-  /* =====================================================
-     EDITAR OU CRIAR
-  ===================================================== */
-
-  if (editingId) {
-
-    const index =
-      database.records.findIndex(
-        item =>
-          item.id ===
-          editingId
-      );
-
-
-    if (index !== -1) {
-
-      database.records[index] = {
-
-        ...database.records[index],
-
-        ...record,
-
-        updatedAt:
-          now
-      };
-
-    }
-
-  } else {
-
-    record.createdAt =
-      now;
-
-    database.records.push(
-      record
-    );
-
-  }
-
-
-  saveDatabase();
-
-
-  if (modal) {
-
-    modal.close();
-  }
-
-
-  editingId = null;
-
-  currentRecordType = null;
-
-
-  renderDashboard();
-
-  renderDiary();
-
-  renderConsultations();
-
-
-  /*
-   * O sincronizacao.js intercepta saveDatabase()
-   * e envia a alteração para o Supabase em segundo plano.
-   */
-}
-
-
-function installRecordFormListener() {
-
-  if (!form) {
-    return;
-  }
-
-
-  if (
-    form.__recordatorioSubmitInstalled
-  ) {
-
-    return;
-
-  }
-
+if (form) {
 
   form.addEventListener(
     "submit",
-    handleRecordSubmit
+    function(event) {
+
+      event.preventDefault();
+
+
+      const dateElement =
+        document.getElementById(
+          "recordDate"
+        );
+
+      const timeElement =
+        document.getElementById(
+          "recordTime"
+        );
+
+
+      if (
+        !dateElement ||
+        !timeElement
+      ) {
+        return;
+      }
+
+
+      const record = {
+
+        id:
+          editingId ||
+          generateId(),
+
+        type:
+          currentRecordType,
+
+        date:
+          dateElement.value,
+
+        time:
+          timeElement.value,
+
+        updatedAt:
+          new Date().toISOString()
+      };
+
+
+      /* =====================================================
+         REFEIÇÃO
+      ===================================================== */
+
+      if (
+        currentRecordType ===
+        "meal"
+      ) {
+
+        record.mealType =
+          document.getElementById(
+            "mealType"
+          ).value;
+
+        record.food =
+          document.getElementById(
+            "food"
+          ).value.trim();
+
+        record.quantity =
+          document.getElementById(
+            "quantity"
+          ).value.trim();
+
+        record.note =
+          document.getElementById(
+            "note"
+          ).value.trim();
+      }
+
+
+      /* =====================================================
+         GLICEMIA
+      ===================================================== */
+
+      if (
+        currentRecordType ===
+        "glucose"
+      ) {
+
+        record.value =
+          document.getElementById(
+            "glucoseValue"
+          ).value;
+
+        record.kind =
+          document.getElementById(
+            "glucoseKind"
+          ).value;
+
+        record.note =
+          document.getElementById(
+            "glucoseNote"
+          ).value.trim();
+      }
+
+
+      /* =====================================================
+         INSULINA
+      ===================================================== */
+
+      if (
+        currentRecordType ===
+        "insulin"
+      ) {
+
+        record.insulin =
+          document.getElementById(
+            "insulinName"
+          ).value.trim();
+
+        record.dose =
+          document.getElementById(
+            "insulinDose"
+          ).value;
+
+        record.application =
+          document.getElementById(
+            "application"
+          ).value;
+
+        record.note =
+          document.getElementById(
+            "insulinNote"
+          ).value.trim();
+      }
+
+
+      /* =====================================================
+         ATIVIDADE
+      ===================================================== */
+
+      if (
+        currentRecordType ===
+        "activity"
+      ) {
+
+        record.activity =
+          document.getElementById(
+            "activityType"
+          ).value;
+
+        record.duration =
+          document.getElementById(
+            "duration"
+          ).value;
+
+        record.intensity =
+          document.getElementById(
+            "intensity"
+          ).value;
+
+        record.note =
+          document.getElementById(
+            "activityNote"
+          ).value.trim();
+      }
+
+
+      /* =====================================================
+         CONSULTA
+      ===================================================== */
+
+      if (
+        currentRecordType ===
+        "consultation"
+      ) {
+
+        record.professional =
+          document.getElementById(
+            "consultationProfessional"
+          ).value.trim();
+
+        record.specialty =
+          document.getElementById(
+            "consultationSpecialty"
+          ).value.trim();
+
+        record.location =
+          document.getElementById(
+            "consultationLocation"
+          ).value.trim();
+
+        record.reason =
+          document.getElementById(
+            "consultationReason"
+          ).value.trim();
+
+        record.note =
+          document.getElementById(
+            "consultationNote"
+          ).value.trim();
+      }
+
+
+      /* =====================================================
+         EDITAR OU CRIAR
+      ===================================================== */
+
+      if (editingId) {
+
+        const index =
+          database.records.findIndex(
+            item =>
+              item.id ===
+              editingId
+          );
+
+
+        if (index !== -1) {
+
+          database.records[index] = {
+
+            ...database.records[index],
+
+            ...record
+          };
+        }
+
+      } else {
+
+        record.createdAt =
+          new Date().toISOString();
+
+        database.records.push(
+          record
+        );
+      }
+
+
+      saveDatabase();
+
+
+      if (modal) {
+
+        modal.close();
+      }
+
+
+      editingId = null;
+
+      currentRecordType = null;
+
+
+      renderDashboard();
+
+      renderDiary();
+
+      renderConsultations();
+    }
   );
-
-
-  form.__recordatorioSubmitInstalled =
-    true;
-
 }
 
 
@@ -2159,8 +2030,7 @@ function editRecord(id) {
   const record =
     database.records.find(
       item =>
-        String(item.id) ===
-        String(id)
+        item.id === id
     );
 
 
@@ -2175,8 +2045,8 @@ function editRecord(id) {
     const medication =
       medications.find(
         item =>
-          String(item.id) ===
-          String(record.medicationId)
+          item.id ===
+          record.medicationId
       );
 
 
@@ -2215,8 +2085,7 @@ function deleteRecord(id) {
   const record =
     database.records.find(
       item =>
-        String(item.id) ===
-        String(id)
+        item.id === id
     );
 
 
@@ -2247,8 +2116,7 @@ function deleteRecord(id) {
   database.records =
     database.records.filter(
       item =>
-        String(item.id) !==
-        String(id)
+        item.id !== id
     );
 
 
@@ -2286,7 +2154,6 @@ function renderConsultationsHome() {
 
     if (!timeline) return;
 
-
     container =
       document.createElement(
         "div"
@@ -2298,56 +2165,37 @@ function renderConsultationsHome() {
     container.className =
       "home-panel";
 
-
-    if (timeline.parentNode) {
-
-      timeline.parentNode.insertBefore(
-        container,
-        timeline.nextSibling
-      );
-
-    }
-
+    timeline.parentNode.insertBefore(
+      container,
+      timeline.nextSibling
+    );
   }
-
 
   const dateKey =
     formatDateKey(
       selectedDate
     );
 
-
   const todayConsultations =
     database.records.filter(
       r =>
-        r.type ===
-          "consultation" &&
-        r.date ===
-          dateKey
+        r.type === "consultation" &&
+        r.date === dateKey
     );
 
-
   if (
-    todayConsultations.length ===
-    0
+    todayConsultations.length === 0
   ) {
 
     container.innerHTML =
       "";
 
     return;
-
   }
 
-
   container.innerHTML = `
-
     <div class="panel-header">
-
-      <h3>
-        🩺 Consultas do Dia
-      </h3>
-
+      <h3>🩺 Consultas do Dia</h3>
     </div>
 
     <div class="panel-content">
@@ -2360,9 +2208,7 @@ function renderConsultationsHome() {
               <div class="consultation-card">
 
                 <strong>
-                  ${escapeHTML(
-                    c.time
-                  )}
+                  ${escapeHTML(c.time)}
                   -
                   ${escapeHTML(
                     c.specialty ||
@@ -2379,28 +2225,20 @@ function renderConsultationsHome() {
 
                 ${
                   c.location
-                    ? `
-                      <small>
-                        📍
-                        ${escapeHTML(
-                          c.location
-                        )}
-                      </small>
-                    `
+                    ? `<small>📍 ${escapeHTML(
+                        c.location
+                      )}</small>`
                     : ""
                 }
 
               </div>
-
             `
           )
           .join("")
       }
 
     </div>
-
   `;
-
 }
 
 
@@ -2415,9 +2253,7 @@ function renderConsultations() {
       "consultationsList"
     );
 
-
   if (!container) return;
-
 
   const consultations =
     database.records
@@ -2447,29 +2283,22 @@ function renderConsultations() {
           )
       );
 
-
   if (
-    consultations.length ===
-    0
+    consultations.length === 0
   ) {
 
     container.innerHTML = `
-
       <div class="empty-state">
-
         Nenhuma consulta agendada ou registrada.
-
       </div>
-
     `;
 
     return;
-
   }
-
 
   container.innerHTML =
     consultations
+
       .map(
         c => `
 
@@ -2490,12 +2319,11 @@ function renderConsultations() {
               <span>
                 ${escapeHTML(
                   c.specialty ||
-                  "Consulta"
+                  ""
                 )}
               </span>
 
             </div>
-
 
             <div class="card-body">
 
@@ -2503,13 +2331,11 @@ function renderConsultations() {
                 <strong>
                   Profissional:
                 </strong>
-
                 ${escapeHTML(
-                  c.professional
+                  c.professional ||
+                  ""
                 )}
-
               </p>
-
 
               ${
                 c.location
@@ -2526,7 +2352,6 @@ function renderConsultations() {
                   : ""
               }
 
-
               ${
                 c.reason
                   ? `
@@ -2541,7 +2366,6 @@ function renderConsultations() {
                   `
                   : ""
               }
-
 
               ${
                 c.note
@@ -2560,7 +2384,6 @@ function renderConsultations() {
 
             </div>
 
-
             <div class="card-actions">
 
               <button
@@ -2571,7 +2394,6 @@ function renderConsultations() {
               >
                 ✏️ Editar
               </button>
-
 
               <button
                 type="button"
@@ -2585,11 +2407,10 @@ function renderConsultations() {
             </div>
 
           </div>
-
         `
       )
-      .join("");
 
+      .join("");
 }
 
 
@@ -2604,62 +2425,45 @@ function renderMedicationHome() {
       "medicationHomePanel"
     );
 
-
   if (!container) return;
 
-
   if (
-    medications.length ===
-    0
+    medications.length === 0
   ) {
 
     container.innerHTML = `
-
       <div class="empty-state">
-
         Nenhum medicamento cadastrado.
-
       </div>
-
     `;
 
     return;
-
   }
-
 
   const dateKey =
     formatDateKey(
       selectedDate
     );
 
-
   const todayMedRecords =
     database.records.filter(
       r =>
-        r.type ===
-          "medication" &&
-        r.date ===
-          dateKey
+        r.type === "medication" &&
+        r.date === dateKey
     );
-
 
   container.innerHTML =
     medications
+
       .map(
         med => {
 
           const taken =
             todayMedRecords.some(
               r =>
-                String(
-                  r.medicationId
-                ) ===
-                String(
-                  med.id
-                )
+                r.medicationId ===
+                med.id
             );
-
 
           return `
 
@@ -2688,36 +2492,27 @@ function renderMedicationHome() {
 
               </div>
 
-
               <button
                 type="button"
                 onclick="toggleMedicationTaken('${escapeHTML(
                   med.id
                 )}')"
               >
-
                 ${
                   taken
                     ? "✅ Tomado"
                     : "⚪ Tomar"
                 }
-
               </button>
 
             </div>
-
           `;
-
         }
       )
-      .join("");
 
+      .join("");
 }
 
-
-/* =========================================================
-   MARCAR MEDICAMENTO COMO TOMADO
-========================================================= */
 
 function toggleMedicationTaken(
   medId
@@ -2728,46 +2523,33 @@ function toggleMedicationTaken(
       selectedDate
     );
 
-
   const existingIndex =
     database.records.findIndex(
       r =>
-        r.type ===
-          "medication" &&
-        r.date ===
-          dateKey &&
-        String(
-          r.medicationId
-        ) ===
-          String(
-            medId
-          )
+        r.type === "medication" &&
+        r.date === dateKey &&
+        r.medicationId === medId
     );
 
-
   if (
-    existingIndex !==
-    -1
+    existingIndex !== -1
   ) {
 
-    const existing =
+    const record =
       database.records[
         existingIndex
       ];
 
-
     database.trash.push({
 
-      ...existing,
+      ...record,
 
       deletedAt:
         new Date().toISOString(),
 
       updatedAt:
         new Date().toISOString()
-
     });
-
 
     database.records.splice(
       existingIndex,
@@ -2779,14 +2561,8 @@ function toggleMedicationTaken(
     const med =
       medications.find(
         m =>
-          String(
-            m.id
-          ) ===
-          String(
-            medId
-          )
+          m.id === medId
       );
-
 
     database.records.push({
 
@@ -2815,18 +2591,14 @@ function toggleMedicationTaken(
 
       updatedAt:
         new Date().toISOString()
-
     });
-
   }
-
 
   saveDatabase();
 
   renderDashboard();
 
   renderDiary();
-
 }
 
 
@@ -2841,33 +2613,24 @@ function renderDiary() {
       "diaryList"
     );
 
-
   if (!container) return;
-
 
   const records =
     getTodayRecords();
 
-
   if (
-    records.length ===
-    0
+    records.length === 0
   ) {
 
-    container.innerHTML = `
-
-      <div class="empty-state">
-
-        Sem registros para o dia selecionado.
-
-      </div>
-
-    `;
+    container.innerHTML =
+      `
+        <div class="empty-state">
+          Sem registros para o dia selecionado.
+        </div>
+      `;
 
     return;
-
   }
-
 
   container.innerHTML =
     records
@@ -2875,7 +2638,6 @@ function renderDiary() {
         createTimelineItem
       )
       .join("");
-
 }
 
 
@@ -2886,13 +2648,8 @@ function renderDiary() {
 function renderMoreScreen() {
 
   renderTrash();
-
 }
 
-
-/* =========================================================
-   LIXEIRA
-========================================================= */
 
 function renderTrash() {
 
@@ -2901,32 +2658,25 @@ function renderTrash() {
       "trashList"
     );
 
-
   if (!container) return;
 
-
   if (
-    database.trash.length ===
-    0
+    database.trash.length === 0
   ) {
 
-    container.innerHTML = `
-
-      <div class="empty-state">
-
-        Lixeira vazia.
-
-      </div>
-
-    `;
+    container.innerHTML =
+      `
+        <div class="empty-state">
+          Lixeira vazia.
+        </div>
+      `;
 
     return;
-
   }
-
 
   container.innerHTML =
     database.trash
+
       .map(
         item => `
 
@@ -2959,30 +2709,22 @@ function renderTrash() {
 
             </div>
 
-
             <button
               type="button"
               onclick="restoreFromTrash('${escapeHTML(
                 item.id
               )}')"
             >
-
               🔄 Restaurar
-
             </button>
 
           </div>
-
         `
       )
-      .join("");
 
+      .join("");
 }
 
-
-/* =========================================================
-   RESTAURAR DA LIXEIRA
-========================================================= */
 
 function restoreFromTrash(
   id
@@ -2991,45 +2733,31 @@ function restoreFromTrash(
   const itemIndex =
     database.trash.findIndex(
       t =>
-        String(
-          t.id
-        ) ===
-        String(
-          id
-        )
+        t.id === id
     );
-
 
   if (
-    itemIndex ===
-    -1
-  ) {
+    itemIndex === -1
+  ) return;
 
-    return;
+  const item =
+    database.trash[
+      itemIndex
+    ];
 
-  }
-
-
-  const [
-    item
-  ] =
-    database.trash.splice(
-      itemIndex,
-      1
-    );
-
+  database.trash.splice(
+    itemIndex,
+    1
+  );
 
   delete item.deletedAt;
-
 
   item.updatedAt =
     new Date().toISOString();
 
-
   database.records.push(
     item
   );
-
 
   saveDatabase();
 
@@ -3039,6 +2767,7 @@ function restoreFromTrash(
 
   renderTrash();
 
+  renderConsultations();
 }
 
 
@@ -3061,7 +2790,6 @@ function exportBackup() {
 
   };
 
-
   const blob =
     new Blob(
       [
@@ -3077,81 +2805,47 @@ function exportBackup() {
       }
     );
 
-
   const url =
     URL.createObjectURL(
       blob
     );
-
 
   const a =
     document.createElement(
       "a"
     );
 
-
   a.href =
     url;
-
 
   a.download =
     `backup_recordatorio_${formatDateKey(
       new Date()
     )}.json`;
 
-
-  document.body.appendChild(
-    a
-  );
-
+  document.body.appendChild(a);
 
   a.click();
 
-
   a.remove();
 
-
-  setTimeout(
-    function () {
-
-      URL.revokeObjectURL(
-        url
-      );
-
-    },
-    1000
+  URL.revokeObjectURL(
+    url
   );
-
 }
 
-
-/* =========================================================
-   RESTAURAÇÃO DE BACKUP
-========================================================= */
 
 function importBackup(
   event
 ) {
 
-  const input =
-    event &&
-    event.target;
-
-
-  if (!input) return;
-
-
   const file =
-    input.files &&
-    input.files[0];
-
+    event.target.files[0];
 
   if (!file) return;
 
-
   const reader =
     new FileReader();
-
 
   reader.onload =
     function(e) {
@@ -3163,9 +2857,7 @@ function importBackup(
             e.target.result
           );
 
-
         if (
-          data &&
           data.database
         ) {
 
@@ -3187,14 +2879,10 @@ function importBackup(
 
           };
 
-
           saveDatabase();
-
         }
 
-
         if (
-          data &&
           data.glucoseSettings
         ) {
 
@@ -3207,46 +2895,34 @@ function importBackup(
 
             };
 
-
           saveGlucoseSettings();
-
         }
 
-
         if (
-          data &&
-          Array.isArray(
-            data.medications
-          )
+          data.medications
         ) {
 
           medications =
-            data.medications;
-
+            Array.isArray(
+              data.medications
+            )
+              ? data.medications
+              : [];
 
           saveMedications();
-
         }
-
 
         alert(
           "Backup restaurado com sucesso!"
         );
 
-
         renderDashboard();
 
         renderDiary();
 
-        renderConsultations();
-
         renderTrash();
 
-
-        /*
-         * O sincronizacao.js detectará a alteração
-         * pelo saveDatabase interceptado.
-         */
+        renderConsultations();
 
       } catch (err) {
 
@@ -3254,173 +2930,101 @@ function importBackup(
           "Erro ao importar o arquivo de backup."
         );
 
-
         console.error(
-          "Erro ao importar backup:",
           err
         );
-
       }
 
     };
-
 
   reader.readAsText(
     file
   );
-
 }
 
 
 /* =========================================================
-   ATUALIZAÇÃO APÓS SINCRONIZAÇÃO
+   ATUALIZAÇÃO APÓS SINCRONIZAÇÃO SUPABASE
 ========================================================= */
 
-function reloadDatabaseFromStorage() {
+document.addEventListener(
+  "recordatorioSyncComplete",
+  function(event) {
 
-  try {
-
-    const stored =
-      localStorage.getItem(
-        STORAGE_KEY
-      );
-
-
-    if (!stored) {
-      return false;
-    }
-
-
-    const parsed =
-      JSON.parse(
-        stored
-      );
-
-
-    if (
-      !parsed ||
-      typeof parsed !==
-        "object"
-    ) {
-
-      return false;
-
-    }
-
-
-    database = {
-
-      records:
-        Array.isArray(
-          parsed.records
-        )
-          ? parsed.records
-          : [],
-
-      trash:
-        Array.isArray(
-          parsed.trash
-        )
-          ? parsed.trash
-          : []
-
-    };
-
-
-    return true;
-
-  } catch (error) {
-
-    console.error(
-      "Erro ao atualizar banco após sincronização:",
-      error
+    console.log(
+      "Recebida sincronização do Supabase. Atualizando aplicativo..."
     );
 
+    /*
+     * O sincronizacao.js já salvou a união dos dados
+     * no localStorage. Agora o app.js precisa abandonar
+     * o banco antigo que estava na memória e carregar
+     * novamente o banco atualizado.
+     */
 
-    return false;
+    reloadDatabaseFromStorage();
 
-  }
+    /*
+     * Atualiza todas as telas.
+     */
 
-}
+    renderDashboard();
 
+    renderDiary();
 
-/* =========================================================
-   EVENTO DA SINCRONIZAÇÃO
-========================================================= */
+    renderConsultations();
 
-function installSyncEvents() {
+    renderTrash();
 
-  document.addEventListener(
-    "recordatorioSyncComplete",
-    function() {
+    /*
+     * Caso o evento tenha informações sobre quantidade,
+     * mostramos no console para facilitar a conferência.
+     */
 
-      /*
-       * O sincronizacao.js já gravou a união dos dados
-       * no localStorage. Aqui apenas fazemos o app.js
-       * reler essa informação para atualizar a memória.
-       */
+    if (
+      event &&
+      event.detail
+    ) {
 
-      if (
-        reloadDatabaseFromStorage()
-      ) {
-
-        renderDashboard();
-
-        renderDiary();
-
-        renderConsultations();
-
-        renderTrash();
-
-      }
-
-    }
-  );
-
-
-  document.addEventListener(
-    "recordatorioSyncError",
-    function(event) {
-
-      console.error(
-        "Sincronização do Recordatório falhou:",
-        event &&
+      console.log(
+        "Aplicativo atualizado com dados sincronizados:",
         event.detail
       );
 
     }
-  );
 
-}
+  }
+);
 
 
 /* =========================================================
-   API PÚBLICA PARA O SINCRONIZADOR
+   QUANDO A PÁGINA VOLTA PARA PRIMEIRO PLANO
 ========================================================= */
 
-window.recordatorioReloadDatabase =
+document.addEventListener(
+  "visibilitychange",
   function() {
 
     if (
-      reloadDatabaseFromStorage()
+      document.visibilityState ===
+      "visible"
     ) {
+
+      /*
+       * Recarrega o estado local caso o
+       * sincronizacao.js tenha alterado o
+       * localStorage enquanto a página estava
+       * em segundo plano.
+       */
+
+      reloadDatabaseFromStorage();
 
       renderDashboard();
 
-      renderDiary();
-
-      renderConsultations();
-
-      renderTrash();
-
-      return true;
-
     }
 
-
-    return false;
-
-  };
+  }
+);
 
 
 /* =========================================================
@@ -3431,13 +3035,20 @@ document.addEventListener(
   "DOMContentLoaded",
   function() {
 
-    initializeDOMReferences();
+    /*
+     * Faz uma última leitura do localStorage
+     * antes de desenhar a interface.
+     */
 
-    installRecordFormListener();
-
-    installSyncEvents();
+    reloadDatabaseFromStorage();
 
     renderDashboard();
+
+    renderDiary();
+
+    renderConsultations();
+
+    renderTrash();
 
   }
 );

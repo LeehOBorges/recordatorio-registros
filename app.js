@@ -1,6 +1,6 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
-   APP.JS COMPLETO — VERSÃO 0.2
+   APP.JS COMPLETO — VERSÃO 0.3
 
    REFEIÇÕES
    GLICEMIA
@@ -8,6 +8,7 @@
    ATIVIDADE
    MEDICAMENTOS / SUPLEMENTOS / VITAMINAS
    CONSULTAS
+   ÁGUA
    DIÁRIO / HISTÓRICO
    LIXEIRA
    BACKUP E RESTAURAÇÃO
@@ -26,6 +27,9 @@ const GLUCOSE_SETTINGS_KEY =
 
 const MEDICATION_SETTINGS_KEY =
   "recordatorio_medicamentos_config_v01";
+
+const WATER_SETTINGS_KEY =
+  "recordatorio_agua_config_v01";
 
 
 /* =========================================================
@@ -57,6 +61,14 @@ const defaultGlucoseOptions = {
 
 
 /* =========================================================
+   CONFIGURAÇÃO PADRÃO DA ÁGUA
+========================================================= */
+
+const DEFAULT_WATER_GOAL_ML =
+  2000;
+
+
+/* =========================================================
    ESTADO
 ========================================================= */
 
@@ -68,6 +80,9 @@ let glucoseSettings =
 
 let medications =
   loadMedications();
+
+let waterGoalMl =
+  loadWaterGoal();
 
 let selectedDate =
   new Date();
@@ -225,6 +240,100 @@ function saveGlucoseSettings() {
 
     console.error(
       "Erro ao salvar configurações de glicemia:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   CONFIGURAÇÃO DE ÁGUA
+========================================================= */
+
+function loadWaterGoal() {
+
+  try {
+
+    const stored =
+      localStorage.getItem(
+        WATER_SETTINGS_KEY
+      );
+
+    if (!stored) {
+
+      return DEFAULT_WATER_GOAL_ML;
+    }
+
+    const parsed =
+      JSON.parse(stored);
+
+
+    let goal = 0;
+
+
+    if (
+      typeof parsed === "number"
+    ) {
+
+      goal =
+        parsed;
+
+    } else if (
+      parsed &&
+      typeof parsed === "object"
+    ) {
+
+      goal =
+        Number(
+          parsed.goalMl ??
+          parsed.waterGoalMl ??
+          parsed.goal ??
+          0
+        );
+    }
+
+
+    if (
+      !Number.isFinite(goal) ||
+      goal <= 0
+    ) {
+
+      return DEFAULT_WATER_GOAL_ML;
+    }
+
+
+    return Math.round(
+      goal
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao carregar meta de água:",
+      error
+    );
+
+    return DEFAULT_WATER_GOAL_ML;
+  }
+}
+
+
+function saveWaterGoal() {
+
+  try {
+
+    localStorage.setItem(
+      WATER_SETTINGS_KEY,
+      JSON.stringify({
+        goalMl:
+          waterGoalMl
+      })
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao salvar meta de água:",
       error
     );
   }
@@ -483,6 +592,1092 @@ function getTodayRecords() {
 
 
 /* =========================================================
+   ÁGUA — REGISTROS DO DIA
+========================================================= */
+
+function getTodayWaterRecords() {
+
+  const dateKey =
+    formatDateKey(
+      selectedDate
+    );
+
+  return database.records
+    .filter(
+      record =>
+        record &&
+        record.type === "water" &&
+        record.date === dateKey
+    )
+    .sort(
+      (a, b) =>
+        String(
+          a.time || ""
+        ).localeCompare(
+          String(
+            b.time || ""
+          )
+        )
+    );
+}
+
+
+function getWaterTotalForDate(
+  dateKey
+) {
+
+  return database.records
+    .filter(
+      record =>
+        record &&
+        record.type === "water" &&
+        record.date === dateKey
+    )
+    .reduce(
+      (
+        total,
+        record
+      ) => {
+
+        const amount =
+          Number(
+            record.amount || 0
+          );
+
+        return (
+          total +
+          (
+            Number.isFinite(
+              amount
+            )
+              ? amount
+              : 0
+          )
+        );
+
+      },
+      0
+    );
+}
+
+
+function getTodayWaterTotal() {
+
+  return getWaterTotalForDate(
+    formatDateKey(
+      selectedDate
+    )
+  );
+}
+
+
+/* =========================================================
+   FORMATAR ÁGUA
+========================================================= */
+
+function formatWaterMl(
+  value
+) {
+
+  const ml =
+    Math.max(
+      0,
+      Math.round(
+        Number(value) || 0
+      )
+    );
+
+
+  if (
+    ml >= 1000
+  ) {
+
+    const liters =
+      ml / 1000;
+
+    return (
+      liters
+        .toLocaleString(
+          "pt-BR",
+          {
+            minimumFractionDigits:
+              liters % 1 === 0
+                ? 0
+                : 1,
+            maximumFractionDigits:
+              2
+          }
+        ) +
+      " L"
+    );
+  }
+
+
+  return (
+    ml.toLocaleString(
+      "pt-BR"
+    ) +
+    " ml"
+  );
+}
+
+
+/* =========================================================
+   ÁGUA — ALTERAR META
+========================================================= */
+
+function editWaterGoal() {
+
+  const current =
+    waterGoalMl;
+
+
+  const input =
+    prompt(
+      "Digite sua meta diária de água em ml.\n\nExemplo: 2000 para 2 litros.",
+      String(current)
+    );
+
+
+  if (
+    input === null
+  ) {
+
+    return;
+  }
+
+
+  const value =
+    Number(
+      String(input)
+        .replace(",", ".")
+    );
+
+
+  if (
+    !Number.isFinite(value) ||
+    value <= 0
+  ) {
+
+    alert(
+      "Digite uma meta válida maior que zero."
+    );
+
+    return;
+  }
+
+
+  waterGoalMl =
+    Math.round(
+      value
+    );
+
+
+  saveWaterGoal();
+
+  renderWaterWidget();
+}
+
+
+/* =========================================================
+   ÁGUA — ADICIONAR
+========================================================= */
+
+function addWater(
+  amount
+) {
+
+  const value =
+    Number(amount);
+
+
+  if (
+    !Number.isFinite(value) ||
+    value <= 0
+  ) {
+
+    return;
+  }
+
+
+  const dateKey =
+    formatDateKey(
+      selectedDate
+    );
+
+
+  const record = {
+
+    id:
+      generateId(),
+
+    type:
+      "water",
+
+    amount:
+      Math.round(value),
+
+    date:
+      dateKey,
+
+    time:
+      currentTime(),
+
+    createdAt:
+      new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString()
+  };
+
+
+  database.records.push(
+    record
+  );
+
+
+  saveDatabase();
+
+
+  renderDashboard();
+
+  renderDiary();
+
+  renderWaterWidget();
+}
+
+
+/* =========================================================
+   ÁGUA — RETIRAR
+========================================================= */
+
+function removeWater(
+  amount
+) {
+
+  let remaining =
+    Math.max(
+      0,
+      Math.round(
+        Number(amount) || 0
+      )
+    );
+
+
+  if (
+    remaining <= 0
+  ) {
+
+    return;
+  }
+
+
+  const dateKey =
+    formatDateKey(
+      selectedDate
+    );
+
+
+  const records =
+    database.records
+      .filter(
+        record =>
+          record &&
+          record.type === "water" &&
+          record.date === dateKey
+      )
+      .sort(
+        (a, b) =>
+          String(
+            b.time || ""
+          ).localeCompare(
+            String(
+              a.time || ""
+            )
+          )
+      );
+
+
+  for (
+    const record of records
+  ) {
+
+    if (
+      remaining <= 0
+    ) {
+
+      break;
+    }
+
+
+    const currentAmount =
+      Math.max(
+        0,
+        Number(
+          record.amount || 0
+        )
+      );
+
+
+    if (
+      currentAmount <= 0
+    ) {
+
+      continue;
+    }
+
+
+    if (
+      currentAmount <=
+      remaining
+    ) {
+
+      const index =
+        database.records.findIndex(
+          item =>
+            item.id ===
+            record.id
+        );
+
+
+      if (
+        index !== -1
+      ) {
+
+        const [
+          removed
+        ] =
+          database.records.splice(
+            index,
+            1
+          );
+
+
+        removed.deletedAt =
+          new Date().toISOString();
+
+
+        database.trash.push(
+          removed
+        );
+      }
+
+
+      remaining -=
+        currentAmount;
+
+    } else {
+
+      record.amount =
+        currentAmount -
+        remaining;
+
+      record.updatedAt =
+        new Date().toISOString();
+
+      remaining = 0;
+    }
+  }
+
+
+  saveDatabase();
+
+
+  renderDashboard();
+
+  renderDiary();
+
+  renderWaterWidget();
+}
+
+
+/* =========================================================
+   ÁGUA — INTERFACE
+========================================================= */
+
+function ensureWaterUI() {
+
+  const quickActions =
+    document.querySelector(
+      ".quick-actions"
+    );
+
+
+  if (
+    !quickActions
+  ) {
+
+    return null;
+  }
+
+
+  /* =======================================================
+     BOTÃO ÁGUA
+  ======================================================= */
+
+  let waterButton =
+    document.getElementById(
+      "waterQuickButton"
+    );
+
+
+  if (
+    !waterButton
+  ) {
+
+    waterButton =
+      document.createElement(
+        "button"
+      );
+
+    waterButton.id =
+      "waterQuickButton";
+
+    waterButton.type =
+      "button";
+
+    waterButton.className =
+      "quick-button";
+
+    waterButton.innerHTML = `
+      <span>💧</span>
+      Água
+    `;
+
+
+    quickActions.appendChild(
+      waterButton
+    );
+  }
+
+
+  waterButton.onclick =
+    function () {
+
+      const panel =
+        document.getElementById(
+          "waterPanel"
+        );
+
+
+      if (
+        !panel
+      ) {
+
+        return;
+      }
+
+
+      panel.scrollIntoView({
+        behavior:
+          "smooth",
+        block:
+          "nearest"
+      });
+    };
+
+
+  /* =======================================================
+     PAINEL DE ÁGUA
+  ======================================================= */
+
+  let panel =
+    document.getElementById(
+      "waterPanel"
+    );
+
+
+  if (
+    !panel
+  ) {
+
+    panel =
+      document.createElement(
+        "section"
+      );
+
+    panel.id =
+      "waterPanel";
+
+    panel.className =
+      "card";
+
+    panel.style.marginTop =
+      "16px";
+
+
+    quickActions.insertAdjacentElement(
+      "afterend",
+      panel
+    );
+  }
+
+
+  return panel;
+}
+
+
+/* =========================================================
+   ÁGUA — RENDERIZAR
+========================================================= */
+
+function renderWaterWidget() {
+
+  const panel =
+    ensureWaterUI();
+
+
+  if (
+    !panel
+  ) {
+
+    return;
+  }
+
+
+  const total =
+    getTodayWaterTotal();
+
+
+  const goal =
+    Math.max(
+      1,
+      Number(
+        waterGoalMl
+      ) || DEFAULT_WATER_GOAL_ML
+    );
+
+
+  const rawPercentage =
+    (
+      total /
+      goal
+    ) *
+    100;
+
+
+  const percentage =
+    Math.min(
+      100,
+      Math.max(
+        0,
+        rawPercentage
+      )
+    );
+
+
+  const records =
+    getTodayWaterRecords();
+
+
+  const remaining =
+    Math.max(
+      0,
+      goal -
+      total
+    );
+
+
+  const progressText =
+    total >= goal
+      ? "Meta atingida! 🎉"
+      : `${formatWaterMl(
+          remaining
+        )} restantes`;
+
+
+  const recordsHTML =
+    records.length
+      ? records
+          .slice()
+          .reverse()
+          .map(
+            record => `
+
+              <div
+                style="
+                  display:flex;
+                  align-items:center;
+                  justify-content:space-between;
+                  gap:10px;
+                  padding:10px 0;
+                  border-bottom:1px solid #edf4f8;
+                "
+              >
+
+                <div>
+
+                  <strong
+                    style="
+                      color:#4d7284;
+                    "
+                  >
+                    💧 ${escapeHTML(
+                      formatWaterMl(
+                        record.amount
+                      )
+                    )}
+                  </strong>
+
+                  <div
+                    style="
+                      font-size:12px;
+                      color:#888;
+                      margin-top:3px;
+                    "
+                  >
+                    ${escapeHTML(
+                      record.time
+                    )}
+                  </div>
+
+                </div>
+
+                <div
+                  style="
+                    display:flex;
+                    gap:6px;
+                  "
+                >
+
+                  <button
+                    type="button"
+                    onclick="editRecord('${escapeHTML(
+                      record.id
+                    )}')"
+                    title="Editar"
+                    style="
+                      border:0;
+                      background:#eef7fb;
+                      border-radius:10px;
+                      padding:8px 10px;
+                      cursor:pointer;
+                    "
+                  >
+                    ✏️
+                  </button>
+
+                  <button
+                    type="button"
+                    onclick="deleteRecord('${escapeHTML(
+                      record.id
+                    )}')"
+                    title="Excluir"
+                    style="
+                      border:0;
+                      background:#fbeeee;
+                      border-radius:10px;
+                      padding:8px 10px;
+                      cursor:pointer;
+                    "
+                  >
+                    🗑️
+                  </button>
+
+                </div>
+
+              </div>
+
+            `
+          )
+          .join("")
+      : `
+          <div
+            style="
+              color:#888;
+              font-size:14px;
+              padding:8px 0;
+            "
+          >
+            Nenhum consumo de água registrado neste dia.
+          </div>
+        `;
+
+
+  panel.innerHTML = `
+
+    <div
+      style="
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:12px;
+        margin-bottom:14px;
+      "
+    >
+
+      <div>
+
+        <h2
+          style="
+            margin:0;
+            color:#4d7284;
+          "
+        >
+          💧 Água
+        </h2>
+
+        <p
+          style="
+            margin:5px 0 0;
+            color:#777;
+            font-size:13px;
+          "
+        >
+          Acompanhe sua hidratação diária.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        onclick="editWaterGoal()"
+        title="Editar meta diária"
+        style="
+          border:0;
+          background:#eef7fb;
+          color:#4d7284;
+          border-radius:10px;
+          padding:8px 10px;
+          cursor:pointer;
+          font-size:13px;
+        "
+      >
+        ⚙️ Meta
+      </button>
+
+    </div>
+
+
+    <div
+      style="
+        display:flex;
+        align-items:baseline;
+        gap:6px;
+        margin-bottom:5px;
+      "
+    >
+
+      <strong
+        style="
+          font-size:28px;
+          color:#4d7284;
+        "
+      >
+        ${escapeHTML(
+          formatWaterMl(
+            total
+          )
+        )}
+      </strong>
+
+      <span
+        style="
+          color:#888;
+          font-size:14px;
+        "
+      >
+        de ${escapeHTML(
+          formatWaterMl(
+            goal
+          )
+        )}
+      </span>
+
+    </div>
+
+
+    <div
+      style="
+        width:100%;
+        height:14px;
+        background:#e6f3f9;
+        border-radius:999px;
+        overflow:hidden;
+        box-shadow:
+          inset 0 1px 2px rgba(0,0,0,0.05);
+      "
+    >
+
+      <div
+        style="
+          width:${percentage}%;
+          height:100%;
+          background:#8ed0ec;
+          border-radius:999px;
+          transition:width 0.35s ease;
+        "
+      ></div>
+
+    </div>
+
+
+    <div
+      style="
+        display:flex;
+        justify-content:space-between;
+        margin-top:7px;
+        font-size:13px;
+        color:#6f8d9b;
+      "
+    >
+
+      <span>
+        ${percentage.toFixed(0)}% da meta
+      </span>
+
+      <strong>
+        ${escapeHTML(
+          progressText
+        )}
+      </strong>
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:18px;
+      "
+    >
+
+      <div
+        style="
+          font-size:13px;
+          font-weight:700;
+          color:#555;
+          margin-bottom:8px;
+        "
+      >
+        Adicionar água
+      </div>
+
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:
+            repeat(5, minmax(0, 1fr));
+          gap:7px;
+        "
+      >
+
+        <button
+          type="button"
+          onclick="addWater(250)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#eaf7fc;
+            color:#4d7284;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          +250
+        </button>
+
+        <button
+          type="button"
+          onclick="addWater(500)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#eaf7fc;
+            color:#4d7284;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          +500
+        </button>
+
+        <button
+          type="button"
+          onclick="addWater(750)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#eaf7fc;
+            color:#4d7284;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          +750
+        </button>
+
+        <button
+          type="button"
+          onclick="addWater(1000)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#eaf7fc;
+            color:#4d7284;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          +1 L
+        </button>
+
+        <button
+          type="button"
+          onclick="addWater(2000)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#eaf7fc;
+            color:#4d7284;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          +2 L
+        </button>
+
+      </div>
+
+
+      <div
+        style="
+          font-size:13px;
+          font-weight:700;
+          color:#555;
+          margin:
+            16px 0 8px;
+        "
+      >
+        Retirar água
+      </div>
+
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:
+            repeat(5, minmax(0, 1fr));
+          gap:7px;
+        "
+      >
+
+        <button
+          type="button"
+          onclick="removeWater(250)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#f7eeee;
+            color:#8b5555;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          −250
+        </button>
+
+        <button
+          type="button"
+          onclick="removeWater(500)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#f7eeee;
+            color:#8b5555;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          −500
+        </button>
+
+        <button
+          type="button"
+          onclick="removeWater(750)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#f7eeee;
+            color:#8b5555;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          −750
+        </button>
+
+        <button
+          type="button"
+          onclick="removeWater(1000)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#f7eeee;
+            color:#8b5555;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          −1 L
+        </button>
+
+        <button
+          type="button"
+          onclick="removeWater(2000)"
+          style="
+            border:0;
+            border-radius:10px;
+            padding:10px 4px;
+            background:#f7eeee;
+            color:#8b5555;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          −2 L
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:20px;
+      "
+    >
+
+      <div
+        style="
+          font-size:13px;
+          font-weight:700;
+          color:#555;
+          margin-bottom:4px;
+        "
+      >
+        Consumos registrados hoje
+      </div>
+
+      ${recordsHTML}
+
+    </div>
+
+  `;
+}
+
+
+/* =========================================================
    NAVEGAÇÃO ENTRE TELAS
 ========================================================= */
 
@@ -555,38 +1750,12 @@ function showScreen(
 
   if (
     targetScreen ===
-    "homeScreen"
+    "homeScreen" ||
+    targetScreen ===
+    "todayScreen"
   ) {
 
     renderDashboard();
-  }
-
-
-  /* =======================================================
-     ANÁLISES
-     CORREÇÃO PARA CARREGAR A TELA DE ANÁLISES
-  ======================================================= */
-
-  if (
-    targetScreen ===
-    "analysisScreen"
-  ) {
-
-    if (
-      typeof initAnalysis ===
-      "function"
-    ) {
-
-      initAnalysis();
-    }
-
-    if (
-      typeof renderAnalysis ===
-      "function"
-    ) {
-
-      renderAnalysis();
-    }
   }
 }
 
@@ -720,6 +1889,9 @@ function renderDashboard() {
 
 
   renderConsultationsHome();
+
+
+  renderWaterWidget();
 }
 
 
@@ -787,7 +1959,9 @@ function createTimelineItem(
 
     medication: "💊",
 
-    consultation: "🩺"
+    consultation: "🩺",
+
+    water: "💧"
   };
 
 
@@ -942,6 +2116,21 @@ function createTimelineItem(
       detail +=
         ` · ${record.location}`;
     }
+  }
+
+
+  else if (
+    record.type ===
+    "water"
+  ) {
+
+    title =
+      `Água · ${formatWaterMl(
+        record.amount
+      )}`;
+
+    detail =
+      "Consumo de água";
   }
 
 
@@ -1179,7 +2368,12 @@ function openRecordForm(
     consultation:
       record
         ? "Editar consulta"
-        : "Nova consulta"
+        : "Nova consulta",
+
+    water:
+      record
+        ? "Editar consumo de água"
+        : "Novo consumo de água"
   };
 
 
@@ -1676,6 +2870,51 @@ function openRecordForm(
   }
 
 
+  /* =======================================================
+     ÁGUA
+  ======================================================= */
+
+  if (
+    type ===
+    "water"
+  ) {
+
+    html += `
+
+      <div class="form-group">
+
+        <label for="waterAmount">
+          Quantidade de água (ml)
+        </label>
+
+        <input
+          id="waterAmount"
+          type="number"
+          min="1"
+          step="50"
+          required
+          placeholder="Ex.: 250"
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="waterNote">
+          Observação
+        </label>
+
+        <textarea
+          id="waterNote"
+          placeholder="Opcional"
+        ></textarea>
+
+      </div>
+    `;
+  }
+
+
   if (formFields) {
 
     formFields.innerHTML =
@@ -1850,6 +3089,17 @@ function fillEditFields(
 
   setValue(
     "consultationNote",
+    record.note
+  );
+
+
+  setValue(
+    "waterAmount",
+    record.amount
+  );
+
+  setValue(
+    "waterNote",
     record.note
   );
 }
@@ -2167,6 +3417,61 @@ function handleRecordSubmit(
 
 
   /* =======================================================
+     ÁGUA
+  ======================================================= */
+
+  if (
+    currentRecordType ===
+    "water"
+  ) {
+
+    const amount =
+      document.getElementById(
+        "waterAmount"
+      );
+
+    const note =
+      document.getElementById(
+        "waterNote"
+      );
+
+
+    const amountValue =
+      amount
+        ? Number(
+            amount.value
+          )
+        : 0;
+
+
+    if (
+      !Number.isFinite(
+        amountValue
+      ) ||
+      amountValue <= 0
+    ) {
+
+      alert(
+        "Digite uma quantidade de água válida."
+      );
+
+      return;
+    }
+
+
+    record.amount =
+      Math.round(
+        amountValue
+      );
+
+    record.note =
+      note
+        ? note.value.trim()
+        : "";
+  }
+
+
+  /* =======================================================
      EDITAR OU CRIAR
   ======================================================= */
 
@@ -2234,6 +3539,8 @@ function handleRecordSubmit(
   renderDiary();
 
   renderConsultations();
+
+  renderWaterWidget();
 }
 
 
@@ -2256,6 +3563,7 @@ function initializeForm() {
 
 /* =========================================================
    AÇÕES NOS REGISTROS
+   EDITAR E EXCLUIR
 ========================================================= */
 
 function editRecord(id) {
@@ -2305,6 +3613,8 @@ function deleteRecord(id) {
   renderDiary();
 
   renderConsultations();
+
+  renderWaterWidget();
 }
 
 
@@ -2601,5 +3911,9 @@ document.addEventListener(
     initializeForm();
 
     renderDashboard();
+
+    ensureWaterUI();
+
+    renderWaterWidget();
   }
 );

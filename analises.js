@@ -1,9 +1,12 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
-   Gráfico de glicemias +
-   análise por período do dia +
-   separação de jejum
+
+   Inclui:
+   - Resumo geral
+   - Gráfico de linha das glicemias
+   - Identificação visual de glicemia em jejum
+   - Análise por período do dia
 ========================================================= */
 
 (function () {
@@ -866,6 +869,7 @@
                 record.kind ||
                 ""
               )
+                .trim()
 
           };
 
@@ -1027,17 +1031,13 @@
     record
   ) {
 
-    const kind =
+    return (
       String(
         record.kind ||
         ""
       )
         .trim()
-        .toLowerCase();
-
-
-    return (
-      kind ===
+        .toLowerCase() ===
       "jejum"
     );
 
@@ -1137,7 +1137,7 @@
 
 
   /* =====================================================
-     ANÁLISE POR PERÍODO DO DIA
+     ANÁLISE POR PERÍODO
   ====================================================== */
 
   function buildPeriodAnalysis(
@@ -1162,11 +1162,6 @@
     glucoseRecords.forEach(
       function (record) {
 
-        /*
-         * JEJUM sempre fica separado,
-         * independentemente do horário.
-         */
-
         if (
           isFastingGlucose(
             record
@@ -1181,11 +1176,6 @@
 
         }
 
-
-        /*
-         * As demais glicemias são classificadas
-         * pelo horário.
-         */
 
         const period =
           getDayPeriod(
@@ -1292,26 +1282,12 @@
             : null;
 
 
-        let label =
-          "";
-
-
-        if (
-          period ===
-          "fasting"
-        ) {
-
-          label =
-            "🩸 Jejum";
-
-        } else {
-
-          label =
-            getPeriodLabel(
-              period
-            );
-
-        }
+        const label =
+          period === "fasting"
+            ? "🩸 Jejum"
+            : getPeriodLabel(
+                period
+              );
 
 
         html += `
@@ -1395,7 +1371,6 @@
                   Média
                 </div>
 
-
                 <strong
                   style="
                     display:block;
@@ -1403,7 +1378,6 @@
                     color:#7f4444;
                   "
                 >
-
                   ${
                     avg === null
                       ? "—"
@@ -1412,7 +1386,6 @@
                         ) +
                         " mg/dL"
                   }
-
                 </strong>
 
               </div>
@@ -1436,7 +1409,6 @@
                   Mínima
                 </div>
 
-
                 <strong
                   style="
                     display:block;
@@ -1444,14 +1416,12 @@
                     color:#7f4444;
                   "
                 >
-
                   ${
                     min === null
                       ? "—"
                       : min +
                         " mg/dL"
                   }
-
                 </strong>
 
               </div>
@@ -1475,7 +1445,6 @@
                   Máxima
                 </div>
 
-
                 <strong
                   style="
                     display:block;
@@ -1483,14 +1452,12 @@
                     color:#7f4444;
                   "
                 >
-
                   ${
                     max === null
                       ? "—"
                       : max +
                         " mg/dL"
                   }
-
                 </strong>
 
               </div>
@@ -1737,7 +1704,12 @@
               item.time,
 
             kind:
-              item.kind
+              item.kind,
+
+            fasting:
+              isFastingGlucose(
+                item
+              )
 
           };
 
@@ -1764,6 +1736,10 @@
           " "
         );
 
+
+    /* =================================================
+       GRADE
+    ================================================== */
 
     let gridHTML =
       "";
@@ -1845,6 +1821,10 @@
       );
 
 
+    /* =================================================
+       MARCADORES
+    ================================================== */
+
     let pointsHTML =
       "";
 
@@ -1865,56 +1845,148 @@
               : ""
           ) +
           (
-            point.kind
-              ? " · " +
-                point.kind
+            point.fasting
+              ? " · Jejum"
               : ""
           );
 
 
-        pointsHTML += `
+        if (
+          point.fasting
+        ) {
 
-          <circle
-            cx="${point.x}"
-            cy="${point.y}"
-            r="6"
-            fill="#A85C5C"
-            stroke="#ffffff"
-            stroke-width="3"
-          >
+          /*
+           * Losango para JEJUM.
+           */
 
-            <title>
-              ${
-                escapeHTML(
-                  label
-                )
-              }
-              — ${point.value}
-              mg/dL
-            </title>
-
-          </circle>
+          const size =
+            8;
 
 
-          <text
-            x="${point.x}"
-            y="${
+          const diamondPoints = [
+
+            (
+              point.x
+            ) + "," +
+            (
               point.y -
-              12
-            }"
-            text-anchor="middle"
-            font-size="11"
-            font-weight="700"
-            fill="#7f4444"
-          >
-            ${point.value}
-          </text>
+              size
+            ),
 
-        `;
+            (
+              point.x +
+              size
+            ) + "," +
+            point.y,
+
+            (
+              point.x
+            ) + "," +
+            (
+              point.y +
+              size
+            ),
+
+            (
+              point.x -
+              size
+            ) + "," +
+            point.y
+
+          ].join(
+            " "
+          );
+
+
+          pointsHTML += `
+
+            <polygon
+              points="${diamondPoints}"
+              fill="#ffffff"
+              stroke="#A85C5C"
+              stroke-width="3"
+            >
+
+              <title>
+                ${
+                  escapeHTML(
+                    label
+                  )
+                }
+                — ${point.value}
+                mg/dL
+              </title>
+
+            </polygon>
+
+
+            <text
+              x="${point.x}"
+              y="${
+                point.y -
+                13
+              }"
+              text-anchor="middle"
+              font-size="11"
+              font-weight="700"
+              fill="#7f4444"
+            >
+              ${point.value}
+            </text>
+
+          `;
+
+        } else {
+
+          pointsHTML += `
+
+            <circle
+              cx="${point.x}"
+              cy="${point.y}"
+              r="6"
+              fill="#A85C5C"
+              stroke="#ffffff"
+              stroke-width="3"
+            >
+
+              <title>
+                ${
+                  escapeHTML(
+                    label
+                  )
+                }
+                — ${point.value}
+                mg/dL
+              </title>
+
+            </circle>
+
+
+            <text
+              x="${point.x}"
+              y="${
+                point.y -
+                12
+              }"
+              text-anchor="middle"
+              font-size="11"
+              font-weight="700"
+              fill="#7f4444"
+            >
+              ${point.value}
+            </text>
+
+          `;
+
+        }
 
       }
     );
 
+
+    /* =================================================
+       EIXO HORIZONTAL
+    ================================================== */
 
     let labelsHTML =
       "";
@@ -2044,6 +2116,10 @@
       }
     );
 
+
+    /* =================================================
+       TENDÊNCIA
+    ================================================== */
 
     const firstValue =
       glucoseRecords[0].value;
@@ -2228,6 +2304,80 @@
         </div>
 
 
+        <!-- =================================================
+             LEGENDA
+        ================================================== -->
+
+        <div
+          style="
+            display:flex;
+            flex-wrap:wrap;
+            gap:16px;
+            align-items:center;
+            margin-top:12px;
+            padding:10px 12px;
+            background:#faf7f5;
+            border-radius:12px;
+            font-size:12px;
+            color:#666;
+          "
+        >
+
+          <span
+            style="
+              display:inline-flex;
+              align-items:center;
+              gap:7px;
+            "
+          >
+
+            <span
+              aria-hidden="true"
+              style="
+                width:12px;
+                height:12px;
+                border-radius:50%;
+                background:#A85C5C;
+                display:inline-block;
+              "
+            ></span>
+
+            Glicemia
+
+          </span>
+
+
+          <span
+            style="
+              display:inline-flex;
+              align-items:center;
+              gap:7px;
+            "
+          >
+
+            <span
+              aria-hidden="true"
+              style="
+                width:10px;
+                height:10px;
+                border:2px solid #A85C5C;
+                background:#fff;
+                transform:rotate(45deg);
+                display:inline-block;
+              "
+            ></span>
+
+            Glicemia em jejum
+
+          </span>
+
+        </div>
+
+
+        <!-- =================================================
+             RESUMO DO GRÁFICO
+        ================================================== -->
+
         <div
           style="
             display:grid;
@@ -2392,8 +2542,9 @@
             font-size:11px;
           "
         >
-          Toque ou passe o cursor sobre um ponto
-          para ver a data, horário e momento da medição.
+          Os losangos representam glicemias em jejum.
+          Toque ou passe o cursor sobre um marcador
+          para ver os detalhes da medição.
         </p>
 
       </section>

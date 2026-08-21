@@ -1,4 +1,3 @@
-```javascript
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    SINCRONIZAÇÃO COM SUPABASE
@@ -1832,4 +1831,3 @@
   }
 
 })();
-```

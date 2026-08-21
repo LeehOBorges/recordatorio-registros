@@ -1,10 +1,11 @@
+```javascript id="p5w1st"
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    SERVICE WORKER — PWA
 ========================================================= */
 
 const CACHE_NAME =
-  "recordatorio-registros-v03";
+  "recordatorio-registros-v04";
 
 
 const FILES_TO_CACHE = [
@@ -30,9 +31,9 @@ const FILES_TO_CACHE = [
 ];
 
 
-/* =========================================================
+/* =====================================================
    INSTALAÇÃO
-========================================================= */
+===================================================== */
 
 self.addEventListener(
   "install",
@@ -56,16 +57,15 @@ self.addEventListener(
 
     );
 
-
     self.skipWaiting();
 
   }
 );
 
 
-/* =========================================================
+/* =====================================================
    ATIVAÇÃO
-========================================================= */
+===================================================== */
 
 self.addEventListener(
   "activate",
@@ -108,24 +108,22 @@ self.addEventListener(
 
     );
 
-
     self.clients.claim();
 
   }
 );
 
 
-/* =========================================================
-   BUSCA DE ARQUIVOS
-========================================================= */
+/* =====================================================
+   REQUISIÇÕES
+===================================================== */
 
 self.addEventListener(
   "fetch",
   event => {
 
     /*
-     * Não interceptar requisições do Supabase.
-     * Elas precisam acessar a internet diretamente.
+     * O Supabase deve acessar a internet diretamente.
      */
 
     if (
@@ -140,8 +138,7 @@ self.addEventListener(
 
 
     /*
-     * O Service Worker trabalha apenas
-     * com requisições GET.
+     * O cache será usado apenas para GET.
      */
 
     if (
@@ -178,18 +175,13 @@ self.addEventListener(
               .then(
                 response => {
 
-                  /*
-                   * Guarda uma cópia das respostas
-                   * válidas no cache.
-                   */
-
                   if (
                     response &&
                     response.status ===
                     200
                   ) {
 
-                    const responseClone =
+                    const cloned =
                       response.clone();
 
 
@@ -202,7 +194,7 @@ self.addEventListener(
 
                           cache.put(
                             event.request,
-                            responseClone
+                            cloned
                           );
 
                         }
@@ -223,3 +215,4 @@ self.addEventListener(
 
   }
 );
+```

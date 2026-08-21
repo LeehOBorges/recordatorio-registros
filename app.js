@@ -5,6 +5,7 @@
    MEDICAMENTOS / SUPLEMENTOS / VITAMINAS
    CONSULTAS
    BACKUP E RESTAURAÇÃO
+   INTEGRAÇÃO COM SINCRONIZAÇÃO SUPABASE
 ========================================================= */
 
 const STORAGE_KEY = "recordatorio_registros_v01";
@@ -118,10 +119,22 @@ function loadDatabase() {
 
 function saveDatabase() {
 
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(database)
-  );
+  try {
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(database)
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao salvar banco local:",
+      error
+    );
+
+  }
+
 }
 
 
@@ -174,12 +187,24 @@ function loadGlucoseSettings() {
 
 function saveGlucoseSettings() {
 
-  localStorage.setItem(
-    GLUCOSE_SETTINGS_KEY,
-    JSON.stringify(
-      glucoseSettings
-    )
-  );
+  try {
+
+    localStorage.setItem(
+      GLUCOSE_SETTINGS_KEY,
+      JSON.stringify(
+        glucoseSettings
+      )
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao salvar configurações de glicemia:",
+      error
+    );
+
+  }
+
 }
 
 
@@ -221,12 +246,24 @@ function loadMedications() {
 
 function saveMedications() {
 
-  localStorage.setItem(
-    MEDICATION_SETTINGS_KEY,
-    JSON.stringify(
-      medications
-    )
-  );
+  try {
+
+    localStorage.setItem(
+      MEDICATION_SETTINGS_KEY,
+      JSON.stringify(
+        medications
+      )
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao salvar medicamentos:",
+      error
+    );
+
+  }
+
 }
 
 
@@ -247,25 +284,39 @@ function generateMedicationId() {
    ELEMENTOS
 ========================================================= */
 
-const modal =
-  document.getElementById(
-    "recordModal"
-  );
+let modal = null;
+let form = null;
+let formFields = null;
+let modalTitle = null;
 
-const form =
-  document.getElementById(
-    "recordForm"
-  );
 
-const formFields =
-  document.getElementById(
-    "formFields"
-  );
+/* =========================================================
+   INICIALIZAR REFERÊNCIAS DO DOM
+========================================================= */
 
-const modalTitle =
-  document.getElementById(
-    "modalTitle"
-  );
+function initializeDOMReferences() {
+
+  modal =
+    document.getElementById(
+      "recordModal"
+    );
+
+  form =
+    document.getElementById(
+      "recordForm"
+    );
+
+  formFields =
+    document.getElementById(
+      "formFields"
+    );
+
+  modalTitle =
+    document.getElementById(
+      "modalTitle"
+    );
+
+}
 
 
 /* =========================================================
@@ -597,7 +648,7 @@ function renderDashboard() {
 
   renderMedicationHome();
 
-  renderMedicationHome();
+  renderConsultationsHome();
 }
 
 
@@ -1699,265 +1750,403 @@ function fillEditFields(
    SALVAR REGISTRO
 ========================================================= */
 
-if (form) {
+function handleRecordSubmit(event) {
+
+  event.preventDefault();
+
+
+  const dateElement =
+    document.getElementById(
+      "recordDate"
+    );
+
+  const timeElement =
+    document.getElementById(
+      "recordTime"
+    );
+
+
+  if (
+    !dateElement ||
+    !timeElement
+  ) {
+
+    return;
+  }
+
+
+  const now =
+    new Date().toISOString();
+
+
+  const record = {
+
+    id:
+      editingId ||
+      generateId(),
+
+    type:
+      currentRecordType,
+
+    date:
+      dateElement.value,
+
+    time:
+      timeElement.value,
+
+    updatedAt:
+      now
+  };
+
+
+  /* =====================================================
+     REFEIÇÃO
+  ===================================================== */
+
+  if (
+    currentRecordType ===
+    "meal"
+  ) {
+
+    const mealType =
+      document.getElementById(
+        "mealType"
+      );
+
+    const food =
+      document.getElementById(
+        "food"
+      );
+
+    const quantity =
+      document.getElementById(
+        "quantity"
+      );
+
+    const note =
+      document.getElementById(
+        "note"
+      );
+
+    record.mealType =
+      mealType
+        ? mealType.value
+        : "";
+
+    record.food =
+      food
+        ? food.value.trim()
+        : "";
+
+    record.quantity =
+      quantity
+        ? quantity.value.trim()
+        : "";
+
+    record.note =
+      note
+        ? note.value.trim()
+        : "";
+  }
+
+
+  /* =====================================================
+     GLICEMIA
+  ===================================================== */
+
+  if (
+    currentRecordType ===
+    "glucose"
+  ) {
+
+    const glucoseValue =
+      document.getElementById(
+        "glucoseValue"
+      );
+
+    const glucoseKind =
+      document.getElementById(
+        "glucoseKind"
+      );
+
+    const glucoseNote =
+      document.getElementById(
+        "glucoseNote"
+      );
+
+    record.value =
+      glucoseValue
+        ? glucoseValue.value
+        : "";
+
+    record.kind =
+      glucoseKind
+        ? glucoseKind.value
+        : "";
+
+    record.note =
+      glucoseNote
+        ? glucoseNote.value.trim()
+        : "";
+  }
+
+
+  /* =====================================================
+     INSULINA
+  ===================================================== */
+
+  if (
+    currentRecordType ===
+    "insulin"
+  ) {
+
+    const insulinName =
+      document.getElementById(
+        "insulinName"
+      );
+
+    const insulinDose =
+      document.getElementById(
+        "insulinDose"
+      );
+
+    const application =
+      document.getElementById(
+        "application"
+      );
+
+    const insulinNote =
+      document.getElementById(
+        "insulinNote"
+      );
+
+    record.insulin =
+      insulinName
+        ? insulinName.value.trim()
+        : "";
+
+    record.dose =
+      insulinDose
+        ? insulinDose.value
+        : "";
+
+    record.application =
+      application
+        ? application.value
+        : "";
+
+    record.note =
+      insulinNote
+        ? insulinNote.value.trim()
+        : "";
+  }
+
+
+  /* =====================================================
+     ATIVIDADE
+  ===================================================== */
+
+  if (
+    currentRecordType ===
+    "activity"
+  ) {
+
+    const activityType =
+      document.getElementById(
+        "activityType"
+      );
+
+    const duration =
+      document.getElementById(
+        "duration"
+      );
+
+    const intensity =
+      document.getElementById(
+        "intensity"
+      );
+
+    const activityNote =
+      document.getElementById(
+        "activityNote"
+      );
+
+    record.activity =
+      activityType
+        ? activityType.value
+        : "";
+
+    record.duration =
+      duration
+        ? duration.value
+        : "";
+
+    record.intensity =
+      intensity
+        ? intensity.value
+        : "";
+
+    record.note =
+      activityNote
+        ? activityNote.value.trim()
+        : "";
+  }
+
+
+  /* =====================================================
+     CONSULTA
+  ===================================================== */
+
+  if (
+    currentRecordType ===
+    "consultation"
+  ) {
+
+    const professional =
+      document.getElementById(
+        "consultationProfessional"
+      );
+
+    const specialty =
+      document.getElementById(
+        "consultationSpecialty"
+      );
+
+    const location =
+      document.getElementById(
+        "consultationLocation"
+      );
+
+    const reason =
+      document.getElementById(
+        "consultationReason"
+      );
+
+    const note =
+      document.getElementById(
+        "consultationNote"
+      );
+
+    record.professional =
+      professional
+        ? professional.value.trim()
+        : "";
+
+    record.specialty =
+      specialty
+        ? specialty.value.trim()
+        : "";
+
+    record.location =
+      location
+        ? location.value.trim()
+        : "";
+
+    record.reason =
+      reason
+        ? reason.value.trim()
+        : "";
+
+    record.note =
+      note
+        ? note.value.trim()
+        : "";
+  }
+
+
+  /* =====================================================
+     EDITAR OU CRIAR
+  ===================================================== */
+
+  if (editingId) {
+
+    const index =
+      database.records.findIndex(
+        item =>
+          item.id ===
+          editingId
+      );
+
+
+    if (index !== -1) {
+
+      database.records[index] = {
+
+        ...database.records[index],
+
+        ...record,
+
+        updatedAt:
+          now
+      };
+
+    }
+
+  } else {
+
+    record.createdAt =
+      now;
+
+    database.records.push(
+      record
+    );
+
+  }
+
+
+  saveDatabase();
+
+
+  if (modal) {
+
+    modal.close();
+  }
+
+
+  editingId = null;
+
+  currentRecordType = null;
+
+
+  renderDashboard();
+
+  renderDiary();
+
+  renderConsultations();
+
+
+  /*
+   * O sincronizacao.js intercepta saveDatabase()
+   * e envia a alteração para o Supabase em segundo plano.
+   */
+}
+
+
+function installRecordFormListener() {
+
+  if (!form) {
+    return;
+  }
+
+
+  if (
+    form.__recordatorioSubmitInstalled
+  ) {
+
+    return;
+
+  }
+
 
   form.addEventListener(
     "submit",
-    function(event) {
-
-      event.preventDefault();
-
-
-      const dateElement =
-        document.getElementById(
-          "recordDate"
-        );
-
-      const timeElement =
-        document.getElementById(
-          "recordTime"
-        );
-
-
-      if (
-        !dateElement ||
-        !timeElement
-      ) {
-        return;
-      }
-
-
-      const record = {
-
-        id:
-          editingId ||
-          generateId(),
-
-        type:
-          currentRecordType,
-
-        date:
-          dateElement.value,
-
-        time:
-          timeElement.value,
-
-        updatedAt:
-          new Date().toISOString()
-      };
-
-
-      /* =====================================================
-         REFEIÇÃO
-      ===================================================== */
-
-      if (
-        currentRecordType ===
-        "meal"
-      ) {
-
-        record.mealType =
-          document.getElementById(
-            "mealType"
-          ).value;
-
-        record.food =
-          document.getElementById(
-            "food"
-          ).value.trim();
-
-        record.quantity =
-          document.getElementById(
-            "quantity"
-          ).value.trim();
-
-        record.note =
-          document.getElementById(
-            "note"
-          ).value.trim();
-      }
-
-
-      /* =====================================================
-         GLICEMIA
-      ===================================================== */
-
-      if (
-        currentRecordType ===
-        "glucose"
-      ) {
-
-        record.value =
-          document.getElementById(
-            "glucoseValue"
-          ).value;
-
-        record.kind =
-          document.getElementById(
-            "glucoseKind"
-          ).value;
-
-        record.note =
-          document.getElementById(
-            "glucoseNote"
-          ).value.trim();
-      }
-
-
-      /* =====================================================
-         INSULINA
-      ===================================================== */
-
-      if (
-        currentRecordType ===
-        "insulin"
-      ) {
-
-        record.insulin =
-          document.getElementById(
-            "insulinName"
-          ).value.trim();
-
-        record.dose =
-          document.getElementById(
-            "insulinDose"
-          ).value;
-
-        record.application =
-          document.getElementById(
-            "application"
-          ).value;
-
-        record.note =
-          document.getElementById(
-            "insulinNote"
-          ).value.trim();
-      }
-
-
-      /* =====================================================
-         ATIVIDADE
-      ===================================================== */
-
-      if (
-        currentRecordType ===
-        "activity"
-      ) {
-
-        record.activity =
-          document.getElementById(
-            "activityType"
-          ).value;
-
-        record.duration =
-          document.getElementById(
-            "duration"
-          ).value;
-
-        record.intensity =
-          document.getElementById(
-            "intensity"
-          ).value;
-
-        record.note =
-          document.getElementById(
-            "activityNote"
-          ).value.trim();
-      }
-
-
-      /* =====================================================
-         CONSULTA
-      ===================================================== */
-
-      if (
-        currentRecordType ===
-        "consultation"
-      ) {
-
-        record.professional =
-          document.getElementById(
-            "consultationProfessional"
-          ).value.trim();
-
-        record.specialty =
-          document.getElementById(
-            "consultationSpecialty"
-          ).value.trim();
-
-        record.location =
-          document.getElementById(
-            "consultationLocation"
-          ).value.trim();
-
-        record.reason =
-          document.getElementById(
-            "consultationReason"
-          ).value.trim();
-
-        record.note =
-          document.getElementById(
-            "consultationNote"
-          ).value.trim();
-      }
-
-
-      /* =====================================================
-         EDITAR OU CRIAR
-      ===================================================== */
-
-      if (editingId) {
-
-        const index =
-          database.records.findIndex(
-            item =>
-              item.id ===
-              editingId
-          );
-
-
-        if (index !== -1) {
-
-          database.records[index] = {
-
-            ...database.records[index],
-
-            ...record
-          };
-        }
-
-      } else {
-
-        record.createdAt =
-          new Date().toISOString();
-
-        database.records.push(
-          record
-        );
-      }
-
-
-      saveDatabase();
-
-
-      if (modal) {
-
-        modal.close();
-      }
-
-
-      editingId = null;
-
-      currentRecordType = null;
-
-
-      renderDashboard();
-
-      renderDiary();
-
-      renderConsultations();
-    }
+    handleRecordSubmit
   );
+
+
+  form.__recordatorioSubmitInstalled =
+    true;
+
 }
 
 
@@ -1970,7 +2159,8 @@ function editRecord(id) {
   const record =
     database.records.find(
       item =>
-        item.id === id
+        String(item.id) ===
+        String(id)
     );
 
 
@@ -1985,16 +2175,24 @@ function editRecord(id) {
     const medication =
       medications.find(
         item =>
-          item.id ===
-          record.medicationId
+          String(item.id) ===
+          String(record.medicationId)
       );
 
 
     if (medication) {
 
-      openEditMedicationForm(
-        medication.id
-      );
+      if (
+        typeof openEditMedicationForm ===
+        "function"
+      ) {
+
+        openEditMedicationForm(
+          medication.id
+        );
+
+      }
+
     }
 
     return;
@@ -2017,7 +2215,8 @@ function deleteRecord(id) {
   const record =
     database.records.find(
       item =>
-        item.id === id
+        String(item.id) ===
+        String(id)
     );
 
 
@@ -2038,6 +2237,9 @@ function deleteRecord(id) {
     ...record,
 
     deletedAt:
+      new Date().toISOString(),
+
+    updatedAt:
       new Date().toISOString()
   });
 
@@ -2045,7 +2247,8 @@ function deleteRecord(id) {
   database.records =
     database.records.filter(
       item =>
-        item.id !== id
+        String(item.id) !==
+        String(id)
     );
 
 
@@ -2081,299 +2284,7 @@ function renderConsultationsHome() {
       );
 
 
-    if (!timeline) {
-      return;
-    }
-
-
-    container =
-      document.createElement(
-        "section"
-      );
-
-
-    container.id =
-      "consultationsHomePanel";
-
-
-    container.className =
-      "card";
-
-
-    timeline.insertAdjacentElement(
-      "afterend",
-      container
-    );
-  }
-
-
-  const dateKey =
-    formatDateKey(
-      selectedDate
-    );
-
-
-  const consultations =
-    database.records
-      .filter(
-        record =>
-          record.type ===
-            "consultation" &&
-          record.date ===
-            dateKey
-      )
-      .sort(
-        (a, b) =>
-          String(
-            a.time || ""
-          ).localeCompare(
-            String(
-              b.time || ""
-            )
-          )
-      );
-
-
-  let html = `
-
-    <div
-      class="section-header"
-      style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:12px;
-      "
-    >
-
-      <div>
-
-        <h2>
-          🩺 Consultas
-        </h2>
-
-        <p>
-          Consultas agendadas para este dia.
-        </p>
-
-      </div>
-
-      <button
-        type="button"
-        id="addConsultationHomeButton"
-        class="primary-button"
-      >
-        + Nova consulta
-      </button>
-
-    </div>
-  `;
-
-
-  if (
-    consultations.length === 0
-  ) {
-
-    html += `
-
-      <div class="empty-state">
-
-        Nenhuma consulta registrada para este dia.
-
-      </div>
-    `;
-
-  } else {
-
-    consultations.forEach(
-      consultation => {
-
-        html +=
-          createConsultationCard(
-            consultation
-          );
-      }
-    );
-  }
-
-
-  container.innerHTML =
-    html;
-
-
-  const addButton =
-    document.getElementById(
-      "addConsultationHomeButton"
-    );
-
-
-  if (addButton) {
-
-    addButton.addEventListener(
-      "click",
-      () => {
-
-        openRecordForm(
-          "consultation"
-        );
-      }
-    );
-  }
-}
-
-
-/* =========================================================
-   CARD DA CONSULTA
-========================================================= */
-
-function createConsultationCard(
-  consultation
-) {
-
-  return `
-
-    <div
-      class="card"
-      style="
-        margin-top:12px;
-        padding:14px;
-      "
-    >
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:flex-start;
-          gap:12px;
-        "
-      >
-
-        <div>
-
-          <strong>
-            🩺
-            ${escapeHTML(
-              consultation.time
-            )}
-            ·
-            ${escapeHTML(
-              consultation.specialty ||
-              "Consulta"
-            )}
-          </strong>
-
-
-          <div
-            style="
-              margin-top:6px;
-            "
-          >
-            ${escapeHTML(
-              consultation.professional ||
-              ""
-            )}
-          </div>
-
-
-          ${
-            consultation.location
-              ? `
-                <div
-                  style="
-                    margin-top:4px;
-                    opacity:.7;
-                  "
-                >
-                  📍
-                  ${escapeHTML(
-                    consultation.location
-                  )}
-                </div>
-              `
-              : ""
-          }
-
-
-          ${
-            consultation.reason
-              ? `
-                <div
-                  style="
-                    margin-top:6px;
-                  "
-                >
-                  ${escapeHTML(
-                    consultation.reason
-                  )}
-                </div>
-              `
-              : ""
-          }
-
-        </div>
-
-
-        <div
-          style="
-            display:flex;
-            gap:6px;
-          "
-        >
-
-          <button
-            type="button"
-            onclick="editRecord('${escapeHTML(
-              consultation.id
-            )}')"
-            title="Editar consulta"
-          >
-            ✏️
-          </button>
-
-
-          <button
-            type="button"
-            onclick="deleteRecord('${escapeHTML(
-              consultation.id
-            )}')"
-            title="Excluir consulta"
-          >
-            🗑️
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   TELA DE CONSULTAS
-========================================================= */
-
-function renderConsultations() {
-
-  let container =
-    document.getElementById(
-      "consultationsContent"
-    );
-
-
-  if (!container) {
-
-    const screen =
-      document.getElementById(
-        "consultationScreen"
-      );
-
-
-    if (!screen) {
-      return;
-    }
+    if (!timeline) return;
 
 
     container =
@@ -2381,667 +2292,341 @@ function renderConsultations() {
         "div"
       );
 
-
     container.id =
-      "consultationsContent";
+      "consultationsHomePanel";
+
+    container.className =
+      "home-panel";
 
 
-    screen.appendChild(
-      container
-    );
+    if (timeline.parentNode) {
+
+      timeline.parentNode.insertBefore(
+        container,
+        timeline.nextSibling
+      );
+
+    }
+
   }
 
 
-  const consultations =
-    database.records
-      .filter(
-        record =>
-          record.type ===
-          "consultation"
-      )
-      .sort(
-        (a, b) => {
-
-          const dateA =
-            `${a.date} ${a.time || ""}`;
-
-          const dateB =
-            `${b.date} ${b.time || ""}`;
-
-          return dateA.localeCompare(
-            dateB
-          );
-        }
-      );
+  const dateKey =
+    formatDateKey(
+      selectedDate
+    );
 
 
-  let html = `
-
-    <div
-      class="section-header"
-      style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:12px;
-        flex-wrap:wrap;
-      "
-    >
-
-      <div>
-
-        <h2>
-          🩺 Consultas
-        </h2>
-
-        <p>
-          Acompanhe suas consultas e compromissos de saúde.
-        </p>
-
-      </div>
-
-
-      <button
-        type="button"
-        id="newConsultationButton"
-        class="primary-button"
-      >
-        + Nova consulta
-      </button>
-
-    </div>
-  `;
+  const todayConsultations =
+    database.records.filter(
+      r =>
+        r.type ===
+          "consultation" &&
+        r.date ===
+          dateKey
+    );
 
 
   if (
-    consultations.length === 0
+    todayConsultations.length ===
+    0
   ) {
 
-    html += `
+    container.innerHTML =
+      "";
 
-      <div class="empty-state">
+    return;
 
-        Nenhuma consulta cadastrada.
-
-        <br><br>
-
-        Cadastre sua primeira consulta
-        para começar a organizar seus
-        compromissos de saúde.
-
-      </div>
-    `;
-
-  } else {
-
-    html += `
-
-      <div
-        style="
-          display:flex;
-          flex-direction:column;
-          gap:12px;
-          margin-top:16px;
-        "
-      >
-    `;
+  }
 
 
-    consultations.forEach(
-      consultation => {
+  container.innerHTML = `
 
-        html += `
+    <div class="panel-header">
 
-          <div
-            class="card"
-            style="
-              padding:16px;
-            "
-          >
+      <h3>
+        🩺 Consultas do Dia
+      </h3>
 
-            <div
-              style="
-                display:flex;
-                justify-content:space-between;
-                align-items:flex-start;
-                gap:12px;
-              "
-            >
+    </div>
 
-              <div
-                style="
-                  flex:1;
-                "
-              >
+    <div class="panel-content">
 
-                <div
-                  style="
-                    font-weight:700;
-                    font-size:1.05rem;
-                  "
-                >
-                  🩺
+      ${
+        todayConsultations
+          .map(
+            c => `
+
+              <div class="consultation-card">
+
+                <strong>
                   ${escapeHTML(
-                    consultation.specialty ||
+                    c.time
+                  )}
+                  -
+                  ${escapeHTML(
+                    c.specialty ||
                     "Consulta"
                   )}
-                </div>
+                </strong>
 
-
-                <div
-                  style="
-                    margin-top:8px;
-                  "
-                >
-                  📅
+                <p>
                   ${escapeHTML(
-                    consultation.date
+                    c.professional ||
+                    ""
                   )}
-                  ·
-                  ⏰
-                  ${escapeHTML(
-                    consultation.time
-                  )}
-                </div>
-
+                </p>
 
                 ${
-                  consultation.professional
+                  c.location
                     ? `
-                      <div
-                        style="
-                          margin-top:6px;
-                        "
-                      >
-                        👩‍⚕️
-                        ${escapeHTML(
-                          consultation.professional
-                        )}
-                      </div>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  consultation.location
-                    ? `
-                      <div
-                        style="
-                          margin-top:6px;
-                          opacity:.75;
-                        "
-                      >
+                      <small>
                         📍
                         ${escapeHTML(
-                          consultation.location
+                          c.location
                         )}
-                      </div>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  consultation.reason
-                    ? `
-                      <div
-                        style="
-                          margin-top:8px;
-                        "
-                      >
-                        <strong>
-                          Motivo:
-                        </strong>
-                        ${escapeHTML(
-                          consultation.reason
-                        )}
-                      </div>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  consultation.note
-                    ? `
-                      <div
-                        style="
-                          margin-top:8px;
-                        "
-                      >
-                        <strong>
-                          Observações:
-                        </strong>
-
-                        <div
-                          style="
-                            white-space:pre-wrap;
-                            margin-top:4px;
-                          "
-                        >
-                          ${escapeHTML(
-                            consultation.note
-                          )}
-                        </div>
-                      </div>
+                      </small>
                     `
                     : ""
                 }
 
               </div>
 
-
-              <div
-                style="
-                  display:flex;
-                  gap:6px;
-                  flex-shrink:0;
-                "
-              >
-
-                <button
-                  type="button"
-                  onclick="editRecord('${escapeHTML(
-                    consultation.id
-                  )}')"
-                  title="Editar"
-                >
-                  ✏️
-                </button>
-
-
-                <button
-                  type="button"
-                  onclick="deleteRecord('${escapeHTML(
-                    consultation.id
-                  )}')"
-                  title="Excluir"
-                >
-                  🗑️
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-        `;
+            `
+          )
+          .join("")
       }
-    );
 
+    </div>
 
-    html += `</div>`;
-  }
+  `;
 
-
-  container.innerHTML =
-    html;
-
-
-  const newButton =
-    document.getElementById(
-      "newConsultationButton"
-    );
-
-
-  if (newButton) {
-
-    newButton.addEventListener(
-      "click",
-      () => {
-
-        openRecordForm(
-          "consultation"
-        );
-      }
-    );
-  }
 }
 
 
 /* =========================================================
-   MEDICAMENTOS — HOME
+   CONSULTAS — TELA DEDICADA
+========================================================= */
+
+function renderConsultations() {
+
+  const container =
+    document.getElementById(
+      "consultationsList"
+    );
+
+
+  if (!container) return;
+
+
+  const consultations =
+    database.records
+
+      .filter(
+        r =>
+          r.type ===
+          "consultation"
+      )
+
+      .sort(
+        (a, b) =>
+          (
+            String(
+              b.date || ""
+            ) +
+            String(
+              b.time || ""
+            )
+          ).localeCompare(
+            String(
+              a.date || ""
+            ) +
+            String(
+              a.time || ""
+            )
+          )
+      );
+
+
+  if (
+    consultations.length ===
+    0
+  ) {
+
+    container.innerHTML = `
+
+      <div class="empty-state">
+
+        Nenhuma consulta agendada ou registrada.
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    consultations
+      .map(
+        c => `
+
+          <div class="card">
+
+            <div class="card-header">
+
+              <strong>
+                ${escapeHTML(
+                  c.date
+                )}
+                às
+                ${escapeHTML(
+                  c.time
+                )}
+              </strong>
+
+              <span>
+                ${escapeHTML(
+                  c.specialty ||
+                  "Consulta"
+                )}
+              </span>
+
+            </div>
+
+
+            <div class="card-body">
+
+              <p>
+                <strong>
+                  Profissional:
+                </strong>
+
+                ${escapeHTML(
+                  c.professional
+                )}
+
+              </p>
+
+
+              ${
+                c.location
+                  ? `
+                    <p>
+                      <strong>
+                        Local:
+                      </strong>
+                      ${escapeHTML(
+                        c.location
+                      )}
+                    </p>
+                  `
+                  : ""
+              }
+
+
+              ${
+                c.reason
+                  ? `
+                    <p>
+                      <strong>
+                        Motivo:
+                      </strong>
+                      ${escapeHTML(
+                        c.reason
+                      )}
+                    </p>
+                  `
+                  : ""
+              }
+
+
+              ${
+                c.note
+                  ? `
+                    <p>
+                      <strong>
+                        Obs:
+                      </strong>
+                      ${escapeHTML(
+                        c.note
+                      )}
+                    </p>
+                  `
+                  : ""
+              }
+
+            </div>
+
+
+            <div class="card-actions">
+
+              <button
+                type="button"
+                onclick="editRecord('${escapeHTML(
+                  c.id
+                )}')"
+              >
+                ✏️ Editar
+              </button>
+
+
+              <button
+                type="button"
+                onclick="deleteRecord('${escapeHTML(
+                  c.id
+                )}')"
+              >
+                🗑️ Excluir
+              </button>
+
+            </div>
+
+          </div>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   MEDICAMENTOS NA HOME
 ========================================================= */
 
 function renderMedicationHome() {
 
-  let container =
+  const container =
     document.getElementById(
       "medicationHomePanel"
     );
 
 
-  if (!container) {
-
-    const quickActions =
-      document.querySelector(
-        ".quick-actions"
-      );
-
-
-    if (!quickActions) return;
-
-
-    container =
-      document.createElement(
-        "section"
-      );
-
-
-    container.id =
-      "medicationHomePanel";
-
-
-    container.className =
-      "card";
-
-
-    quickActions.insertAdjacentElement(
-      "afterend",
-      container
-    );
-  }
-
-
-  const dateKey =
-    formatDateKey(
-      selectedDate
-    );
-
-
-  let html = `
-
-    <div
-      class="section-header"
-      style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:12px;
-      "
-    >
-
-      <div>
-
-        <h2>
-          💊 Medicamentos / Suplementos e Vitaminas
-        </h2>
-
-        <p>
-          Marque cada item conforme você tomar.
-        </p>
-
-      </div>
-
-      <button
-        type="button"
-        id="manageMedicationsButton"
-        class="secondary-button"
-      >
-        ⚙️ Gerenciar
-      </button>
-
-    </div>
-  `;
+  if (!container) return;
 
 
   if (
-    medications.length === 0
+    medications.length ===
+    0
   ) {
 
-    html += `
+    container.innerHTML = `
 
       <div class="empty-state">
 
-        Nenhum medicamento ou vitamina cadastrado.
-
-        <br><br>
-
-        <button
-          type="button"
-          id="addFirstMedicationButton"
-          class="primary-button"
-        >
-          + Adicionar medicamento, suplemento ou vitamina
-        </button>
+        Nenhum medicamento cadastrado.
 
       </div>
+
     `;
 
-
-    container.innerHTML =
-      html;
-
-
-    attachMedicationHomeEvents();
-
     return;
+
   }
 
-
-  const periods = [
-
-    {
-      key: "morning",
-      label: "🌅 Manhã"
-    },
-
-    {
-      key: "afternoon",
-      label: "☀️ Tarde"
-    },
-
-    {
-      key: "night",
-      label: "🌙 Noite"
-    }
-  ];
-
-
-  periods.forEach(
-    period => {
-
-      const periodMedications =
-        medications.filter(
-          medication =>
-            medication.active !==
-              false &&
-            medication.period ===
-              period.key
-        );
-
-
-      if (
-        periodMedications.length ===
-        0
-      ) {
-        return;
-      }
-
-
-      html += `
-
-        <div
-          style="
-            margin-top:18px;
-          "
-        >
-
-          <h3>
-            ${period.label}
-          </h3>
-      `;
-
-
-      periodMedications.forEach(
-        medication => {
-
-          const taken =
-            isMedicationTaken(
-              medication.id,
-              dateKey
-            );
-
-
-          html += `
-
-            <label
-              style="
-                display:flex;
-                align-items:center;
-                gap:12px;
-                padding:12px 0;
-                cursor:pointer;
-                border-bottom:1px solid rgba(0,0,0,.08);
-              "
-            >
-
-              <input
-                type="checkbox"
-                class="medication-check"
-                data-medication-id="${escapeHTML(
-                  medication.id
-                )}"
-                ${
-                  taken
-                    ? "checked"
-                    : ""
-                }
-              >
-
-              <span
-                style="
-                  flex:1;
-                  ${
-                    taken
-                      ? "text-decoration:line-through;opacity:.55;"
-                      : ""
-                  }
-                "
-              >
-                ${escapeHTML(
-                  medication.name
-                )}
-              </span>
-
-            </label>
-          `;
-        }
-      );
-
-
-      html += `</div>`;
-    }
-  );
-
-
-  container.innerHTML =
-    html;
-
-
-  attachMedicationHomeEvents();
-}
-
-
-/* =========================================================
-   EVENTOS DOS MEDICAMENTOS
-========================================================= */
-
-function attachMedicationHomeEvents() {
-
-  const manage =
-    document.getElementById(
-      "manageMedicationsButton"
-    );
-
-
-  const add =
-    document.getElementById(
-      "addFirstMedicationButton"
-    );
-
-
-  if (manage) {
-
-    manage.addEventListener(
-      "click",
-      openMedicationManager
-    );
-  }
-
-
-  if (add) {
-
-    add.addEventListener(
-      "click",
-      () => {
-
-        openMedicationManager();
-
-        setTimeout(
-          openAddMedicationForm,
-          50
-        );
-      }
-    );
-  }
-
-
-  document
-    .querySelectorAll(
-      ".medication-check"
-    )
-    .forEach(
-      checkbox => {
-
-        checkbox.addEventListener(
-          "change",
-          () => {
-
-            toggleMedicationTaken(
-              checkbox.dataset
-                .medicationId,
-              checkbox.checked
-            );
-          }
-        );
-      }
-    );
-}
-
-
-/* =========================================================
-   VERIFICAR MEDICAMENTO
-========================================================= */
-
-function isMedicationTaken(
-  medicationId,
-  dateKey
-) {
-
-  return database.records.some(
-    record =>
-      record.type ===
-        "medication" &&
-      record.medicationId ===
-        medicationId &&
-      record.date ===
-        dateKey &&
-      record.taken ===
-        true
-  );
-}
-
-
-/* =========================================================
-   MARCAR / DESMARCAR
-========================================================= */
-
-function toggleMedicationTaken(
-  medicationId,
-  checked
-) {
 
   const dateKey =
     formatDateKey(
@@ -3049,51 +2634,175 @@ function toggleMedicationTaken(
     );
 
 
-  const medication =
-    medications.find(
-      item =>
-        item.id ===
-        medicationId
-    );
-
-
-  if (!medication) return;
-
-
-  const existingIndex =
-    database.records.findIndex(
-      record =>
-        record.type ===
+  const todayMedRecords =
+    database.records.filter(
+      r =>
+        r.type ===
           "medication" &&
-        record.medicationId ===
-          medicationId &&
-        record.date ===
+        r.date ===
           dateKey
     );
 
 
-  if (checked) {
+  container.innerHTML =
+    medications
+      .map(
+        med => {
 
-    const record = {
+          const taken =
+            todayMedRecords.some(
+              r =>
+                String(
+                  r.medicationId
+                ) ===
+                String(
+                  med.id
+                )
+            );
+
+
+          return `
+
+            <div
+              class="med-item ${
+                taken
+                  ? "taken"
+                  : ""
+              }"
+            >
+
+              <div>
+
+                <strong>
+                  ${escapeHTML(
+                    med.name
+                  )}
+                </strong>
+
+                <small>
+                  ${escapeHTML(
+                    med.dosage ||
+                    ""
+                  )}
+                </small>
+
+              </div>
+
+
+              <button
+                type="button"
+                onclick="toggleMedicationTaken('${escapeHTML(
+                  med.id
+                )}')"
+              >
+
+                ${
+                  taken
+                    ? "✅ Tomado"
+                    : "⚪ Tomar"
+                }
+
+              </button>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   MARCAR MEDICAMENTO COMO TOMADO
+========================================================= */
+
+function toggleMedicationTaken(
+  medId
+) {
+
+  const dateKey =
+    formatDateKey(
+      selectedDate
+    );
+
+
+  const existingIndex =
+    database.records.findIndex(
+      r =>
+        r.type ===
+          "medication" &&
+        r.date ===
+          dateKey &&
+        String(
+          r.medicationId
+        ) ===
+          String(
+            medId
+          )
+    );
+
+
+  if (
+    existingIndex !==
+    -1
+  ) {
+
+    const existing =
+      database.records[
+        existingIndex
+      ];
+
+
+    database.trash.push({
+
+      ...existing,
+
+      deletedAt:
+        new Date().toISOString(),
+
+      updatedAt:
+        new Date().toISOString()
+
+    });
+
+
+    database.records.splice(
+      existingIndex,
+      1
+    );
+
+  } else {
+
+    const med =
+      medications.find(
+        m =>
+          String(
+            m.id
+          ) ===
+          String(
+            medId
+          )
+      );
+
+
+    database.records.push({
 
       id:
-        existingIndex !== -1
-          ? database.records[
-              existingIndex
-            ].id
-          : generateId(),
+        generateId(),
 
       type:
         "medication",
 
       medicationId:
-        medicationId,
+        medId,
 
       medicationName:
-        medication.name,
-
-      period:
-        medication.period,
+        med
+          ? med.name
+          : "Medicamento",
 
       date:
         dateKey,
@@ -3101,58 +2810,14 @@ function toggleMedicationTaken(
       time:
         currentTime(),
 
-      taken:
-        true,
-
       createdAt:
-        existingIndex !== -1
-          ? database.records[
-              existingIndex
-            ].createdAt ||
-            new Date()
-              .toISOString()
-          : new Date()
-              .toISOString(),
+        new Date().toISOString(),
 
       updatedAt:
-        new Date()
-          .toISOString()
-    };
+        new Date().toISOString()
 
+    });
 
-    if (
-      existingIndex !== -1
-    ) {
-
-      database.records[
-        existingIndex
-      ] = {
-
-        ...database.records[
-          existingIndex
-        ],
-
-        ...record
-      };
-
-    } else {
-
-      database.records.push(
-        record
-      );
-    }
-
-  } else {
-
-    if (
-      existingIndex !== -1
-    ) {
-
-      database.records.splice(
-        existingIndex,
-        1
-      );
-    }
   }
 
 
@@ -3161,1158 +2826,67 @@ function toggleMedicationTaken(
   renderDashboard();
 
   renderDiary();
+
 }
 
 
 /* =========================================================
-   GERENCIADOR
-========================================================= */
-
-function openMedicationManager() {
-
-  let manager =
-    document.getElementById(
-      "medicationManager"
-    );
-
-
-  if (!manager) {
-
-    manager =
-      document.createElement(
-        "dialog"
-      );
-
-    manager.id =
-      "medicationManager";
-
-    document.body.appendChild(
-      manager
-    );
-  }
-
-
-  renderMedicationManager();
-
-  manager.showModal();
-}
-
-
-/* =========================================================
-   RENDERIZAR GERENCIADOR
-========================================================= */
-
-function renderMedicationManager() {
-
-  const manager =
-    document.getElementById(
-      "medicationManager"
-    );
-
-
-  if (!manager) return;
-
-
-  manager.innerHTML = `
-
-    <form
-      method="dialog"
-      style="
-        padding:24px;
-        min-width:min(90vw,520px);
-        max-height:85vh;
-        overflow:auto;
-      "
-    >
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:12px;
-        "
-      >
-
-        <h2>
-          💊 Medicamentos / Suplementos e Vitaminas
-        </h2>
-
-        <button
-          type="submit"
-          class="icon-button"
-        >
-          ✕
-        </button>
-
-      </div>
-
-
-      <p>
-        Cadastre cada item separadamente e escolha
-        o período em que ele é tomado.
-      </p>
-
-
-      <button
-        type="button"
-        id="newMedicationButton"
-        class="primary-button"
-        style="margin:16px 0;"
-      >
-        + Adicionar medicamento, suplemento ou vitamina
-      </button>
-
-
-      <div
-        id="medicationList"
-      ></div>
-
-    </form>
-  `;
-
-
-  const list =
-    document.getElementById(
-      "medicationList"
-    );
-
-
-  if (
-    medications.length === 0
-  ) {
-
-    list.innerHTML = `
-      <div class="empty-state">
-        Nenhum medicamento ou vitamina cadastrado.
-      </div>
-    `;
-
-  } else {
-
-    list.innerHTML =
-      medications
-        .map(
-          createMedicationManagerItem
-        )
-        .join("");
-  }
-
-
-  document
-    .getElementById(
-      "newMedicationButton"
-    )
-    .addEventListener(
-      "click",
-      openAddMedicationForm
-    );
-
-
-  manager
-    .querySelectorAll(
-      "[data-edit-medication]"
-    )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            openEditMedicationForm(
-              button.dataset
-                .editMedication
-            );
-          }
-        );
-      }
-    );
-
-
-  manager
-    .querySelectorAll(
-      "[data-delete-medication]"
-    )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            deleteMedication(
-              button.dataset
-                .deleteMedication
-            );
-          }
-        );
-      }
-    );
-}
-
-
-/* =========================================================
-   ITEM DO GERENCIADOR
-========================================================= */
-
-function createMedicationManagerItem(
-  medication
-) {
-
-  const periodLabels = {
-
-    morning: "Manhã",
-    afternoon: "Tarde",
-    night: "Noite"
-  };
-
-
-  return `
-
-    <div
-      class="card"
-      style="margin-bottom:12px;"
-    >
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:12px;
-        "
-      >
-
-        <div>
-
-          <strong>
-            ${escapeHTML(
-              medication.name
-            )}
-          </strong>
-
-          <div
-            style="
-              margin-top:4px;
-              opacity:.7;
-            "
-          >
-            ${escapeHTML(
-              periodLabels[
-                medication.period
-              ] ||
-              medication.period
-            )}
-
-            ${
-              medication.time
-                ? ` · ${escapeHTML(
-                    medication.time
-                  )}`
-                : ""
-            }
-          </div>
-
-        </div>
-
-
-        <div
-          style="
-            display:flex;
-            gap:6px;
-          "
-        >
-
-          <button
-            type="button"
-            data-edit-medication="${escapeHTML(
-              medication.id
-            )}"
-            title="Editar"
-          >
-            ✏️
-          </button>
-
-
-          <button
-            type="button"
-            data-delete-medication="${escapeHTML(
-              medication.id
-            )}"
-            title="Excluir"
-          >
-            🗑️
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   NOVO MEDICAMENTO
-========================================================= */
-
-function openAddMedicationForm() {
-
-  renderMedicationForm();
-}
-
-
-/* =========================================================
-   EDITAR MEDICAMENTO
-========================================================= */
-
-function openEditMedicationForm(
-  id
-) {
-
-  const medication =
-    medications.find(
-      item =>
-        item.id === id
-    );
-
-
-  if (!medication) return;
-
-
-  renderMedicationForm(
-    medication
-  );
-}
-
-
-/* =========================================================
-   FORMULÁRIO MEDICAMENTO
-========================================================= */
-
-function renderMedicationForm(
-  medication = null
-) {
-
-  const manager =
-    document.getElementById(
-      "medicationManager"
-    );
-
-
-  if (!manager) return;
-
-
-  const isEditing =
-    Boolean(
-      medication
-    );
-
-
-  manager.innerHTML = `
-
-    <form
-      id="medicationForm"
-      style="
-        padding:24px;
-        min-width:min(90vw,520px);
-      "
-    >
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-        "
-      >
-
-        <h2>
-          ${
-            isEditing
-              ? "Editar medicamento / suplemento / vitamina"
-              : "Novo medicamento / suplemento / vitamina"
-          }
-        </h2>
-
-
-        <button
-          type="button"
-          id="closeMedicationForm"
-          class="icon-button"
-        >
-          ✕
-        </button>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label for="medicationName">
-          Nome
-        </label>
-
-        <input
-          id="medicationName"
-          type="text"
-          value="${
-            medication
-              ? escapeHTML(
-                  medication.name
-                )
-              : ""
-          }"
-          placeholder="Ex.: Vitamina D"
-          required
-        >
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label for="medicationPeriod">
-          Período
-        </label>
-
-        <select
-          id="medicationPeriod"
-          required
-        >
-
-          <option
-            value="morning"
-            ${
-              medication &&
-              medication.period ===
-                "morning"
-                ? "selected"
-                : ""
-            }
-          >
-            🌅 Manhã
-          </option>
-
-
-          <option
-            value="afternoon"
-            ${
-              medication &&
-              medication.period ===
-                "afternoon"
-                ? "selected"
-                : ""
-            }
-          >
-            ☀️ Tarde
-          </option>
-
-
-          <option
-            value="night"
-            ${
-              medication &&
-              medication.period ===
-                "night"
-                ? "selected"
-                : ""
-            }
-          >
-            🌙 Noite
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label for="medicationTime">
-          Horário
-        </label>
-
-        <input
-          id="medicationTime"
-          type="time"
-          value="${
-            medication &&
-            medication.time
-              ? escapeHTML(
-                  medication.time
-                )
-              : ""
-          }"
-          required
-        >
-
-      </div>
-
-
-      <div
-        style="
-          display:flex;
-          gap:8px;
-          margin-top:20px;
-        "
-      >
-
-        <button
-          type="button"
-          id="cancelMedicationForm"
-          class="secondary-button"
-        >
-          Cancelar
-        </button>
-
-
-        <button
-          type="submit"
-          class="primary-button"
-        >
-          Salvar
-        </button>
-
-      </div>
-
-    </form>
-  `;
-
-
-  document
-    .getElementById(
-      "closeMedicationForm"
-    )
-    .addEventListener(
-      "click",
-      renderMedicationManager
-    );
-
-
-  document
-    .getElementById(
-      "cancelMedicationForm"
-    )
-    .addEventListener(
-      "click",
-      renderMedicationManager
-    );
-
-
-  document
-    .getElementById(
-      "medicationForm"
-    )
-    .addEventListener(
-      "submit",
-      event => {
-
-        event.preventDefault();
-
-
-        const name =
-          document
-            .getElementById(
-              "medicationName"
-            )
-            .value
-            .trim();
-
-
-        const period =
-          document
-            .getElementById(
-              "medicationPeriod"
-            )
-            .value;
-
-
-        const time =
-          document
-            .getElementById(
-              "medicationTime"
-            )
-            .value;
-
-
-        if (
-          !name ||
-          !time
-        ) {
-          return;
-        }
-
-
-        if (isEditing) {
-
-          const index =
-            medications.findIndex(
-              item =>
-                item.id ===
-                medication.id
-            );
-
-
-          if (index !== -1) {
-
-            medications[index] = {
-
-              ...medications[index],
-
-              name:
-                name,
-
-              period:
-                period,
-
-              time:
-                time,
-
-              active:
-                true
-            };
-          }
-
-
-          database.records =
-            database.records.map(
-              record => {
-
-                if (
-                  record.type ===
-                    "medication" &&
-                  record.medicationId ===
-                    medication.id
-                ) {
-
-                  return {
-
-                    ...record,
-
-                    medicationName:
-                      name,
-
-                    period:
-                      period
-                  };
-                }
-
-
-                return record;
-              }
-            );
-
-        } else {
-
-          medications.push({
-
-            id:
-              generateMedicationId(),
-
-            name:
-              name,
-
-            period:
-              period,
-
-            time:
-              time,
-
-            active:
-              true
-          });
-        }
-
-
-        saveMedications();
-
-        saveDatabase();
-
-        renderMedicationManager();
-
-        renderMedicationHome();
-
-        renderDashboard();
-      }
-    );
-}
-
-
-/* =========================================================
-   EXCLUIR MEDICAMENTO
-========================================================= */
-
-function deleteMedication(
-  id
-) {
-
-  const medication =
-    medications.find(
-      item =>
-        item.id === id
-    );
-
-
-  if (!medication) return;
-
-
-  const confirmed =
-    confirm(
-      `Excluir "${medication.name}" da lista de medicamentos / suplementos e vitaminas?`
-    );
-
-
-  if (!confirmed) return;
-
-
-  medications =
-    medications.filter(
-      item =>
-        item.id !== id
-    );
-
-
-  database.records =
-    database.records.filter(
-      record =>
-        !(
-          record.type ===
-            "medication" &&
-          record.medicationId ===
-            id
-        )
-    );
-
-
-  saveMedications();
-
-  saveDatabase();
-
-  renderMedicationManager();
-
-  renderMedicationHome();
-
-  renderDashboard();
-}
-
-
-/* =========================================================
-   BOTÕES PRINCIPAIS
-========================================================= */
-
-document
-  .querySelectorAll(
-    "[data-record-type]"
-  )
-  .forEach(
-    button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          openRecordForm(
-            button.dataset
-              .recordType
-          );
-        }
-      );
-    }
-  );
-
-
-/* =========================================================
-   BOTÃO CONSULTAS — CORREÇÃO
-========================================================= */
-
-const consultationQuickButton =
-  document.getElementById(
-    "consultationQuickButton"
-  );
-
-
-if (consultationQuickButton) {
-
-  consultationQuickButton.addEventListener(
-    "click",
-    () => {
-
-      openConsultationsScreen();
-
-    }
-  );
-}
-
-
-/* =========================================================
-   FECHAR MODAL
-========================================================= */
-
-const closeModal =
-  document.getElementById(
-    "closeModal"
-  );
-
-
-if (closeModal) {
-
-  closeModal.addEventListener(
-    "click",
-    () => {
-
-      if (modal) {
-
-        modal.close();
-      }
-    }
-  );
-}
-
-
-const cancelButton =
-  document.getElementById(
-    "cancelButton"
-  );
-
-
-if (cancelButton) {
-
-  cancelButton.addEventListener(
-    "click",
-    () => {
-
-      if (modal) {
-
-        modal.close();
-      }
-    }
-  );
-}
-
-
-/* =========================================================
-   DIA ANTERIOR
-========================================================= */
-
-const previousDay =
-  document.getElementById(
-    "previousDay"
-  );
-
-
-if (previousDay) {
-
-  previousDay.addEventListener(
-    "click",
-    () => {
-
-      selectedDate.setDate(
-        selectedDate.getDate() -
-          1
-      );
-
-      renderDashboard();
-    }
-  );
-}
-
-
-/* =========================================================
-   PRÓXIMO DIA
-========================================================= */
-
-const nextDay =
-  document.getElementById(
-    "nextDay"
-  );
-
-
-if (nextDay) {
-
-  nextDay.addEventListener(
-    "click",
-    () => {
-
-      selectedDate.setDate(
-        selectedDate.getDate() +
-          1
-      );
-
-      renderDashboard();
-    }
-  );
-}
-
-
-/* =========================================================
-   DIÁRIO
+   DIÁRIO / HISTÓRICO
 ========================================================= */
 
 function renderDiary() {
 
   const container =
     document.getElementById(
-      "diaryContent"
+      "diaryList"
     );
 
 
   if (!container) return;
 
 
+  const records =
+    getTodayRecords();
+
+
   if (
-    database.records.length ===
+    records.length ===
     0
   ) {
 
     container.innerHTML = `
+
       <div class="empty-state">
-        Nenhum registro encontrado.
+
+        Sem registros para o dia selecionado.
+
       </div>
+
     `;
 
     return;
+
   }
 
 
-  const sortedRecords =
-    [...database.records].sort(
-      (a, b) => {
-
-        const dateA =
-          `${a.date} ${a.time || ""}`;
-
-        const dateB =
-          `${b.date} ${b.time || ""}`;
-
-        return dateB.localeCompare(
-          dateA
-        );
-      }
-    );
-
-
   container.innerHTML =
-    sortedRecords
+    records
       .map(
-        createDiaryItem
+        createTimelineItem
       )
       .join("");
+
 }
 
 
 /* =========================================================
-   ITEM DO DIÁRIO
+   TELA MAIS
 ========================================================= */
 
-function createDiaryItem(
-  record
-) {
+function renderMoreScreen() {
 
-  const icons = {
+  renderTrash();
 
-    meal: "🍽️",
-    glucose: "🩸",
-    insulin: "💉",
-    activity: "🏋️",
-    medication: "💊",
-    consultation: "🩺"
-  };
-
-
-  let title = "";
-
-  let detail = "";
-
-
-  if (
-    record.type ===
-    "meal"
-  ) {
-
-    title =
-      record.mealType ||
-      "Refeição";
-
-    detail =
-      record.food ||
-      "Refeição registrada";
-  }
-
-
-  else if (
-    record.type ===
-    "glucose"
-  ) {
-
-    title =
-      `${record.value} mg/dL`;
-
-    detail =
-      record.kind ||
-      "Glicemia";
-  }
-
-
-  else if (
-    record.type ===
-    "insulin"
-  ) {
-
-    title =
-      `${record.dose} U`;
-
-    detail =
-      record.insulin ||
-      "Insulina";
-
-
-    if (
-      record.application
-    ) {
-
-      detail +=
-        ` · ${record.application}`;
-    }
-  }
-
-
-  else if (
-    record.type ===
-    "activity"
-  ) {
-
-    title =
-      record.activity ||
-      "Atividade";
-
-    detail =
-      `${record.duration || 0} min`;
-
-
-    if (
-      record.intensity
-    ) {
-
-      detail +=
-        ` · ${record.intensity}`;
-    }
-  }
-
-
-  else if (
-    record.type ===
-    "medication"
-  ) {
-
-    title =
-      record.medicationName ||
-      "Medicamento / suplemento / vitamina";
-
-    detail =
-      "Tomado";
-
-
-    if (
-      record.period
-    ) {
-
-      const periods = {
-
-        morning: "Manhã",
-        afternoon: "Tarde",
-        night: "Noite"
-      };
-
-
-      detail +=
-        ` · ${
-          periods[
-            record.period
-          ] ||
-          record.period
-        }`;
-    }
-  }
-
-
-  else if (
-    record.type ===
-    "consultation"
-  ) {
-
-    title =
-      record.specialty ||
-      "Consulta";
-
-    detail =
-      record.professional ||
-      "Consulta médica";
-
-
-    if (
-      record.location
-    ) {
-
-      detail +=
-        ` · ${record.location}`;
-    }
-  }
-
-
-  return `
-
-    <div
-      class="timeline-item"
-      style="margin-bottom:12px;"
-    >
-
-      <div class="timeline-icon">
-        ${
-          icons[
-            record.type
-          ] || "📝"
-        }
-      </div>
-
-
-      <div class="timeline-content">
-
-        <div class="timeline-title">
-
-          ${escapeHTML(
-            record.date
-          )}
-
-          ·
-
-          ${escapeHTML(
-            record.time || ""
-          )}
-
-        </div>
-
-
-        <div class="timeline-detail">
-
-          ${escapeHTML(
-            title
-          )}
-
-          ·
-
-          ${escapeHTML(
-            detail
-          )}
-
-        </div>
-
-      </div>
-
-    </div>
-  `;
 }
 
 
@@ -4324,7 +2898,7 @@ function renderTrash() {
 
   const container =
     document.getElementById(
-      "trashContent"
+      "trashList"
     );
 
 
@@ -4332,848 +2906,159 @@ function renderTrash() {
 
 
   if (
-    !database.trash ||
     database.trash.length ===
-      0
+    0
   ) {
 
     container.innerHTML = `
+
       <div class="empty-state">
-        A lixeira está vazia.
+
+        Lixeira vazia.
+
       </div>
+
     `;
 
     return;
+
   }
 
 
-  const sortedTrash =
-    [...database.trash].sort(
-      (a, b) =>
-        new Date(
-          b.deletedAt
-        ) -
-        new Date(
-          a.deletedAt
-        )
-    );
+  container.innerHTML =
+    database.trash
+      .map(
+        item => `
+
+          <div class="trash-item">
+
+            <div>
+
+              <strong>
+                ${escapeHTML(
+                  item.type
+                )}
+                -
+                ${escapeHTML(
+                  item.date
+                )}
+              </strong>
+
+              <small>
+                Excluído em:
+                ${
+                  item.deletedAt
+                    ? new Date(
+                        item.deletedAt
+                      ).toLocaleString(
+                        "pt-BR"
+                      )
+                    : ""
+                }
+              </small>
+
+            </div>
 
 
-  container.innerHTML = `
+            <button
+              type="button"
+              onclick="restoreFromTrash('${escapeHTML(
+                item.id
+              )}')"
+            >
 
-    <div
-      style="
-        display:flex;
-        gap:8px;
-        margin-bottom:16px;
-        flex-wrap:wrap;
-      "
-    >
+              🔄 Restaurar
 
-      <button
-        type="button"
-        id="emptyTrashButton"
-        class="secondary-button"
-      >
-        Esvaziar lixeira
-      </button>
+            </button>
 
-    </div>
+          </div>
 
+        `
+      )
+      .join("");
 
-    ${
-      sortedTrash
-        .map(
-          createTrashItem
-        )
-        .join("")
-    }
-  `;
-
-
-  const button =
-    document.getElementById(
-      "emptyTrashButton"
-    );
-
-
-  if (button) {
-
-    button.addEventListener(
-      "click",
-      emptyTrash
-    );
-  }
 }
 
 
 /* =========================================================
-   ITEM DA LIXEIRA
+   RESTAURAR DA LIXEIRA
 ========================================================= */
 
-function createTrashItem(
-  record
-) {
-
-  const icons = {
-
-    meal: "🍽️",
-    glucose: "🩸",
-    insulin: "💉",
-    activity: "🏋️",
-    medication: "💊",
-    consultation: "🩺"
-  };
-
-
-  let title = "";
-
-  let detail = "";
-
-
-  if (
-    record.type ===
-    "meal"
-  ) {
-
-    title =
-      record.mealType ||
-      "Refeição";
-
-    detail =
-      record.food ||
-      "Refeição registrada";
-  }
-
-
-  else if (
-    record.type ===
-    "glucose"
-  ) {
-
-    title =
-      `${record.value} mg/dL`;
-
-    detail =
-      record.kind ||
-      "Glicemia";
-  }
-
-
-  else if (
-    record.type ===
-    "insulin"
-  ) {
-
-    title =
-      `${record.dose} U`;
-
-    detail =
-      record.insulin ||
-      "Insulina";
-  }
-
-
-  else if (
-    record.type ===
-    "activity"
-  ) {
-
-    title =
-      record.activity ||
-      "Atividade";
-
-    detail =
-      `${record.duration || 0} min`;
-  }
-
-
-  else if (
-    record.type ===
-    "medication"
-  ) {
-
-    title =
-      record.medicationName ||
-      "Medicamento / suplemento / vitamina";
-
-    detail =
-      "Tomado";
-  }
-
-
-  else if (
-    record.type ===
-    "consultation"
-  ) {
-
-    title =
-      record.specialty ||
-      "Consulta";
-
-    detail =
-      record.professional ||
-      "Consulta médica";
-  }
-
-
-  return `
-
-    <div
-      class="timeline-item"
-      style="margin-bottom:12px;"
-    >
-
-      <div class="timeline-icon">
-        ${
-          icons[
-            record.type
-          ] || "📝"
-        }
-      </div>
-
-
-      <div class="timeline-content">
-
-        <div class="timeline-title">
-
-          ${escapeHTML(
-            record.time || ""
-          )}
-
-          ·
-
-          ${escapeHTML(
-            title
-          )}
-
-        </div>
-
-
-        <div class="timeline-detail">
-
-          ${escapeHTML(
-            detail
-          )}
-
-        </div>
-
-
-        <div
-          class="timeline-detail"
-          style="margin-top:4px;"
-        >
-
-          ${escapeHTML(
-            record.date || ""
-          )}
-
-        </div>
-
-      </div>
-
-
-      <div class="timeline-actions">
-
-        <button
-          type="button"
-          onclick="restoreRecord('${escapeHTML(
-            record.id
-          )}')"
-          title="Restaurar"
-        >
-          ↩️
-        </button>
-
-
-        <button
-          type="button"
-          onclick="permanentlyDeleteRecord('${escapeHTML(
-            record.id
-          )}')"
-          title="Excluir definitivamente"
-        >
-          ❌
-        </button>
-
-      </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   RESTAURAR
-========================================================= */
-
-function restoreRecord(
+function restoreFromTrash(
   id
 ) {
 
-  const index =
+  const itemIndex =
     database.trash.findIndex(
-      item =>
-        item.id === id
+      t =>
+        String(
+          t.id
+        ) ===
+        String(
+          id
+        )
     );
 
 
-  if (index === -1) return;
+  if (
+    itemIndex ===
+    -1
+  ) {
+
+    return;
+
+  }
 
 
-  const record =
-    database.trash[index];
+  const [
+    item
+  ] =
+    database.trash.splice(
+      itemIndex,
+      1
+    );
 
 
-  const restoredRecord = {
-    ...record
-  };
+  delete item.deletedAt;
 
 
-  delete restoredRecord.deletedAt;
+  item.updatedAt =
+    new Date().toISOString();
 
 
   database.records.push(
-    restoredRecord
-  );
-
-
-  database.trash.splice(
-    index,
-    1
+    item
   );
 
 
   saveDatabase();
-
-  renderTrash();
 
   renderDashboard();
 
   renderDiary();
 
-  renderConsultations();
-
-
-  alert(
-    "Registro restaurado."
-  );
-}
-
-
-/* =========================================================
-   EXCLUIR DEFINITIVAMENTE
-========================================================= */
-
-function permanentlyDeleteRecord(
-  id
-) {
-
-  const confirmed =
-    confirm(
-      "Excluir este registro definitivamente? Esta ação não poderá ser desfeita."
-    );
-
-
-  if (!confirmed) return;
-
-
-  database.trash =
-    database.trash.filter(
-      item =>
-        item.id !== id
-    );
-
-
-  saveDatabase();
-
   renderTrash();
+
 }
 
 
 /* =========================================================
-   ESVAZIAR LIXEIRA
+   BACKUP E RESTAURAÇÃO
 ========================================================= */
 
-function emptyTrash() {
+function exportBackup() {
 
-  if (
-    !database.trash ||
-    database.trash.length ===
-      0
-  ) {
-    return;
-  }
+  const data = {
 
+    database,
 
-  const confirmed =
-    confirm(
-      "Esvaziar toda a lixeira? Todos esses registros serão excluídos definitivamente."
-    );
+    glucoseSettings,
 
+    medications,
 
-  if (!confirmed) return;
+    exportedAt:
+      new Date().toISOString()
 
-
-  database.trash = [];
-
-
-  saveDatabase();
-
-  renderTrash();
-}
-
-
-/* =========================================================
-   CONFIGURAÇÕES DE GLICEMIA
-========================================================= */
-
-function renderGlucoseSettings() {
-
-  const container =
-    document.getElementById(
-      "settingsPanel"
-    );
-
-
-  if (!container) return;
-
-
-  const items = [
-
-    [
-      "fasting",
-      "Jejum"
-    ],
-
-    [
-      "breakfast1",
-      "1h após o café da manhã"
-    ],
-
-    [
-      "breakfast2",
-      "2h após o café da manhã"
-    ],
-
-    [
-      "morningSnack1",
-      "1h após o lanche da manhã"
-    ],
-
-    [
-      "morningSnack2",
-      "2h após o lanche da manhã"
-    ],
-
-    [
-      "lunch1",
-      "1h após o almoço"
-    ],
-
-    [
-      "lunch2",
-      "2h após o almoço"
-    ],
-
-    [
-      "afternoonSnack1",
-      "1h após o lanche da tarde"
-    ],
-
-    [
-      "afternoonSnack2",
-      "2h após o lanche da tarde"
-    ],
-
-    [
-      "dinner1",
-      "1h após o jantar"
-    ],
-
-    [
-      "dinner2",
-      "2h após o jantar"
-    ],
-
-    [
-      "supper1",
-      "1h após a ceia"
-    ],
-
-    [
-      "supper2",
-      "2h após a ceia"
-    ]
-  ];
-
-
-  let html = `
-
-    <h2>
-      Configurações
-    </h2>
-
-
-    <div class="card">
-
-      <h3>
-        Medições de glicemia
-      </h3>
-
-
-      <p>
-        Ative somente os momentos em que você deseja
-        que apareçam no registro de glicemia.
-      </p>
-
-
-      <div
-        style="
-          display:flex;
-          flex-direction:column;
-          gap:12px;
-          margin-top:16px;
-        "
-      >
-  `;
-
-
-  items.forEach(
-    item => {
-
-      html += `
-
-        <label
-          style="
-            display:flex;
-            align-items:center;
-            gap:10px;
-            cursor:pointer;
-          "
-        >
-
-          <input
-            type="checkbox"
-            class="glucose-setting-checkbox"
-            data-glucose-key="${item[0]}"
-            ${
-              glucoseSettings[
-                item[0]
-              ]
-                ? "checked"
-                : ""
-            }
-          >
-
-          <span>
-            ${escapeHTML(
-              item[1]
-            )}
-          </span>
-
-        </label>
-      `;
-    }
-  );
-
-
-  html += `
-
-      </div>
-
-    </div>
-  `;
-
-
-  container.innerHTML =
-    html;
-
-
-  container
-    .querySelectorAll(
-      ".glucose-setting-checkbox"
-    )
-    .forEach(
-      checkbox => {
-
-        checkbox.addEventListener(
-          "change",
-          () => {
-
-            const key =
-              checkbox.dataset
-                .glucoseKey;
-
-
-            glucoseSettings[
-              key
-            ] =
-              checkbox.checked;
-
-
-            saveGlucoseSettings();
-          }
-        );
-      }
-    );
-}
-
-
-/* =========================================================
-   MAIS
-========================================================= */
-
-function renderMoreScreen() {
-
-  const trashPanel =
-    document.getElementById(
-      "trashPanel"
-    );
-
-
-  const settingsPanel =
-    document.getElementById(
-      "settingsPanel"
-    );
-
-
-  if (trashPanel) {
-
-    trashPanel.hidden =
-      true;
-  }
-
-
-  if (settingsPanel) {
-
-    settingsPanel.hidden =
-      true;
-  }
-}
-
-
-/* =========================================================
-   BOTÃO LIXEIRA
-========================================================= */
-
-const openTrashButton =
-  document.getElementById(
-    "openTrashButton"
-  );
-
-
-if (openTrashButton) {
-
-  openTrashButton.addEventListener(
-    "click",
-    () => {
-
-      const trashPanel =
-        document.getElementById(
-          "trashPanel"
-        );
-
-
-      const settingsPanel =
-        document.getElementById(
-          "settingsPanel"
-        );
-
-
-      if (trashPanel) {
-
-        trashPanel.hidden =
-          false;
-      }
-
-
-      if (settingsPanel) {
-
-        settingsPanel.hidden =
-          true;
-      }
-
-
-      renderTrash();
-    }
-  );
-}
-
-
-/* =========================================================
-   BOTÃO CONFIGURAÇÕES
-========================================================= */
-
-const settingsButton =
-  document.getElementById(
-    "settingsButton"
-  );
-
-
-if (settingsButton) {
-
-  settingsButton.addEventListener(
-    "click",
-    () => {
-
-      const trashPanel =
-        document.getElementById(
-          "trashPanel"
-        );
-
-
-      const settingsPanel =
-        document.getElementById(
-          "settingsPanel"
-        );
-
-
-      if (trashPanel) {
-
-        trashPanel.hidden =
-          true;
-      }
-
-
-      if (settingsPanel) {
-
-        settingsPanel.hidden =
-          false;
-
-        renderGlucoseSettings();
-      }
-    }
-  );
-}
-
-
-/* =========================================================
-   NAVEGAÇÃO
-========================================================= */
-
-const navigationItems =
-  document.querySelectorAll(
-    ".navigation-item"
-  );
-
-
-navigationItems.forEach(
-  button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        const targetScreen =
-          button.dataset
-            .screen;
-
-
-        if (!targetScreen)
-          return;
-
-
-        showScreen(
-          targetScreen
-        );
-      }
-    );
-  }
-);
-
-
-/* =========================================================
-   BOTÃO DE MEDICAMENTOS
-========================================================= */
-
-document.addEventListener(
-  "click",
-  event => {
-
-    const button =
-      event.target.closest(
-        "button"
-      );
-
-
-    if (!button) return;
-
-
-    const text =
-      button.textContent
-        .replace(
-          /\s+/g,
-          " "
-        )
-        .trim()
-        .toLowerCase();
-
-
-    if (
-      text.includes(
-        "medicamentos / suplementos e vitaminas"
-      ) ||
-      text.includes(
-        "medicamentos/suplementos e vitaminas"
-      )
-    ) {
-
-      event.preventDefault();
-
-      openMedicationManager();
-    }
-  }
-);
-
-
-/* =========================================================
-   BACKUP
-========================================================= */
-
-const backupButton =
-  document.getElementById(
-    "backupButton"
-  );
-
-
-if (backupButton) {
-
-  backupButton.addEventListener(
-    "click",
-    createBackup
-  );
-}
-
-
-function createBackup() {
-
-  const backup = {
-
-    application:
-      "Recordatório + Registros",
-
-    version:
-      "0.1",
-
-    createdAt:
-      new Date()
-        .toISOString(),
-
-    data: {
-
-      records:
-        database.records,
-
-      trash:
-        database.trash
-    },
-
-    glucoseSettings:
-      glucoseSettings,
-
-    medications:
-      medications
   };
 
 
@@ -5181,7 +3066,7 @@ function createBackup() {
     new Blob(
       [
         JSON.stringify(
-          backup,
+          data,
           null,
           2
         )
@@ -5199,44 +3084,67 @@ function createBackup() {
     );
 
 
-  const link =
+  const a =
     document.createElement(
       "a"
     );
 
 
-  link.href =
+  a.href =
     url;
 
 
-  link.download =
-    `Recordatorio_Backup_${formatDateKey(
+  a.download =
+    `backup_recordatorio_${formatDateKey(
       new Date()
     )}.json`;
 
 
   document.body.appendChild(
-    link
+    a
   );
 
 
-  link.click();
+  a.click();
 
-  link.remove();
 
-  URL.revokeObjectURL(
-    url
+  a.remove();
+
+
+  setTimeout(
+    function () {
+
+      URL.revokeObjectURL(
+        url
+      );
+
+    },
+    1000
   );
+
 }
 
 
 /* =========================================================
-   RESTAURAÇÃO
+   RESTAURAÇÃO DE BACKUP
 ========================================================= */
 
-function restoreBackupFile(
-  file
+function importBackup(
+  event
 ) {
+
+  const input =
+    event &&
+    event.target;
+
+
+  if (!input) return;
+
+
+  const file =
+    input.files &&
+    input.files[0];
+
 
   if (!file) return;
 
@@ -5246,208 +3154,290 @@ function restoreBackupFile(
 
 
   reader.onload =
-    function(event) {
+    function(e) {
 
       try {
 
-        const backup =
+        const data =
           JSON.parse(
-            event.target.result
+            e.target.result
           );
 
 
         if (
-          !validateBackup(
-            backup
-          )
+          data &&
+          data.database
         ) {
 
-          alert(
-            "Este arquivo não é um backup válido do Recordatório + Registros."
-          );
+          database = {
 
-          return;
+            records:
+              Array.isArray(
+                data.database.records
+              )
+                ? data.database.records
+                : [],
+
+            trash:
+              Array.isArray(
+                data.database.trash
+              )
+                ? data.database.trash
+                : []
+
+          };
+
+
+          saveDatabase();
+
         }
 
 
-        const confirmed =
-          confirm(
-            "Restaurar este backup substituirá os registros atuais do aplicativo. Deseja continuar?"
-          );
+        if (
+          data &&
+          data.glucoseSettings
+        ) {
+
+          glucoseSettings =
+            {
+
+              ...defaultGlucoseOptions,
+
+              ...data.glucoseSettings
+
+            };
 
 
-        if (!confirmed)
-          return;
+          saveGlucoseSettings();
+
+        }
 
 
-        database = {
-
-          records:
-            backup.data.records,
-
-          trash:
-            backup.data.trash
-        };
-
-
-        glucoseSettings = {
-
-          ...defaultGlucoseOptions,
-
-          ...backup.glucoseSettings
-        };
-
-
-        medications =
+        if (
+          data &&
           Array.isArray(
-            backup.medications
+            data.medications
           )
-            ? backup.medications
-            : [];
+        ) {
+
+          medications =
+            data.medications;
 
 
-        saveDatabase();
+          saveMedications();
 
-        saveGlucoseSettings();
+        }
 
-        saveMedications();
+
+        alert(
+          "Backup restaurado com sucesso!"
+        );
+
 
         renderDashboard();
 
         renderDiary();
 
-        renderTrash();
-
         renderConsultations();
 
+        renderTrash();
+
+
+        /*
+         * O sincronizacao.js detectará a alteração
+         * pelo saveDatabase interceptado.
+         */
+
+      } catch (err) {
+
         alert(
-          "Backup restaurado com sucesso."
+          "Erro ao importar o arquivo de backup."
         );
 
-      } catch (error) {
 
         console.error(
-          "Erro ao restaurar backup:",
-          error
+          "Erro ao importar backup:",
+          err
         );
 
-
-        alert(
-          "Não foi possível ler este arquivo de backup."
-        );
       }
+
     };
 
 
   reader.readAsText(
     file
   );
+
 }
 
 
 /* =========================================================
-   VALIDAR BACKUP
+   ATUALIZAÇÃO APÓS SINCRONIZAÇÃO
 ========================================================= */
 
-function validateBackup(
-  backup
-) {
+function reloadDatabaseFromStorage() {
 
-  return Boolean(
+  try {
 
-    backup &&
-
-    typeof backup ===
-      "object" &&
-
-    backup.application ===
-      "Recordatório + Registros" &&
-
-    backup.data &&
-
-    typeof backup.data ===
-      "object" &&
-
-    Array.isArray(
-      backup.data.records
-    ) &&
-
-    Array.isArray(
-      backup.data.trash
-    ) &&
-
-    backup.glucoseSettings &&
-
-    typeof backup.glucoseSettings ===
-      "object"
-  );
-}
-
-
-/* =========================================================
-   BOTÃO RESTAURAR BACKUP
-========================================================= */
-
-const restoreBackupButton =
-  document.getElementById(
-    "restoreBackupButton"
-  );
-
-
-const restoreBackupInput =
-  document.getElementById(
-    "restoreBackupInput"
-  );
-
-
-if (restoreBackupButton) {
-
-  restoreBackupButton.addEventListener(
-    "click",
-    () => {
-
-      if (
-        restoreBackupInput
-      ) {
-
-        restoreBackupInput.click();
-      }
-    }
-  );
-}
-
-
-if (restoreBackupInput) {
-
-  restoreBackupInput.addEventListener(
-    "change",
-    event => {
-
-      const file =
-        event.target.files &&
-        event.target.files[0];
-
-
-      restoreBackupFile(
-        file
+    const stored =
+      localStorage.getItem(
+        STORAGE_KEY
       );
 
 
-      event.target.value =
-        "";
+    if (!stored) {
+      return false;
     }
-  );
+
+
+    const parsed =
+      JSON.parse(
+        stored
+      );
+
+
+    if (
+      !parsed ||
+      typeof parsed !==
+        "object"
+    ) {
+
+      return false;
+
+    }
+
+
+    database = {
+
+      records:
+        Array.isArray(
+          parsed.records
+        )
+          ? parsed.records
+          : [],
+
+      trash:
+        Array.isArray(
+          parsed.trash
+        )
+          ? parsed.trash
+          : []
+
+    };
+
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao atualizar banco após sincronização:",
+      error
+    );
+
+
+    return false;
+
+  }
+
 }
 
 
 /* =========================================================
-   INICIALIZAÇÃO
+   EVENTO DA SINCRONIZAÇÃO
 ========================================================= */
 
-renderDashboard();
+function installSyncEvents() {
 
-renderDiary();
+  document.addEventListener(
+    "recordatorioSyncComplete",
+    function() {
 
-renderTrash();
+      /*
+       * O sincronizacao.js já gravou a união dos dados
+       * no localStorage. Aqui apenas fazemos o app.js
+       * reler essa informação para atualizar a memória.
+       */
 
-renderConsultations();
+      if (
+        reloadDatabaseFromStorage()
+      ) {
+
+        renderDashboard();
+
+        renderDiary();
+
+        renderConsultations();
+
+        renderTrash();
+
+      }
+
+    }
+  );
+
+
+  document.addEventListener(
+    "recordatorioSyncError",
+    function(event) {
+
+      console.error(
+        "Sincronização do Recordatório falhou:",
+        event &&
+        event.detail
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   API PÚBLICA PARA O SINCRONIZADOR
+========================================================= */
+
+window.recordatorioReloadDatabase =
+  function() {
+
+    if (
+      reloadDatabaseFromStorage()
+    ) {
+
+      renderDashboard();
+
+      renderDiary();
+
+      renderConsultations();
+
+      renderTrash();
+
+      return true;
+
+    }
+
+
+    return false;
+
+  };
+
+
+/* =========================================================
+   INICIALIZAÇÃO DA APLICAÇÃO
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function() {
+
+    initializeDOMReferences();
+
+    installRecordFormListener();
+
+    installSyncEvents();
+
+    renderDashboard();
+
+  }
+);

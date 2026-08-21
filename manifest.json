@@ -1,3 +1,4 @@
+```json
 {
   "name": "Recordatório + Registros",
   "short_name": "Recordatório",
@@ -11,16 +12,23 @@
   "theme_color": "#A85C5C",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "ícone-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
+```

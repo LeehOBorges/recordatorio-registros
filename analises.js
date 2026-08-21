@@ -1,7 +1,9 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
-   Gráfico de glicemias + análise por período do dia
+   Gráfico de glicemias +
+   análise por período do dia +
+   separação de jejum
 ========================================================= */
 
 (function () {
@@ -755,7 +757,7 @@
 
 
   /* =====================================================
-     RESUMOS GERAIS
+     RESUMOS
   ====================================================== */
 
   function countType(
@@ -857,6 +859,12 @@
             value:
               Number(
                 record.value
+              ),
+
+            kind:
+              String(
+                record.kind ||
+                ""
               )
 
           };
@@ -1012,7 +1020,32 @@
 
 
   /* =====================================================
-     CLASSIFICAÇÃO POR PERÍODO DO DIA
+     JEJUM
+  ====================================================== */
+
+  function isFastingGlucose(
+    record
+  ) {
+
+    const kind =
+      String(
+        record.kind ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    return (
+      kind ===
+      "jejum"
+    );
+
+  }
+
+
+  /* =====================================================
+     PERÍODO DO DIA
   ====================================================== */
 
   function getDayPeriod(
@@ -1103,11 +1136,17 @@
   }
 
 
+  /* =====================================================
+     ANÁLISE POR PERÍODO DO DIA
+  ====================================================== */
+
   function buildPeriodAnalysis(
     glucoseRecords
   ) {
 
     const periods = {
+
+      fasting: [],
 
       morning: [],
 
@@ -1122,6 +1161,31 @@
 
     glucoseRecords.forEach(
       function (record) {
+
+        /*
+         * JEJUM sempre fica separado,
+         * independentemente do horário.
+         */
+
+        if (
+          isFastingGlucose(
+            record
+          )
+        ) {
+
+          periods.fasting.push(
+            record.value
+          );
+
+          return;
+
+        }
+
+
+        /*
+         * As demais glicemias são classificadas
+         * pelo horário.
+         */
 
         const period =
           getDayPeriod(
@@ -1138,6 +1202,8 @@
 
 
     const order = [
+
+      "fasting",
 
       "morning",
 
@@ -1160,7 +1226,7 @@
       >
 
         <h2>
-          🕐 Glicemias por período do dia
+          🕐 Glicemias por período
         </h2>
 
         <p
@@ -1171,8 +1237,8 @@
             line-height:1.5;
           "
         >
-          Comparação das medições conforme o horário
-          em que foram registradas.
+          As glicemias em jejum são separadas
+          das demais medições da manhã.
         </p>
 
 
@@ -1226,6 +1292,28 @@
             : null;
 
 
+        let label =
+          "";
+
+
+        if (
+          period ===
+          "fasting"
+        ) {
+
+          label =
+            "🩸 Jejum";
+
+        } else {
+
+          label =
+            getPeriodLabel(
+              period
+            );
+
+        }
+
+
         html += `
 
           <div
@@ -1253,9 +1341,7 @@
                   font-size:16px;
                 "
               >
-                ${getPeriodLabel(
-                  period
-                )}
+                ${label}
               </strong>
 
 
@@ -1265,15 +1351,18 @@
                   color:#777;
                 "
               >
+
                 ${
                   values.length
                 }
+
                 ${
                   values.length ===
                   1
                     ? "medição"
                     : "medições"
                 }
+
               </span>
 
             </div>
@@ -1314,6 +1403,7 @@
                     color:#7f4444;
                   "
                 >
+
                   ${
                     avg === null
                       ? "—"
@@ -1322,6 +1412,7 @@
                         ) +
                         " mg/dL"
                   }
+
                 </strong>
 
               </div>
@@ -1353,12 +1444,14 @@
                     color:#7f4444;
                   "
                 >
+
                   ${
                     min === null
                       ? "—"
                       : min +
                         " mg/dL"
                   }
+
                 </strong>
 
               </div>
@@ -1390,12 +1483,14 @@
                     color:#7f4444;
                   "
                 >
+
                   ${
                     max === null
                       ? "—"
                       : max +
                         " mg/dL"
                   }
+
                 </strong>
 
               </div>
@@ -1413,35 +1508,6 @@
     html += `
 
         </div>
-
-    `;
-
-
-    if (
-      periods.morning.length === 0 &&
-      periods.afternoon.length === 0 &&
-      periods.night.length === 0 &&
-      periods.unknown.length === 0
-    ) {
-
-      html += `
-
-        <div
-          class="empty-state"
-          style="
-            margin-top:12px;
-          "
-        >
-          Não há glicemias com horário
-          suficiente para esta análise.
-        </div>
-
-      `;
-
-    }
-
-
-    html += `
 
       </section>
 
@@ -1668,7 +1734,10 @@
               item.date,
 
             time:
-              item.time
+              item.time,
+
+            kind:
+              item.kind
 
           };
 
@@ -1695,10 +1764,6 @@
           " "
         );
 
-
-    /* =================================================
-       GRADE
-    ================================================== */
 
     let gridHTML =
       "";
@@ -1780,10 +1845,6 @@
       );
 
 
-    /* =================================================
-       PONTOS
-    ================================================== */
-
     let pointsHTML =
       "";
 
@@ -1801,6 +1862,12 @@
             point.time
               ? " · " +
                 point.time
+              : ""
+          ) +
+          (
+            point.kind
+              ? " · " +
+                point.kind
               : ""
           );
 
@@ -1848,10 +1915,6 @@
       }
     );
 
-
-    /* =================================================
-       EIXO HORIZONTAL
-    ================================================== */
 
     let labelsHTML =
       "";
@@ -2038,16 +2101,20 @@
             line-height:1.5;
           "
         >
+
           ${
             glucoseRecords.length
           }
+
           ${
             glucoseRecords.length ===
             1
               ? "medição"
               : "medições"
           }
+
           no período.
+
         </p>
 
 
@@ -2197,12 +2264,15 @@
                 color:#7f4444;
               "
             >
+
               ${
                 Math.round(
                   averageValue
                 )
               }
+
               mg/dL
+
             </strong>
 
           </div>
@@ -2266,8 +2336,11 @@
                 color:#7f4444;
               "
             >
+
               ${minValue}
+
               mg/dL
+
             </strong>
 
           </div>
@@ -2299,8 +2372,11 @@
                 color:#7f4444;
               "
             >
+
               ${maxValue}
+
               mg/dL
+
             </strong>
 
           </div>
@@ -2317,7 +2393,7 @@
           "
         >
           Toque ou passe o cursor sobre um ponto
-          para ver a data, horário e valor.
+          para ver a data, horário e momento da medição.
         </p>
 
       </section>
@@ -2655,6 +2731,7 @@
               Total de registros
             </span>
 
+
             <strong>
               ${records.length}
             </strong>
@@ -2674,6 +2751,7 @@
             <span>
               Média das glicemias
             </span>
+
 
             <strong>
               ${
@@ -2703,6 +2781,7 @@
               Menor glicemia
             </span>
 
+
             <strong>
               ${
                 glucoseMin ===
@@ -2728,6 +2807,7 @@
             <span>
               Maior glicemia
             </span>
+
 
             <strong>
               ${
@@ -2755,6 +2835,7 @@
               Atividade
             </span>
 
+
             <strong>
               ${activityMinutes}
               min
@@ -2774,6 +2855,7 @@
             <span>
               Insulina
             </span>
+
 
             <strong>
               ${
@@ -2809,6 +2891,7 @@
               <h2>
                 🩸 Evolução das glicemias
               </h2>
+
 
               <div class="empty-state">
                 Não há glicemias registradas

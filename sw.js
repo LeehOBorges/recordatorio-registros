@@ -1,4 +1,3 @@
-```javascript id="p5w1st"
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    SERVICE WORKER — PWA
@@ -215,4 +214,3 @@ self.addEventListener(
 
   }
 );
-```

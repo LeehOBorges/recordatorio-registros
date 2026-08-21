@@ -58,10 +58,6 @@
 
   <style>
 
-    /* =====================================================
-       LOGIN
-    ====================================================== */
-
     #loginScreen {
 
       min-height: 100vh;
@@ -277,20 +273,12 @@
     }
 
     .login-message.error {
-
       color: #a33f3f;
-
     }
 
     .login-message.success {
-
       color: #42724b;
-
     }
-
-    /* =====================================================
-       RECUPERAÇÃO DE SENHA
-    ====================================================== */
 
     #resetPasswordPanel {
 
@@ -305,9 +293,7 @@
     }
 
     #resetPasswordPanel.visible {
-
       display: block;
-
     }
 
     .reset-title {
@@ -374,10 +360,6 @@
 
     }
 
-    /* =====================================================
-       ALTERAÇÃO DE SENHA
-    ====================================================== */
-
     #changePasswordScreen {
 
       min-height: 100vh;
@@ -404,9 +386,7 @@
     }
 
     #changePasswordScreen.visible {
-
       display: flex;
-
     }
 
     .change-password-container {
@@ -503,10 +483,6 @@
       cursor: pointer;
 
     }
-
-    /* =====================================================
-       RELATÓRIOS
-    ====================================================== */
 
     #reportsScreen {
 
@@ -643,9 +619,7 @@
 
 <body>
 
-  <!-- =====================================================
-       TELA DE LOGIN
-  ====================================================== -->
+  <!-- LOGIN -->
 
   <section id="loginScreen">
 
@@ -785,10 +759,7 @@
 
   </section>
 
-
-  <!-- =====================================================
-       TELA DE ALTERAÇÃO DE SENHA
-  ====================================================== -->
+  <!-- ALTERAÇÃO DE SENHA -->
 
   <section id="changePasswordScreen">
 
@@ -851,16 +822,11 @@
 
   </section>
 
-
-  <!-- =====================================================
-       APLICATIVO
-  ====================================================== -->
+  <!-- APLICATIVO -->
 
   <div id="appContent" hidden>
 
-    <!-- ===================================================
-         HOJE
-    ==================================================== -->
+    <!-- HOJE -->
 
     <section
       id="todayScreen"
@@ -985,9 +951,7 @@
             data-record-type="meal"
           >
 
-            <span>
-              🍽️
-            </span>
+            <span>🍽️</span>
 
             Refeição
 
@@ -999,9 +963,7 @@
             data-record-type="glucose"
           >
 
-            <span>
-              🩸
-            </span>
+            <span>🩸</span>
 
             Glicemia
 
@@ -1013,9 +975,7 @@
             data-record-type="insulin"
           >
 
-            <span>
-              💉
-            </span>
+            <span>💉</span>
 
             Insulina
 
@@ -1027,9 +987,7 @@
             data-record-type="activity"
           >
 
-            <span>
-              🏋️
-            </span>
+            <span>🏋️</span>
 
             Atividade
 
@@ -1041,9 +999,7 @@
             id="medicationsButton"
           >
 
-            <span>
-              💊
-            </span>
+            <span>💊</span>
 
             Medicamentos / Suplementos e Vitaminas
 
@@ -1055,9 +1011,7 @@
             id="consultationQuickButton"
           >
 
-            <span>
-              🩺
-            </span>
+            <span>🩺</span>
 
             Consultas
 
@@ -1130,10 +1084,7 @@
 
     </section>
 
-
-    <!-- ===================================================
-         DIÁRIO
-    ==================================================== -->
+    <!-- DIÁRIO -->
 
     <section
       id="diaryScreen"
@@ -1179,10 +1130,7 @@
 
     </section>
 
-
-    <!-- ===================================================
-         ANÁLISES
-    ==================================================== -->
+    <!-- ANÁLISES -->
 
     <section
       id="analysisScreen"
@@ -1211,11 +1159,13 @@
         <section class="card">
 
           <h2>
-            Análises
+            📊 Análises
           </h2>
 
-          <div class="empty-state">
-            Esta área será desenvolvida nas próximas etapas.
+          <div
+            class="empty-state"
+          >
+            Carregando análises...
           </div>
 
         </section>
@@ -1224,10 +1174,7 @@
 
     </section>
 
-
-    <!-- ===================================================
-         CONSULTAS
-    ==================================================== -->
+    <!-- CONSULTAS -->
 
     <section
       id="consultationScreen"
@@ -1267,10 +1214,7 @@
 
     </section>
 
-
-    <!-- ===================================================
-         MAIS
-    ==================================================== -->
+    <!-- MAIS -->
 
     <section
       id="moreScreen"
@@ -1376,10 +1320,7 @@
 
     </section>
 
-
-    <!-- ===================================================
-         RELATÓRIOS
-    ==================================================== -->
+    <!-- RELATÓRIOS -->
 
     <section
       id="reportsScreen"
@@ -1512,7 +1453,8 @@
             id="reportPreviewContent"
             class="empty-state"
           >
-            Escolha o período e clique em "Visualizar relatório".
+            Escolha o período e clique em
+            "Visualizar relatório".
           </div>
 
         </section>
@@ -1521,10 +1463,7 @@
 
     </section>
 
-
-    <!-- ===================================================
-         NAVEGAÇÃO
-    ==================================================== -->
+    <!-- NAVEGAÇÃO -->
 
     <nav class="bottom-navigation">
 
@@ -1596,10 +1535,7 @@
 
   </div>
 
-
-  <!-- =====================================================
-       MODAL DE REGISTRO
-  ====================================================== -->
+  <!-- MODAL -->
 
   <dialog id="recordModal">
 
@@ -1651,9 +1587,7 @@
   </dialog>
 
 
-  <!-- =====================================================
-       SUPABASE AUTH
-  ====================================================== -->
+  <!-- SUPABASE -->
 
   <script>
 
@@ -2272,28 +2206,24 @@
   </script>
 
 
-  <!-- =====================================================
-       JAVASCRIPT PRINCIPAL
-  ====================================================== -->
+  <!-- JAVASCRIPT PRINCIPAL -->
 
   <script src="app.js"></script>
 
-  <!-- =====================================================
-       MÓDULO DE RELATÓRIOS
-  ====================================================== -->
+  <!-- RELATÓRIOS -->
 
   <script src="relatorios.js"></script>
 
-  <!-- =====================================================
-       MÓDULO DE SINCRONIZAÇÃO
-  ====================================================== -->
+  <!-- ANÁLISES -->
+
+  <script src="analises.js"></script>
+
+  <!-- SINCRONIZAÇÃO -->
 
   <script src="sincronizacao.js"></script>
 
 
-  <!-- =====================================================
-       SERVICE WORKER
-  ====================================================== -->
+  <!-- SERVICE WORKER -->
 
   <script>
 

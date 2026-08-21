@@ -61,910 +61,558 @@
     ====================================================== */
 
     #loginScreen {
-
       min-height: 100vh;
       min-height: 100dvh;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       padding: 24px;
-
       background:
         linear-gradient(
           180deg,
           #fff8f6 0%,
           #f8eeee 100%
         );
-
       box-sizing: border-box;
-
     }
-
 
     .login-container {
-
       width: 100%;
       max-width: 420px;
-
     }
 
-
     .login-card {
-
       background: #ffffff;
-
       border-radius: 24px;
-
       padding: 32px 26px;
-
       box-shadow:
         0 12px 40px
         rgba(80, 40, 40, 0.10);
-
       box-sizing: border-box;
-
     }
-
 
     .login-brand {
-
       text-align: center;
-
       margin-bottom: 28px;
-
     }
 
-
     .login-cover-image {
-
       display: block;
-
       width: 140px;
       height: 140px;
-
       object-fit: cover;
-
       margin: 0 auto 16px;
-
       border-radius: 28px;
-
       box-shadow:
         0 10px 30px
         rgba(80, 40, 40, 0.15);
-
     }
-
 
     .login-brand-title {
-
       margin: 0;
-
       color: #7f4444;
-
       font-size: 26px;
-
       font-weight: 700;
-
     }
-
 
     .login-brand-subtitle {
-
       margin: 8px 0 0;
-
       color: #777;
-
       font-size: 14px;
-
       line-height: 1.5;
-
     }
-
 
     .login-form-group {
-
       margin-bottom: 16px;
-
     }
-
 
     .login-form-group label {
-
       display: block;
-
       margin-bottom: 7px;
-
       font-size: 14px;
-
       font-weight: 600;
-
       color: #444;
-
     }
-
 
     .login-form-group input {
-
       width: 100%;
-
       box-sizing: border-box;
-
       padding: 13px 14px;
-
       border: 1px solid #ddd;
-
       border-radius: 12px;
-
       font-size: 16px;
-
       outline: none;
-
       background: #fff;
-
     }
 
-
     .login-form-group input:focus {
-
       border-color: #A85C5C;
-
       box-shadow:
         0 0 0 3px
         rgba(168, 92, 92, 0.10);
-
     }
-
 
     .login-button {
-
       width: 100%;
-
       border: 0;
-
       border-radius: 12px;
-
       padding: 14px;
-
       margin-top: 6px;
-
       background: #A85C5C;
-
       color: #fff;
-
       font-size: 16px;
-
       font-weight: 700;
-
       cursor: pointer;
-
     }
-
 
     .login-button:disabled {
-
       opacity: 0.65;
-
       cursor: wait;
-
     }
-
 
     .forgot-password-button {
-
       display: block;
-
       width: 100%;
-
       margin-top: 16px;
-
       border: 0;
-
       background: transparent;
-
       color: #A85C5C;
-
       font-size: 14px;
-
       font-weight: 600;
-
       cursor: pointer;
-
     }
-
 
     .login-message {
-
       min-height: 20px;
-
       margin-top: 16px;
-
       text-align: center;
-
       font-size: 14px;
-
       line-height: 1.5;
-
     }
-
 
     .login-message.error {
-
       color: #a33f3f;
-
     }
-
 
     .login-message.success {
-
       color: #42724b;
-
     }
-
 
     /* =====================================================
        RECUPERAÇÃO DE SENHA
     ====================================================== */
 
     #resetPasswordPanel {
-
       display: none;
-
       margin-top: 24px;
-
       padding-top: 24px;
-
       border-top: 1px solid #eee;
-
     }
-
 
     #resetPasswordPanel.visible {
-
       display: block;
-
     }
-
 
     .reset-title {
-
       margin: 0 0 8px;
-
       color: #555;
-
       font-size: 18px;
-
     }
-
 
     .reset-description {
-
       margin: 0 0 18px;
-
       color: #777;
-
       font-size: 14px;
-
       line-height: 1.5;
-
     }
-
 
     .reset-button {
-
       width: 100%;
-
       border: 0;
-
       border-radius: 12px;
-
       padding: 13px;
-
       background: #f0dddd;
-
       color: #7f4444;
-
       font-size: 15px;
-
       font-weight: 700;
-
       cursor: pointer;
-
     }
-
 
     .back-login-button {
-
       display: block;
-
       width: 100%;
-
       margin-top: 12px;
-
       border: 0;
-
       background: transparent;
-
       color: #777;
-
       font-size: 14px;
-
       cursor: pointer;
-
     }
-
 
     /* =====================================================
        ALTERAÇÃO DE SENHA
     ====================================================== */
 
     #changePasswordScreen {
-
       min-height: 100vh;
-
       min-height: 100dvh;
-
       display: none;
-
       align-items: center;
-
       justify-content: center;
-
       padding: 24px;
-
       box-sizing: border-box;
-
       background:
         linear-gradient(
           180deg,
           #fff8f6 0%,
           #f8eeee 100%
         );
-
     }
-
 
     #changePasswordScreen.visible {
-
       display: flex;
-
     }
-
 
     .change-password-container {
-
       width: 100%;
-
       max-width: 420px;
-
     }
 
-
     .change-password-card {
-
       background: #fff;
-
       border-radius: 24px;
-
       padding: 30px 26px;
-
       box-shadow:
         0 12px 40px
         rgba(80, 40, 40, 0.10);
-
     }
-
 
     .change-password-card h2 {
-
       margin-top: 0;
-
       color: #7f4444;
-
     }
-
 
     .change-password-card p {
-
       color: #777;
-
       line-height: 1.5;
-
       font-size: 14px;
-
     }
-
 
     .change-password-card label {
-
       display: block;
-
       margin:
         16px 0 7px;
-
       font-size: 14px;
-
       font-weight: 600;
-
       color: #444;
-
     }
-
 
     .change-password-card input {
-
       width: 100%;
-
       box-sizing: border-box;
-
       padding: 13px 14px;
-
       border: 1px solid #ddd;
-
       border-radius: 12px;
-
       font-size: 16px;
-
     }
-
 
     .change-password-button {
-
       width: 100%;
-
       margin-top: 20px;
-
       border: 0;
-
       border-radius: 12px;
-
       padding: 14px;
-
       background: #A85C5C;
-
       color: white;
-
       font-weight: 700;
-
       font-size: 16px;
-
       cursor: pointer;
-
     }
-
 
     /* =====================================================
        RELATÓRIOS
     ====================================================== */
 
     #reportsScreen {
-
       padding-bottom: 100px;
-
     }
-
 
     .reports-intro {
-
       color: #777;
-
       font-size: 14px;
-
       line-height: 1.5;
-
       margin-top: 0;
-
     }
-
 
     .report-field {
-
       margin-bottom: 18px;
-
     }
-
 
     .report-field label {
-
       display: block;
-
       margin-bottom: 7px;
-
       font-size: 14px;
-
       font-weight: 600;
-
       color: #444;
-
     }
-
 
     .report-field input,
     .report-field select {
-
       width: 100%;
-
       box-sizing: border-box;
-
       padding: 13px 14px;
-
       border: 1px solid #ddd;
-
       border-radius: 12px;
-
       font-size: 16px;
-
       background: #fff;
-
     }
-
 
     .report-button {
-
       width: 100%;
-
       border: 0;
-
       border-radius: 12px;
-
       padding: 14px;
-
       margin-top: 8px;
-
       font-size: 16px;
-
       font-weight: 700;
-
       cursor: pointer;
-
     }
-
 
     .report-button.primary {
-
       background: #A85C5C;
-
       color: white;
-
     }
-
 
     .report-button.secondary {
-
       background: #f0dddd;
-
       color: #7f4444;
-
     }
-
 
     .report-button:disabled {
-
       opacity: 0.65;
-
       cursor: wait;
-
     }
-
 
     .report-preview {
-
       margin-top: 20px;
-
       min-height: 100px;
-
     }
-
 
     .report-preview h3 {
-
       color: #7f4444;
-
       margin-top: 0;
-
     }
-
 
     .report-preview-item {
-
       padding: 12px 0;
-
       border-bottom: 1px solid #eee;
-
       font-size: 14px;
-
       line-height: 1.5;
-
     }
 
-
     /* =====================================================
-       PAINÉIS DE CONSULTAS E MEDICAMENTOS
+       PAINÉIS
     ====================================================== */
 
     .home-panel {
-
       margin-top: 16px;
-
     }
-
 
     .consultation-card {
-
       padding: 14px;
-
       border-bottom: 1px solid #eee;
-
     }
-
 
     .consultation-card:last-child {
-
       border-bottom: 0;
-
     }
-
 
     .consultation-card strong {
-
       display: block;
-
       color: #7f4444;
-
       margin-bottom: 5px;
-
     }
-
 
     .consultation-card p {
-
       margin: 4px 0;
-
       color: #555;
-
     }
-
 
     .consultation-card small {
-
       color: #777;
-
     }
-
 
     .med-item {
-
       display: flex;
-
       align-items: center;
-
       justify-content: space-between;
-
       gap: 12px;
-
       padding: 14px;
-
       border: 1px solid #eee;
-
       border-radius: 14px;
-
       background: #fff;
-
     }
-
 
     .med-item.taken {
-
       background: #f4faf5;
-
       border-color: #cfe4d2;
-
     }
-
 
     .med-item > div {
-
       display: flex;
-
       flex-direction: column;
-
       gap: 4px;
-
       min-width: 0;
-
     }
-
 
     .med-item small {
-
       color: #777;
-
     }
-
 
     .med-item button {
-
       border: 0;
-
       border-radius: 10px;
-
       padding: 9px 12px;
-
       background: #f0dddd;
-
       color: #7f4444;
-
       font-weight: 700;
-
       cursor: pointer;
-
       white-space: nowrap;
-
     }
-
 
     .med-item.taken button {
-
       background: #dcefe0;
-
       color: #42724b;
-
     }
 
-
     /* =====================================================
-       CONSULTAS — CARDS
+       CONSULTAS
     ====================================================== */
 
     .consultations-list {
-
       display: flex;
-
       flex-direction: column;
-
       gap: 14px;
-
     }
-
 
     .consultation-screen-card {
-
       padding: 16px;
-
       border: 1px solid #eee;
-
       border-radius: 16px;
-
       background: #fff;
-
     }
-
 
     .consultation-screen-card .card-header {
-
       display: flex;
-
       justify-content: space-between;
-
       align-items: flex-start;
-
       gap: 12px;
-
       margin-bottom: 12px;
-
     }
-
 
     .consultation-screen-card .card-header span {
-
       color: #A85C5C;
-
       font-weight: 700;
-
       text-align: right;
-
     }
-
 
     .consultation-screen-card .card-body p {
-
       margin: 8px 0;
-
       color: #555;
-
     }
-
 
     .consultation-screen-card .card-actions {
-
       display: flex;
-
       gap: 8px;
-
       margin-top: 14px;
-
     }
-
 
     .consultation-screen-card .card-actions button {
-
       border: 0;
-
       border-radius: 10px;
-
       padding: 9px 12px;
-
       cursor: pointer;
-
       font-weight: 600;
-
     }
-
 
     /* =====================================================
        LIXEIRA
     ====================================================== */
 
     .trash-item {
-
       display: flex;
-
       align-items: center;
-
       justify-content: space-between;
-
       gap: 12px;
-
       padding: 14px;
-
       border-bottom: 1px solid #eee;
-
     }
-
 
     .trash-item:last-child {
-
       border-bottom: 0;
-
     }
-
 
     .trash-item > div {
-
       display: flex;
-
       flex-direction: column;
-
       gap: 5px;
-
     }
-
 
     .trash-item small {
-
       color: #777;
-
     }
 
-
     .trash-item button {
-
       border: 0;
-
       border-radius: 10px;
-
       padding: 9px 12px;
-
       background: #f0dddd;
-
       color: #7f4444;
-
       font-weight: 700;
-
       cursor: pointer;
-
       white-space: nowrap;
+    }
+
+    /* =====================================================
+       ÁGUA
+    ====================================================== */
+
+    .water-home-panel {
+      margin-top: 16px;
+    }
+
+    .water-quick-button {
+      position: relative;
+    }
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media (max-width: 600px) {
+
+      .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .quick-button {
+        min-width: 0;
+      }
+
+      .water-quick-button {
+        grid-column: span 2;
+      }
+
+      .med-item {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .med-item button {
+        width: 100%;
+      }
 
     }
 
@@ -1338,6 +986,10 @@
         </section>
 
 
+        <!-- =================================================
+             AÇÕES RÁPIDAS
+        ================================================== -->
+
         <section class="quick-actions">
 
 
@@ -1402,13 +1054,14 @@
 
 
           <!-- =================================================
-               ÁGUA
+               ÁGUA — BOTÃO ÚNICO
           ================================================== -->
 
           <button
-            class="quick-button"
+            class="quick-button water-quick-button"
             type="button"
             data-record-type="water"
+            id="waterQuickButton"
           >
 
             <span>
@@ -2786,6 +2439,87 @@
   ====================================================== -->
 
   <script src="sincronizacao.js"></script>
+
+
+  <!-- =====================================================
+       CORREÇÃO DO BOTÃO DE ÁGUA
+       
+       O app.js é mantido como está.
+       Este trecho garante que exista somente UM botão
+       de água, mesmo que alguma função antiga tente criar
+       outro botão.
+  ====================================================== -->
+
+  <script>
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      function() {
+
+        function keepOnlyOneWaterButton() {
+
+          const buttons =
+            document.querySelectorAll(
+              '[data-record-type="water"]'
+            );
+
+
+          if (buttons.length <= 1) {
+            return;
+          }
+
+
+          /*
+           * Mantém o primeiro botão encontrado
+           * e remove os demais.
+           */
+
+          buttons.forEach(
+            function(button, index) {
+
+              if (index > 0) {
+
+                button.remove();
+
+              }
+
+            }
+          );
+
+        }
+
+
+        keepOnlyOneWaterButton();
+
+
+        /*
+         * Se algum código do app.js criar outro botão
+         * depois da inicialização, o observador remove
+         * a duplicata automaticamente.
+         */
+
+        const observer =
+          new MutationObserver(
+            function() {
+
+              keepOnlyOneWaterButton();
+
+            }
+          );
+
+
+        observer.observe(
+          document.body,
+          {
+            childList: true,
+            subtree: true
+          }
+        );
+
+      }
+    );
+
+  </script>
 
 
   <!-- =====================================================

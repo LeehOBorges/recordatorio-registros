@@ -1,7 +1,7 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
-   Gráfico de glicemias aprimorado
+   Gráfico de glicemias + análise por período do dia
 ========================================================= */
 
 (function () {
@@ -755,7 +755,7 @@
 
 
   /* =====================================================
-     RESUMOS
+     RESUMOS GERAIS
   ====================================================== */
 
   function countType(
@@ -1012,6 +1012,448 @@
 
 
   /* =====================================================
+     CLASSIFICAÇÃO POR PERÍODO DO DIA
+  ====================================================== */
+
+  function getDayPeriod(
+    time
+  ) {
+
+    if (!time) {
+
+      return "unknown";
+
+    }
+
+
+    const parts =
+      String(
+        time
+      ).split(":");
+
+
+    const hour =
+      Number(
+        parts[0]
+      );
+
+
+    if (
+      !Number.isFinite(
+        hour
+      )
+    ) {
+
+      return "unknown";
+
+    }
+
+
+    if (
+      hour >= 5 &&
+      hour < 12
+    ) {
+
+      return "morning";
+
+    }
+
+
+    if (
+      hour >= 12 &&
+      hour < 18
+    ) {
+
+      return "afternoon";
+
+    }
+
+
+    return "night";
+
+  }
+
+
+  function getPeriodLabel(
+    period
+  ) {
+
+    const labels = {
+
+      morning:
+        "🌅 Manhã",
+
+      afternoon:
+        "☀️ Tarde",
+
+      night:
+        "🌙 Noite",
+
+      unknown:
+        "⏱️ Horário não informado"
+
+    };
+
+
+    return (
+      labels[period] ||
+      labels.unknown
+    );
+
+  }
+
+
+  function buildPeriodAnalysis(
+    glucoseRecords
+  ) {
+
+    const periods = {
+
+      morning: [],
+
+      afternoon: [],
+
+      night: [],
+
+      unknown: []
+
+    };
+
+
+    glucoseRecords.forEach(
+      function (record) {
+
+        const period =
+          getDayPeriod(
+            record.time
+          );
+
+
+        periods[period].push(
+          record.value
+        );
+
+      }
+    );
+
+
+    const order = [
+
+      "morning",
+
+      "afternoon",
+
+      "night",
+
+      "unknown"
+
+    ];
+
+
+    let html = `
+
+      <section
+        class="card"
+        style="
+          margin-top:16px;
+        "
+      >
+
+        <h2>
+          🕐 Glicemias por período do dia
+        </h2>
+
+        <p
+          style="
+            margin-top:0;
+            color:#777;
+            font-size:13px;
+            line-height:1.5;
+          "
+        >
+          Comparação das medições conforme o horário
+          em que foram registradas.
+        </p>
+
+
+        <div
+          style="
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+          "
+        >
+
+    `;
+
+
+    order.forEach(
+      function (period) {
+
+        const values =
+          periods[period];
+
+
+        if (
+          period === "unknown" &&
+          values.length === 0
+        ) {
+
+          return;
+
+        }
+
+
+        const avg =
+          average(
+            values
+          );
+
+
+        const min =
+          values.length
+            ? Math.min(
+                ...values
+              )
+            : null;
+
+
+        const max =
+          values.length
+            ? Math.max(
+                ...values
+              )
+            : null;
+
+
+        html += `
+
+          <div
+            style="
+              border:1px solid #eee;
+              border-radius:14px;
+              padding:14px;
+              background:#fff;
+            "
+          >
+
+            <div
+              style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:10px;
+                margin-bottom:10px;
+              "
+            >
+
+              <strong
+                style="
+                  color:#7f4444;
+                  font-size:16px;
+                "
+              >
+                ${getPeriodLabel(
+                  period
+                )}
+              </strong>
+
+
+              <span
+                style="
+                  font-size:12px;
+                  color:#777;
+                "
+              >
+                ${
+                  values.length
+                }
+                ${
+                  values.length ===
+                  1
+                    ? "medição"
+                    : "medições"
+                }
+              </span>
+
+            </div>
+
+
+            <div
+              style="
+                display:grid;
+                grid-template-columns:
+                  repeat(3, minmax(0, 1fr));
+                gap:8px;
+              "
+            >
+
+              <div
+                style="
+                  padding:10px;
+                  background:#f8eeee;
+                  border-radius:10px;
+                  text-align:center;
+                "
+              >
+
+                <div
+                  style="
+                    font-size:10px;
+                    color:#777;
+                  "
+                >
+                  Média
+                </div>
+
+
+                <strong
+                  style="
+                    display:block;
+                    margin-top:4px;
+                    color:#7f4444;
+                  "
+                >
+                  ${
+                    avg === null
+                      ? "—"
+                      : Math.round(
+                          avg
+                        ) +
+                        " mg/dL"
+                  }
+                </strong>
+
+              </div>
+
+
+              <div
+                style="
+                  padding:10px;
+                  background:#f8eeee;
+                  border-radius:10px;
+                  text-align:center;
+                "
+              >
+
+                <div
+                  style="
+                    font-size:10px;
+                    color:#777;
+                  "
+                >
+                  Mínima
+                </div>
+
+
+                <strong
+                  style="
+                    display:block;
+                    margin-top:4px;
+                    color:#7f4444;
+                  "
+                >
+                  ${
+                    min === null
+                      ? "—"
+                      : min +
+                        " mg/dL"
+                  }
+                </strong>
+
+              </div>
+
+
+              <div
+                style="
+                  padding:10px;
+                  background:#f8eeee;
+                  border-radius:10px;
+                  text-align:center;
+                "
+              >
+
+                <div
+                  style="
+                    font-size:10px;
+                    color:#777;
+                  "
+                >
+                  Máxima
+                </div>
+
+
+                <strong
+                  style="
+                    display:block;
+                    margin-top:4px;
+                    color:#7f4444;
+                  "
+                >
+                  ${
+                    max === null
+                      ? "—"
+                      : max +
+                        " mg/dL"
+                  }
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `;
+
+      }
+    );
+
+
+    html += `
+
+        </div>
+
+    `;
+
+
+    if (
+      periods.morning.length === 0 &&
+      periods.afternoon.length === 0 &&
+      periods.night.length === 0 &&
+      periods.unknown.length === 0
+    ) {
+
+      html += `
+
+        <div
+          class="empty-state"
+          style="
+            margin-top:12px;
+          "
+        >
+          Não há glicemias com horário
+          suficiente para esta análise.
+        </div>
+
+      `;
+
+    }
+
+
+    html += `
+
+      </section>
+
+    `;
+
+
+    return html;
+
+  }
+
+
+  /* =====================================================
      GRÁFICO DE LINHA
   ====================================================== */
 
@@ -1255,7 +1697,7 @@
 
 
     /* =================================================
-       LINHAS DE GRADE
+       GRADE
     ================================================== */
 
     let gridHTML =
@@ -1309,6 +1751,7 @@
           stroke-width="1"
         ></line>
 
+
         <text
           x="${
             left -
@@ -1330,10 +1773,6 @@
 
     }
 
-
-    /* =================================================
-       LINHA DA MÉDIA
-    ================================================== */
 
     const averageY =
       yFor(
@@ -1411,7 +1850,7 @@
 
 
     /* =================================================
-       RÓTULOS DO EIXO X
+       EIXO HORIZONTAL
     ================================================== */
 
     let labelsHTML =
@@ -1498,17 +1937,6 @@
         }
 
 
-        const dateLabel =
-          formatDate(
-            point.date
-          );
-
-
-        const timeLabel =
-          point.time ||
-          "";
-
-
         labelsHTML += `
 
           <text
@@ -1521,11 +1949,14 @@
             font-size="10"
             fill="#777"
           >
-            ${dateLabel}
+            ${formatDate(
+              point.date
+            )}
           </text>
 
+
           ${
-            timeLabel
+            point.time
               ? `
                 <text
                   x="${point.x}"
@@ -1538,7 +1969,7 @@
                   fill="#999"
                 >
                   ${escapeHTML(
-                    timeLabel
+                    point.time
                   )}
                 </text>
               `
@@ -1551,17 +1982,14 @@
     );
 
 
-    /* =================================================
-       ÁREA DE STATUS
-    ================================================== */
-
     const firstValue =
       glucoseRecords[0].value;
 
 
     const lastValue =
       glucoseRecords[
-        glucoseRecords.length - 1
+        glucoseRecords.length -
+        1
       ].value;
 
 
@@ -1610,8 +2038,16 @@
             line-height:1.5;
           "
         >
-          ${glucoseRecords.length}
-          medição(ões) no período.
+          ${
+            glucoseRecords.length
+          }
+          ${
+            glucoseRecords.length ===
+            1
+              ? "medição"
+              : "medições"
+          }
+          no período.
         </p>
 
 
@@ -1752,6 +2188,7 @@
               Média
             </div>
 
+
             <strong
               style="
                 display:block;
@@ -1788,6 +2225,7 @@
               Tendência
             </div>
 
+
             <strong
               style="
                 display:block;
@@ -1818,6 +2256,7 @@
             >
               Mínima
             </div>
+
 
             <strong
               style="
@@ -1850,6 +2289,7 @@
             >
               Máxima
             </div>
+
 
             <strong
               style="
@@ -2379,6 +2819,11 @@
 
           `
       }
+
+
+      ${buildPeriodAnalysis(
+        glucoseRecords
+      )}
 
 
       ${

@@ -2,9 +2,12 @@
    RECORDATÓRIO + REGISTROS
    SINCRONIZAÇÃO COM SUPABASE
 
-   Não substitui o app.js.
-   Mantém o localStorage como cópia local e usa
-   o Supabase como banco central.
+   Versão corrigida:
+   - Mantém localStorage como cópia local
+   - Usa Supabase como banco central
+   - Faz merge entre dados locais e dados da nuvem
+   - Atualiza o database em memória do app.js
+   - Atualiza a interface após a sincronização
 ========================================================= */
 
 (function () {
@@ -19,8 +22,10 @@
   const SUPABASE_URL =
     "https://gutbveorftpahuyjonnv.supabase.co";
 
+
   const SUPABASE_PUBLISHABLE_KEY =
     "sb_publishable_L8XMa2cXo2aWaGHHMdP1Tw_JtjABUQi";
+
 
   const STORAGE_KEY =
     "recordatorio_registros_v01";
@@ -31,6 +36,7 @@
   ====================================================== */
 
   let syncClient = null;
+
 
   try {
 
@@ -80,6 +86,11 @@
 
   function getTimestamp(record) {
 
+    if (!record) {
+      return nowISO();
+    }
+
+
     return (
       record.deletedAt ||
       record.updatedAt ||
@@ -95,8 +106,10 @@
     const value =
       getTimestamp(record);
 
+
     const time =
       new Date(value).getTime();
+
 
     return Number.isFinite(time)
       ? time
@@ -104,6 +117,43 @@
 
   }
 
+
+  function cloneObject(object) {
+
+    if (
+      object === undefined ||
+      object === null
+    ) {
+
+      return object;
+
+    }
+
+
+    try {
+
+      return JSON.parse(
+        JSON.stringify(object)
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao clonar objeto:",
+        error
+      );
+
+
+      return object;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOCAL DATABASE
+  ====================================================== */
 
   function loadLocalDatabase() {
 
@@ -176,34 +226,115 @@
     trash
   ) {
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
+    try {
 
-        records,
-        trash
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
 
-      })
-    );
+          records:
+            Array.isArray(records)
+              ? records
+              : [],
 
-  }
+          trash:
+            Array.isArray(trash)
+              ? trash
+              : []
 
+        })
+      );
 
-  function cloneObject(
-    object
-  ) {
+    } catch (error) {
 
-    return JSON.parse(
-      JSON.stringify(
-        object
-      )
-    );
+      console.error(
+        "Erro ao salvar registros locais:",
+        error
+      );
+
+    }
 
   }
 
 
   /* =====================================================
-     CONVERTER REGISTRO LOCAL → SUPABASE
+     ATUALIZAR DATABASE DO APP.JS
+  ====================================================== */
+
+  function updateAppDatabase(
+    mergedDatabase
+  ) {
+
+    if (!mergedDatabase) {
+      return;
+    }
+
+
+    const records =
+      Array.isArray(
+        mergedDatabase.records
+      )
+        ? mergedDatabase.records
+        : [];
+
+
+    const trash =
+      Array.isArray(
+        mergedDatabase.trash
+      )
+        ? mergedDatabase.trash
+        : [];
+
+
+    /*
+     * Se o app.js disponibilizar uma função pública
+     * para atualizar o banco em memória, usamos ela.
+     */
+
+    if (
+      typeof window.setDatabaseFromSync ===
+      "function"
+    ) {
+
+      window.setDatabaseFromSync({
+        records:
+          cloneObject(records),
+
+        trash:
+          cloneObject(trash)
+
+      });
+
+      return;
+
+    }
+
+
+    /*
+     * Compatibilidade adicional:
+     * alguns projetos expõem o database em window.
+     */
+
+    if (
+      window.database &&
+      typeof window.database ===
+        "object"
+    ) {
+
+      window.database.records =
+        cloneObject(records);
+
+
+      window.database.trash =
+        cloneObject(trash);
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOCAL → SUPABASE
   ====================================================== */
 
   function localToCloudRow(
@@ -251,7 +382,7 @@
 
 
   /* =====================================================
-     CONVERTER SUPABASE → REGISTRO LOCAL
+     SUPABASE → LOCAL
   ====================================================== */
 
   function cloudRowToLocal(
@@ -293,8 +424,7 @@
 
 
     if (
-      row.atualizado_em &&
-      !original.updatedAt
+      row.atualizado_em
     ) {
 
       original.updatedAt =
@@ -309,7 +439,7 @@
 
 
   /* =====================================================
-     OBTÉM USUÁRIO LOGADO
+     USUÁRIO LOGADO
   ====================================================== */
 
   async function getCurrentUser() {
@@ -337,6 +467,7 @@
           error
         );
 
+
         return null;
 
       }
@@ -356,6 +487,7 @@
         error
       );
 
+
       return null;
 
     }
@@ -364,7 +496,7 @@
 
 
   /* =====================================================
-     CRIA MAPA LOCAL
+     CRIAR MAPA LOCAL
   ====================================================== */
 
   function createLocalMap(
@@ -375,11 +507,39 @@
       new Map();
 
 
-    database.records.forEach(
+    if (!database) {
+
+      return map;
+
+    }
+
+
+    const records =
+      Array.isArray(
+        database.records
+      )
+        ? database.records
+        : [];
+
+
+    const trash =
+      Array.isArray(
+        database.trash
+      )
+        ? database.trash
+        : [];
+
+
+    records.forEach(
       function (record) {
 
-        if (!record || !record.id) {
+        if (
+          !record ||
+          !record.id
+        ) {
+
           return;
+
         }
 
 
@@ -427,11 +587,16 @@
     );
 
 
-    database.trash.forEach(
+    trash.forEach(
       function (record) {
 
-        if (!record || !record.id) {
+        if (
+          !record ||
+          !record.id
+        ) {
+
           return;
+
         }
 
 
@@ -485,7 +650,7 @@
 
 
   /* =====================================================
-     BUSCAR REGISTROS DO SUPABASE
+     BUSCAR REGISTROS DA NUVEM
   ====================================================== */
 
   async function loadCloudRows(
@@ -514,9 +679,7 @@
     }
 
 
-    return Array.isArray(
-      data
-    )
+    return Array.isArray(data)
       ? data
       : [];
 
@@ -524,7 +687,7 @@
 
 
   /* =====================================================
-     UNIFICAR LOCAL + NUVEM
+     MERGE LOCAL + NUVEM
   ====================================================== */
 
   function mergeData(
@@ -587,6 +750,7 @@
             cloudItem
           );
 
+
           return;
 
         }
@@ -607,6 +771,11 @@
                 cloudRecord
               );
 
+
+        /*
+         * Se o registro da nuvem for mais novo,
+         * ele vence.
+         */
 
         if (
           cloudTime >
@@ -630,7 +799,7 @@
 
 
   /* =====================================================
-     TRANSFORMAR MAPA EM DATABASE LOCAL
+     MAPA → DATABASE
   ====================================================== */
 
   function buildLocalDatabase(
@@ -645,8 +814,13 @@
     merged.forEach(
       function (item) {
 
-        if (!item || !item.record) {
+        if (
+          !item ||
+          !item.record
+        ) {
+
           return;
+
         }
 
 
@@ -683,6 +857,7 @@
           String(
             a.date || ""
           );
+
 
         const dateB =
           String(
@@ -745,7 +920,7 @@
 
 
   /* =====================================================
-     ENVIAR DADOS UNIFICADOS PARA O SUPABASE
+     ENVIAR MERGE PARA SUPABASE
   ====================================================== */
 
   async function uploadMergedData(
@@ -815,6 +990,98 @@
 
 
   /* =====================================================
+     ATUALIZAR INTERFACE
+  ====================================================== */
+
+  function refreshApplication() {
+
+    try {
+
+      if (
+        typeof window.renderDashboard ===
+        "function"
+      ) {
+
+        window.renderDashboard();
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao atualizar dashboard:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        typeof window.renderDiary ===
+        "function"
+      ) {
+
+        window.renderDiary();
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao atualizar diário:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        typeof window.renderConsultations ===
+        "function"
+      ) {
+
+        window.renderConsultations();
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao atualizar consultas:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        typeof window.renderTrash ===
+        "function"
+      ) {
+
+        window.renderTrash();
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao atualizar lixeira:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
      SINCRONIZAÇÃO PRINCIPAL
   ====================================================== */
 
@@ -822,22 +1089,19 @@
     reason = "manual"
   ) {
 
-    if (
-      syncing
-    ) {
+    if (syncing) {
 
       return;
 
     }
 
 
-    if (
-      !navigator.onLine
-    ) {
+    if (!navigator.onLine) {
 
       console.log(
         "Sincronização ignorada: sem internet."
       );
+
 
       return;
 
@@ -849,6 +1113,7 @@
       console.warn(
         "Cliente Supabase não disponível."
       );
+
 
       return;
 
@@ -870,10 +1135,15 @@
           "Nenhum usuário autenticado. Sincronização aguardando login."
         );
 
+
         return;
 
       }
 
+
+      /*
+       * Primeiro carregamos o estado local.
+       */
 
       const localDatabase =
         loadLocalDatabase();
@@ -885,11 +1155,26 @@
         );
 
 
+      /*
+       * Depois buscamos os registros do usuário
+       * no Supabase.
+       */
+
       const cloudRows =
         await loadCloudRows(
           user.id
         );
 
+
+      console.log(
+        "Registros encontrados no Supabase:",
+        cloudRows.length
+      );
+
+
+      /*
+       * Fazemos o merge.
+       */
 
       const merged =
         mergeData(
@@ -898,6 +1183,10 @@
         );
 
 
+      /*
+       * Transformamos o merge em database.
+       */
+
       const mergedDatabase =
         buildLocalDatabase(
           merged
@@ -905,9 +1194,7 @@
 
 
       /*
-       * Primeiro salvamos localmente a união.
-       * Assim nenhum dado que já exista em qualquer
-       * dispositivo é descartado.
+       * Salva no localStorage.
        */
 
       saveLocalDatabase(
@@ -917,7 +1204,18 @@
 
 
       /*
-       * Depois enviamos a união completa para o Supabase.
+       * IMPORTANTE:
+       * Atualiza também o database que está
+       * em memória no app.js.
+       */
+
+      updateAppDatabase(
+        mergedDatabase
+      );
+
+
+      /*
+       * Envia a união completa de volta ao Supabase.
        */
 
       await uploadMergedData(
@@ -929,11 +1227,16 @@
       console.log(
         "Sincronização concluída:",
         {
-          motivo: reason,
+
+          motivo:
+            reason,
+
           registros:
             mergedDatabase.records.length,
+
           lixeira:
             mergedDatabase.trash.length
+
         }
       );
 
@@ -958,49 +1261,10 @@
 
 
       /*
-       * Atualiza a tela sem recarregar a página.
-       * O app.js mantém seu próprio estado em memória,
-       * então recarregamos a página somente se necessário.
+       * Atualiza a interface.
        */
 
-      if (
-        typeof window.renderDashboard ===
-        "function"
-      ) {
-
-        window.renderDashboard();
-
-      }
-
-
-      if (
-        typeof window.renderDiary ===
-        "function"
-      ) {
-
-        window.renderDiary();
-
-      }
-
-
-      if (
-        typeof window.renderConsultations ===
-        "function"
-      ) {
-
-        window.renderConsultations();
-
-      }
-
-
-      if (
-        typeof window.renderTrash ===
-        "function"
-      ) {
-
-        window.renderTrash();
-
-      }
+      refreshApplication();
 
     } catch (error) {
 
@@ -1014,7 +1278,8 @@
         new CustomEvent(
           "recordatorioSyncError",
           {
-            detail: error
+            detail:
+              error
           }
         )
       );
@@ -1043,6 +1308,7 @@
         "saveDatabase ainda não está disponível."
       );
 
+
       return false;
 
     }
@@ -1064,12 +1330,16 @@
     window.saveDatabase =
       function () {
 
+        /*
+         * Primeiro mantém o comportamento original
+         * do aplicativo.
+         */
+
         originalSaveDatabase();
 
 
         /*
-         * Não bloqueia o aplicativo esperando a internet.
-         * A sincronização acontece em segundo plano.
+         * Depois sincroniza em segundo plano.
          */
 
         syncNow(
@@ -1089,7 +1359,7 @@
 
 
   /* =====================================================
-     TENTAR INSTALAR O HOOK
+     TENTAR INSTALAR HOOK
   ====================================================== */
 
   function tryInstallSaveHook() {
@@ -1112,13 +1382,15 @@
 
 
   /* =====================================================
-     SINCRONIZAÇÃO APÓS LOGIN
+     AUTENTICAÇÃO
   ====================================================== */
 
   function installAuthListener() {
 
     if (!syncClient) {
+
       return;
+
     }
 
 
@@ -1128,11 +1400,15 @@
         session
       ) {
 
+        console.log(
+          "Sincronização - Auth:",
+          event
+        );
+
+
         if (
-          (
-            event ===
-            "SIGNED_IN"
-          ) &&
+          event ===
+          "SIGNED_IN" &&
           session
         ) {
 
@@ -1168,7 +1444,7 @@
 
 
   /* =====================================================
-     SINCRONIZAR AO VOLTAR PARA A PÁGINA
+     VISIBILIDADE / INTERNET
   ====================================================== */
 
   function installVisibilityListener() {
@@ -1219,14 +1495,12 @@
 
 
   /* =====================================================
-     SINCRONIZAÇÃO PERIODICA
+     SINCRONIZAÇÃO PERIÓDICA
   ====================================================== */
 
   function installPeriodicSync() {
 
-    if (
-      syncTimer
-    ) {
+    if (syncTimer) {
 
       clearInterval(
         syncTimer

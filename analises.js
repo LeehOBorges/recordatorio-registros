@@ -1,4 +1,3 @@
-```javascript
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
@@ -8,27 +7,16 @@
 
   "use strict";
 
-
   const STORAGE_KEY =
     "recordatorio_registros_v01";
 
-
   let analysisScreen = null;
-
   let periodSelect = null;
-
   let startDateInput = null;
-
   let endDateInput = null;
-
   let refreshButton = null;
-
   let content = null;
 
-
-  /* =====================================================
-     INICIALIZAÇÃO
-  ====================================================== */
 
   function initAnalysis() {
 
@@ -36,7 +24,6 @@
       document.getElementById(
         "analysisScreen"
       );
-
 
     if (!analysisScreen) {
 
@@ -48,21 +35,13 @@
 
     }
 
-
     createInterface();
-
     bindEvents();
-
     setDefaultPeriod();
-
     renderAnalysis();
 
   }
 
-
-  /* =====================================================
-     CRIAR INTERFACE
-  ====================================================== */
 
   function createInterface() {
 
@@ -71,19 +50,13 @@
         "main"
       );
 
-
     if (!main) {
-
       return;
-
     }
-
 
     main.innerHTML = `
 
-      <section
-        class="card analysis-controls"
-      >
+      <section class="card">
 
         <h2>
           📊 Análises
@@ -101,9 +74,10 @@
           e visualize a evolução das glicemias.
         </p>
 
-
         <div
-          class="analysis-field"
+          style="
+            margin-bottom:16px;
+          "
         >
 
           <label
@@ -152,13 +126,9 @@
 
         </div>
 
-
         <div
           id="analysisCustomDates"
           hidden
-          style="
-            margin-top:14px;
-          "
         >
 
           <div
@@ -196,7 +166,6 @@
 
           </div>
 
-
           <div>
 
             <label
@@ -230,7 +199,6 @@
 
         </div>
 
-
         <button
           type="button"
           id="refreshAnalysisButton"
@@ -252,37 +220,31 @@
 
       </section>
 
-
       <div
         id="analysisContent"
       ></div>
 
     `;
 
-
     periodSelect =
       document.getElementById(
         "analysisPeriod"
       );
-
 
     startDateInput =
       document.getElementById(
         "analysisStartDate"
       );
 
-
     endDateInput =
       document.getElementById(
         "analysisEndDate"
       );
 
-
     refreshButton =
       document.getElementById(
         "refreshAnalysisButton"
       );
-
 
     content =
       document.getElementById(
@@ -291,10 +253,6 @@
 
   }
 
-
-  /* =====================================================
-     EVENTOS
-  ====================================================== */
 
   function bindEvents() {
 
@@ -309,18 +267,13 @@
               "analysisCustomDates"
             );
 
-
           if (!customDates) {
-
             return;
-
           }
-
 
           customDates.hidden =
             periodSelect.value !==
             "custom";
-
 
           if (
             periodSelect.value ===
@@ -331,14 +284,12 @@
 
           }
 
-
           renderAnalysis();
 
         }
       );
 
     }
-
 
     if (refreshButton) {
 
@@ -353,7 +304,6 @@
 
     }
 
-
     if (startDateInput) {
 
       startDateInput.addEventListener(
@@ -362,7 +312,6 @@
       );
 
     }
-
 
     if (endDateInput) {
 
@@ -376,17 +325,12 @@
   }
 
 
-  /* =====================================================
-     DATAS
-  ====================================================== */
-
   function dateToKey(
     date
   ) {
 
     const year =
       date.getFullYear();
-
 
     const month =
       String(
@@ -396,7 +340,6 @@
         "0"
       );
 
-
     const day =
       String(
         date.getDate()
@@ -404,7 +347,6 @@
         2,
         "0"
       );
-
 
     return (
       year +
@@ -417,29 +359,17 @@
   }
 
 
-  function todayKey() {
-
-    return dateToKey(
-      new Date()
-    );
-
-  }
-
-
   function setDefaultCustomDates() {
 
     const end =
       new Date();
 
-
     const start =
       new Date();
-
 
     start.setDate(
       start.getDate() - 6
     );
-
 
     if (startDateInput) {
 
@@ -449,7 +379,6 @@
         );
 
     }
-
 
     if (endDateInput) {
 
@@ -466,15 +395,11 @@
   function setDefaultPeriod() {
 
     if (!periodSelect) {
-
       return;
-
     }
-
 
     periodSelect.value =
       "7";
-
 
     setDefaultCustomDates();
 
@@ -486,7 +411,6 @@
     const end =
       new Date();
 
-
     end.setHours(
       0,
       0,
@@ -494,12 +418,10 @@
       0
     );
 
-
     let start =
       new Date(
         end
       );
-
 
     if (
       periodSelect &&
@@ -512,12 +434,10 @@
           ? startDateInput.value
           : "";
 
-
       const customEnd =
         endDateInput
           ? endDateInput.value
           : "";
-
 
       if (
         !customStart ||
@@ -528,7 +448,6 @@
 
       }
 
-
       if (
         customStart >
         customEnd
@@ -537,7 +456,6 @@
         return null;
 
       }
-
 
       return {
 
@@ -551,7 +469,6 @@
 
     }
 
-
     const days =
       Number(
         periodSelect
@@ -559,14 +476,12 @@
           : 7
       );
 
-
     start.setDate(
       start.getDate() -
       (
         days - 1
       )
     );
-
 
     return {
 
@@ -585,10 +500,6 @@
   }
 
 
-  /* =====================================================
-     BANCO LOCAL
-  ====================================================== */
-
   function loadDatabase() {
 
     try {
@@ -597,7 +508,6 @@
         localStorage.getItem(
           STORAGE_KEY
         );
-
 
       if (!stored) {
 
@@ -611,12 +521,10 @@
 
       }
 
-
       const parsed =
         JSON.parse(
           stored
         );
-
 
       return {
 
@@ -643,7 +551,6 @@
         error
       );
 
-
       return {
 
         records: [],
@@ -662,17 +569,14 @@
     const database =
       loadDatabase();
 
-
     const range =
       getDateRange();
-
 
     if (!range) {
 
       return [];
 
     }
-
 
     return database.records.filter(
       function (record) {
@@ -682,7 +586,6 @@
             record.date ||
             ""
           );
-
 
         return (
           date >=
@@ -697,26 +600,18 @@
   }
 
 
-  /* =====================================================
-     FORMATAÇÕES
-  ====================================================== */
-
   function formatDate(
     value
   ) {
 
     if (!value) {
-
       return "";
-
     }
-
 
     const parts =
       String(
         value
       ).split("-");
-
 
     if (
       parts.length !==
@@ -726,7 +621,6 @@
       return value;
 
     }
-
 
     return (
       parts[2] +
@@ -770,10 +664,6 @@
 
   }
 
-
-  /* =====================================================
-     RESUMOS
-  ====================================================== */
 
   function countType(
     records,
@@ -820,7 +710,6 @@
               record.duration
             );
 
-
           return (
             total +
             (
@@ -862,7 +751,6 @@
               record.value
             );
 
-
           return Number.isFinite(
             value
           )
@@ -895,7 +783,6 @@
       return null;
 
     }
-
 
     return (
       values.reduce(
@@ -949,9 +836,7 @@
 
           ];
 
-
           let value = 0;
-
 
           for (
             const candidate
@@ -962,7 +847,6 @@
               Number(
                 candidate
               );
-
 
             if (
               Number.isFinite(
@@ -979,7 +863,6 @@
 
           }
 
-
           return (
             total +
             value
@@ -991,10 +874,6 @@
 
   }
 
-
-  /* =====================================================
-     GRÁFICO DE GLICEMIA
-  ====================================================== */
 
   function buildGlucoseChart(
     records
@@ -1060,12 +939,10 @@
               " " +
               a.time;
 
-
             const second =
               b.date +
               " " +
               b.time;
-
 
             return first.localeCompare(
               second
@@ -1082,7 +959,12 @@
 
       return `
 
-        <section class="card">
+        <section
+          class="card"
+          style="
+            margin-top:16px;
+          "
+        >
 
           <h2>
             🩸 Glicemias
@@ -1115,12 +997,10 @@
         ...values
       );
 
-
     const max =
       Math.max(
         ...values
       );
-
 
     const range =
       Math.max(
@@ -1131,7 +1011,12 @@
 
     let chartHTML = `
 
-      <section class="card">
+      <section
+        class="card"
+        style="
+          margin-top:16px;
+        "
+      >
 
         <h2>
           🩸 Evolução das glicemias
@@ -1279,9 +1164,58 @@
   }
 
 
-  /* =====================================================
-     TELA COMPLETA
-  ====================================================== */
+  function summaryCard(
+    icon,
+    label,
+    value
+  ) {
+
+    return `
+
+      <div
+        style="
+          padding:14px;
+          background:#fff;
+          border:1px solid #eee;
+          border-radius:14px;
+        "
+      >
+
+        <div
+          style="
+            font-size:20px;
+            margin-bottom:5px;
+          "
+        >
+          ${icon}
+        </div>
+
+        <div
+          style="
+            font-size:12px;
+            color:#777;
+          "
+        >
+          ${label}
+        </div>
+
+        <strong
+          style="
+            display:block;
+            margin-top:4px;
+            color:#7f4444;
+            font-size:22px;
+          "
+        >
+          ${value}
+        </strong>
+
+      </div>
+
+    `;
+
+  }
+
 
   function renderAnalysis() {
 
@@ -1291,16 +1225,19 @@
 
     }
 
-
     const range =
       getDateRange();
-
 
     if (!range) {
 
       content.innerHTML = `
 
-        <section class="card">
+        <section
+          class="card"
+          style="
+            margin-top:16px;
+          "
+        >
 
           <div class="empty-state">
 
@@ -1504,7 +1441,6 @@
           📈 Resumo
         </h2>
 
-
         <div
           style="
             display:flex;
@@ -1663,96 +1599,10 @@
         records
       )}
 
-
-      ${
-        records.length === 0
-          ? `
-
-            <section
-              class="card"
-              style="
-                margin-top:16px;
-              "
-            >
-
-              <div class="empty-state">
-
-                Nenhum registro encontrado
-                no período selecionado.
-
-              </div>
-
-            </section>
-
-          `
-          : ""
-      }
-
     `;
 
   }
 
-
-  /* =====================================================
-     CARD DE RESUMO
-  ====================================================== */
-
-  function summaryCard(
-    icon,
-    label,
-    value
-  ) {
-
-    return `
-
-      <div
-        style="
-          padding:14px;
-          background:#fff;
-          border:1px solid #eee;
-          border-radius:14px;
-        "
-      >
-
-        <div
-          style="
-            font-size:20px;
-            margin-bottom:5px;
-          "
-        >
-          ${icon}
-        </div>
-
-        <div
-          style="
-            font-size:12px;
-            color:#777;
-          "
-        >
-          ${label}
-        </div>
-
-        <strong
-          style="
-            display:block;
-            margin-top:4px;
-            color:#7f4444;
-            font-size:22px;
-          "
-        >
-          ${value}
-        </strong>
-
-      </div>
-
-    `;
-
-  }
-
-
-  /* =====================================================
-     REAGIR À SINCRONIZAÇÃO
-  ====================================================== */
 
   document.addEventListener(
     "recordatorioSyncComplete",
@@ -1763,10 +1613,6 @@
     }
   );
 
-
-  /* =====================================================
-     INICIAR
-  ====================================================== */
 
   if (
     document.readyState ===
@@ -1785,4 +1631,3 @@
   }
 
 })();
-```

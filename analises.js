@@ -1,7 +1,7 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
-   Versão com gráfico de linha de glicemias
+   Gráfico de glicemias aprimorado
 ========================================================= */
 
 (function () {
@@ -14,15 +14,10 @@
 
 
   let analysisScreen = null;
-
   let periodSelect = null;
-
   let startDateInput = null;
-
   let endDateInput = null;
-
   let refreshButton = null;
-
   let content = null;
 
 
@@ -483,7 +478,7 @@
     );
 
 
-    let start =
+    const start =
       new Date(
         end
       );
@@ -760,7 +755,7 @@
 
 
   /* =====================================================
-     CONTAGENS
+     RESUMOS
   ====================================================== */
 
   function countType(
@@ -1083,63 +1078,65 @@
       );
 
 
-    const paddingLeft =
-      42;
+    const chartWidth =
+      760;
 
 
-    const paddingRight =
-      18;
+    const chartHeight =
+      360;
 
 
-    const paddingTop =
-      24;
+    const left =
+      58;
 
 
-    const paddingBottom =
-      48;
+    const right =
+      22;
 
 
-    const width =
-      720;
+    const top =
+      34;
 
 
-    const height =
-      340;
+    const bottom =
+      60;
 
 
     const plotWidth =
-      width -
-      paddingLeft -
-      paddingRight;
+      chartWidth -
+      left -
+      right;
 
 
     const plotHeight =
-      height -
-      paddingTop -
-      paddingBottom;
+      chartHeight -
+      top -
+      bottom;
 
 
     const valueRange =
       Math.max(
         maxValue -
         minValue,
-        10
+        20
       );
 
 
     const chartMin =
       minValue -
-      (
+      Math.max(
         valueRange *
-        0.10
+        0.12,
+        5
       );
 
 
     const chartMax =
       maxValue +
-      (
+      Math.max(
         valueRange *
-        0.10
+        0.12,
+        5
       );
 
 
@@ -1161,18 +1158,16 @@
       ) {
 
         return (
-          paddingLeft +
-          (
-            plotWidth /
-            2
-          )
+          left +
+          plotWidth /
+          2
         );
 
       }
 
 
       return (
-        paddingLeft +
+        left +
         (
           index /
           (
@@ -1191,7 +1186,7 @@
     ) {
 
       return (
-        paddingTop +
+        top +
         (
           (
             chartMax -
@@ -1239,7 +1234,7 @@
       );
 
 
-    const polylinePoints =
+    const polyline =
       points
         .map(
           function (
@@ -1259,86 +1254,96 @@
         );
 
 
-    const gridValues = [
-
-      chartMax,
-
-      chartMin +
-        (
-          chartRange *
-          0.75
-        ),
-
-      chartMin +
-        (
-          chartRange *
-          0.50
-        ),
-
-      chartMin +
-        (
-          chartRange *
-          0.25
-        ),
-
-      chartMin
-
-    ];
-
+    /* =================================================
+       LINHAS DE GRADE
+    ================================================== */
 
     let gridHTML =
       "";
 
 
-    gridValues.forEach(
-      function (
-        value
-      ) {
+    const numberOfGridLines =
+      5;
 
-        const y =
-          yFor(
+
+    for (
+      let index = 0;
+      index <
+        numberOfGridLines;
+      index++
+    ) {
+
+      const ratio =
+        index /
+        (
+          numberOfGridLines -
+          1
+        );
+
+
+      const value =
+        chartMax -
+        (
+          ratio *
+          chartRange
+        );
+
+
+      const y =
+        yFor(
+          value
+        );
+
+
+      gridHTML += `
+
+        <line
+          x1="${left}"
+          y1="${y}"
+          x2="${
+            chartWidth -
+            right
+          }"
+          y2="${y}"
+          stroke="#eeeeee"
+          stroke-width="1"
+        ></line>
+
+        <text
+          x="${
+            left -
+            8
+          }"
+          y="${
+            y + 4
+          }"
+          text-anchor="end"
+          font-size="11"
+          fill="#777"
+        >
+          ${Math.round(
             value
-          );
+          )}
+        </text>
+
+      `;
+
+    }
 
 
-        gridHTML += `
+    /* =================================================
+       LINHA DA MÉDIA
+    ================================================== */
 
-          <line
-            x1="${paddingLeft}"
-            y1="${y}"
-            x2="${
-              width -
-              paddingRight
-            }"
-            y2="${y}"
-            stroke="#eeeeee"
-            stroke-width="1"
-          ></line>
+    const averageY =
+      yFor(
+        averageValue
+      );
 
-          <text
-            x="${
-              paddingLeft -
-              7
-            }"
-            y="${
-              y + 4
-            }"
-            text-anchor="end"
-            font-size="11"
-            fill="#777777"
-          >
-            ${
-              Math.round(
-                value
-              )
-            }
-          </text>
 
-        `;
-
-      }
-    );
-
+    /* =================================================
+       PONTOS
+    ================================================== */
 
     let pointsHTML =
       "";
@@ -1346,18 +1351,13 @@
 
     points.forEach(
       function (
-        point,
-        index
+        point
       ) {
 
-        const shortDate =
+        const label =
           formatDate(
             point.date
-          );
-
-
-        const label =
-          shortDate +
+          ) +
           (
             point.time
               ? " · " +
@@ -1368,111 +1368,40 @@
 
         pointsHTML += `
 
-          <g>
+          <circle
+            cx="${point.x}"
+            cy="${point.y}"
+            r="6"
+            fill="#A85C5C"
+            stroke="#ffffff"
+            stroke-width="3"
+          >
 
-            <circle
-              cx="${point.x}"
-              cy="${point.y}"
-              r="6"
-              fill="#A85C5C"
-              stroke="#ffffff"
-              stroke-width="3"
-            >
-              <title>
-                ${
-                  escapeHTML(
-                    label
-                  )
-                } — ${
-                  point.value
-                } mg/dL
-              </title>
-            </circle>
-
-            <text
-              x="${point.x}"
-              y="${
-                Math.max(
-                  point.y - 12,
-                  16
-                )
-              }"
-              text-anchor="middle"
-              font-size="11"
-              font-weight="700"
-              fill="#7f4444"
-            >
-              ${point.value}
-            </text>
-
-          </g>
-
-        `;
-
-      }
-    );
-
-
-    let labelsHTML =
-      "";
-
-
-    const maxLabels =
-      7;
-
-
-    points.forEach(
-      function (
-        point,
-        index
-      ) {
-
-        if (
-          glucoseRecords.length >
-          maxLabels &&
-          index %
-            Math.ceil(
-              glucoseRecords.length /
-              maxLabels
-            ) !==
-            0 &&
-          index !==
-            glucoseRecords.length -
-            1
-        ) {
-
-          return;
-
-        }
-
-
-        const shortLabel =
-          formatDate(
-            point.date
-          ) +
-          (
-            point.time
-              ? "<br>" +
+            <title>
+              ${
                 escapeHTML(
-                  point.time
+                  label
                 )
-              : ""
-          );
+              }
+              — ${point.value}
+              mg/dL
+            </title>
 
+          </circle>
 
-        labelsHTML += `
 
           <text
             x="${point.x}"
             y="${
-              height -
-              20
+              point.y -
+              12
             }"
             text-anchor="middle"
-            font-size="10"
-            fill="#777777"
+            font-size="11"
+            font-weight="700"
+            fill="#7f4444"
           >
-            ${shortLabel}
+            ${point.value}
           </text>
 
         `;
@@ -1481,10 +1410,182 @@
     );
 
 
-    const averageY =
-      yFor(
-        averageValue
-      );
+    /* =================================================
+       RÓTULOS DO EIXO X
+    ================================================== */
+
+    let labelsHTML =
+      "";
+
+
+    const maximumLabels =
+      6;
+
+
+    let labelIndexes = [];
+
+
+    if (
+      glucoseRecords.length <=
+      maximumLabels
+    ) {
+
+      labelIndexes =
+        glucoseRecords.map(
+          function (
+            item,
+            index
+          ) {
+
+            return index;
+
+          }
+        );
+
+    } else {
+
+      const step =
+        (
+          glucoseRecords.length -
+          1
+        ) /
+        (
+          maximumLabels -
+          1
+        );
+
+
+      for (
+        let index = 0;
+        index <
+          maximumLabels;
+        index++
+      ) {
+
+        labelIndexes.push(
+          Math.round(
+            index *
+            step
+          )
+        );
+
+      }
+
+    }
+
+
+    labelIndexes =
+      [
+        ...new Set(
+          labelIndexes
+        )
+      ];
+
+
+    labelIndexes.forEach(
+      function (
+        index
+      ) {
+
+        const point =
+          points[index];
+
+
+        if (!point) {
+
+          return;
+
+        }
+
+
+        const dateLabel =
+          formatDate(
+            point.date
+          );
+
+
+        const timeLabel =
+          point.time ||
+          "";
+
+
+        labelsHTML += `
+
+          <text
+            x="${point.x}"
+            y="${
+              chartHeight -
+              30
+            }"
+            text-anchor="middle"
+            font-size="10"
+            fill="#777"
+          >
+            ${dateLabel}
+          </text>
+
+          ${
+            timeLabel
+              ? `
+                <text
+                  x="${point.x}"
+                  y="${
+                    chartHeight -
+                    16
+                  }"
+                  text-anchor="middle"
+                  font-size="9"
+                  fill="#999"
+                >
+                  ${escapeHTML(
+                    timeLabel
+                  )}
+                </text>
+              `
+              : ""
+          }
+
+        `;
+
+      }
+    );
+
+
+    /* =================================================
+       ÁREA DE STATUS
+    ================================================== */
+
+    const firstValue =
+      glucoseRecords[0].value;
+
+
+    const lastValue =
+      glucoseRecords[
+        glucoseRecords.length - 1
+      ].value;
+
+
+    let trendText =
+      "Estável";
+
+
+    if (
+      lastValue >
+      firstValue
+    ) {
+
+      trendText =
+        "Tendência de alta";
+
+    } else if (
+      lastValue <
+      firstValue
+    ) {
+
+      trendText =
+        "Tendência de queda";
+
+    }
 
 
     return `
@@ -1509,8 +1610,8 @@
             line-height:1.5;
           "
         >
-          Cada ponto representa uma medição
-          registrada no período selecionado.
+          ${glucoseRecords.length}
+          medição(ões) no período.
         </p>
 
 
@@ -1519,21 +1620,22 @@
             width:100%;
             overflow-x:auto;
             overflow-y:hidden;
+            margin-top:8px;
           "
         >
 
           <svg
             viewBox="
               0 0
-              ${width}
-              ${height}
+              ${chartWidth}
+              ${chartHeight}
             "
             width="100%"
             role="img"
-            aria-label="Gráfico de evolução das glicemias"
+            aria-label="Evolução das glicemias"
             style="
-              min-width:620px;
               display:block;
+              min-width:640px;
             "
           >
 
@@ -1541,12 +1643,12 @@
 
 
             <line
-              x1="${paddingLeft}"
-              y1="${paddingTop}"
-              x2="${paddingLeft}"
+              x1="${left}"
+              y1="${top}"
+              x2="${left}"
               y2="${
-                height -
-                paddingBottom
+                chartHeight -
+                bottom
               }"
               stroke="#dddddd"
               stroke-width="1"
@@ -1554,18 +1656,18 @@
 
 
             <line
-              x1="${paddingLeft}"
+              x1="${left}"
               y1="${
-                height -
-                paddingBottom
+                chartHeight -
+                bottom
               }"
               x2="${
-                width -
-                paddingRight
+                chartWidth -
+                right
               }"
               y2="${
-                height -
-                paddingBottom
+                chartHeight -
+                bottom
               }"
               stroke="#dddddd"
               stroke-width="1"
@@ -1573,21 +1675,38 @@
 
 
             <line
-              x1="${paddingLeft}"
+              x1="${left}"
               y1="${averageY}"
               x2="${
-                width -
-                paddingRight
+                chartWidth -
+                right
               }"
               y2="${averageY}"
               stroke="#999999"
-              stroke-width="1"
-              stroke-dasharray="6 5"
+              stroke-width="1.5"
+              stroke-dasharray="7 6"
             ></line>
 
 
+            <text
+              x="${
+                chartWidth -
+                right
+              }"
+              y="${
+                averageY -
+                7
+              }"
+              text-anchor="end"
+              font-size="10"
+              fill="#777"
+            >
+              Média
+            </text>
+
+
             <polyline
-              points="${polylinePoints}"
+              points="${polyline}"
               fill="none"
               stroke="#A85C5C"
               stroke-width="4"
@@ -1597,6 +1716,7 @@
 
 
             ${pointsHTML}
+
 
             ${labelsHTML}
 
@@ -1609,7 +1729,7 @@
           style="
             display:grid;
             grid-template-columns:
-              repeat(3, minmax(0, 1fr));
+              repeat(2, minmax(0, 1fr));
             gap:10px;
             margin-top:12px;
           "
@@ -1617,10 +1737,9 @@
 
           <div
             style="
-              padding:12px;
+              padding:13px;
               background:#f8eeee;
               border-radius:12px;
-              text-align:center;
             "
           >
 
@@ -1637,6 +1756,7 @@
               style="
                 display:block;
                 margin-top:4px;
+                font-size:18px;
                 color:#7f4444;
               "
             >
@@ -1653,10 +1773,40 @@
 
           <div
             style="
-              padding:12px;
+              padding:13px;
               background:#f8eeee;
               border-radius:12px;
-              text-align:center;
+            "
+          >
+
+            <div
+              style="
+                font-size:11px;
+                color:#777;
+              "
+            >
+              Tendência
+            </div>
+
+            <strong
+              style="
+                display:block;
+                margin-top:4px;
+                font-size:15px;
+                color:#7f4444;
+              "
+            >
+              ${trendText}
+            </strong>
+
+          </div>
+
+
+          <div
+            style="
+              padding:13px;
+              background:#f8eeee;
+              border-radius:12px;
             "
           >
 
@@ -1673,6 +1823,7 @@
               style="
                 display:block;
                 margin-top:4px;
+                font-size:18px;
                 color:#7f4444;
               "
             >
@@ -1685,10 +1836,9 @@
 
           <div
             style="
-              padding:12px;
+              padding:13px;
               background:#f8eeee;
               border-radius:12px;
-              text-align:center;
             "
           >
 
@@ -1705,6 +1855,7 @@
               style="
                 display:block;
                 margin-top:4px;
+                font-size:18px;
                 color:#7f4444;
               "
             >
@@ -1716,6 +1867,19 @@
 
         </div>
 
+
+        <p
+          style="
+            margin-bottom:0;
+            margin-top:14px;
+            color:#999;
+            font-size:11px;
+          "
+        >
+          Toque ou passe o cursor sobre um ponto
+          para ver a data, horário e valor.
+        </p>
+
       </section>
 
     `;
@@ -1724,7 +1888,7 @@
 
 
   /* =====================================================
-     CARDS
+     CARDS DE RESUMO
   ====================================================== */
 
   function summaryCard(
@@ -2187,9 +2351,34 @@
       </section>
 
 
-      ${buildGlucoseLineChart(
-        glucoseRecords
-      )}
+      ${
+        glucoseAverage !==
+        null
+          ? buildGlucoseLineChart(
+              glucoseRecords
+            )
+          : `
+
+            <section
+              class="card"
+              style="
+                margin-top:16px;
+              "
+            >
+
+              <h2>
+                🩸 Evolução das glicemias
+              </h2>
+
+              <div class="empty-state">
+                Não há glicemias registradas
+                no período selecionado.
+              </div>
+
+            </section>
+
+          `
+      }
 
 
       ${

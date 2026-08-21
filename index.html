@@ -52,9 +52,7 @@
     href="styles.css"
   >
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
 
@@ -680,6 +678,296 @@
 
     }
 
+
+    /* =====================================================
+       PAINÉIS DE CONSULTAS E MEDICAMENTOS
+    ====================================================== */
+
+    .home-panel {
+
+      margin-top: 16px;
+
+    }
+
+
+    .consultation-card {
+
+      padding: 14px;
+
+      border-bottom: 1px solid #eee;
+
+    }
+
+
+    .consultation-card:last-child {
+
+      border-bottom: 0;
+
+    }
+
+
+    .consultation-card strong {
+
+      display: block;
+
+      color: #7f4444;
+
+      margin-bottom: 5px;
+
+    }
+
+
+    .consultation-card p {
+
+      margin: 4px 0;
+
+      color: #555;
+
+    }
+
+
+    .consultation-card small {
+
+      color: #777;
+
+    }
+
+
+    .med-item {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 12px;
+
+      padding: 14px;
+
+      border: 1px solid #eee;
+
+      border-radius: 14px;
+
+      background: #fff;
+
+    }
+
+
+    .med-item.taken {
+
+      background: #f4faf5;
+
+      border-color: #cfe4d2;
+
+    }
+
+
+    .med-item > div {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 4px;
+
+      min-width: 0;
+
+    }
+
+
+    .med-item small {
+
+      color: #777;
+
+    }
+
+
+    .med-item button {
+
+      border: 0;
+
+      border-radius: 10px;
+
+      padding: 9px 12px;
+
+      background: #f0dddd;
+
+      color: #7f4444;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      white-space: nowrap;
+
+    }
+
+
+    .med-item.taken button {
+
+      background: #dcefe0;
+
+      color: #42724b;
+
+    }
+
+
+    /* =====================================================
+       CONSULTAS — CARDS
+    ====================================================== */
+
+    .consultations-list {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 14px;
+
+    }
+
+
+    .consultation-screen-card {
+
+      padding: 16px;
+
+      border: 1px solid #eee;
+
+      border-radius: 16px;
+
+      background: #fff;
+
+    }
+
+
+    .consultation-screen-card .card-header {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: flex-start;
+
+      gap: 12px;
+
+      margin-bottom: 12px;
+
+    }
+
+
+    .consultation-screen-card .card-header span {
+
+      color: #A85C5C;
+
+      font-weight: 700;
+
+      text-align: right;
+
+    }
+
+
+    .consultation-screen-card .card-body p {
+
+      margin: 8px 0;
+
+      color: #555;
+
+    }
+
+
+    .consultation-screen-card .card-actions {
+
+      display: flex;
+
+      gap: 8px;
+
+      margin-top: 14px;
+
+    }
+
+
+    .consultation-screen-card .card-actions button {
+
+      border: 0;
+
+      border-radius: 10px;
+
+      padding: 9px 12px;
+
+      cursor: pointer;
+
+      font-weight: 600;
+
+    }
+
+
+    /* =====================================================
+       LIXEIRA
+    ====================================================== */
+
+    .trash-item {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 12px;
+
+      padding: 14px;
+
+      border-bottom: 1px solid #eee;
+
+    }
+
+
+    .trash-item:last-child {
+
+      border-bottom: 0;
+
+    }
+
+
+    .trash-item > div {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 5px;
+
+    }
+
+
+    .trash-item small {
+
+      color: #777;
+
+    }
+
+
+    .trash-item button {
+
+      border: 0;
+
+      border-radius: 10px;
+
+      padding: 9px 12px;
+
+      background: #f0dddd;
+
+      color: #7f4444;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      white-space: nowrap;
+
+    }
+
   </style>
 
 </head>
@@ -1252,7 +1540,9 @@
           </h2>
 
 
-          <div id="diaryContent">
+          <!-- ID CORRIGIDO PARA O JAVASCRIPT -->
+
+          <div id="diaryList">
 
             <div class="empty-state">
               Nenhum registro encontrado.
@@ -1350,7 +1640,18 @@
           </h2>
 
 
-          <div id="consultationsContent"></div>
+          <!-- ID CORRIGIDO PARA O JAVASCRIPT -->
+
+          <div
+            id="consultationsList"
+            class="consultations-list"
+          >
+
+            <div class="empty-state">
+              Nenhuma consulta agendada ou registrada.
+            </div>
+
+          </div>
 
         </section>
 
@@ -1440,7 +1741,9 @@
           </div>
 
 
-          <div id="trashContent">
+          <!-- ID CORRIGIDO PARA O JAVASCRIPT -->
+
+          <div id="trashList">
 
             <div class="empty-state">
               A lixeira está vazia.
@@ -2466,7 +2769,7 @@
 
 
   <!-- =====================================================
-       SINCRONIZAÇÃO
+       SINCRONIZAÇÃO SUPABASE
   ====================================================== -->
 
   <script src="sincronizacao.js"></script>

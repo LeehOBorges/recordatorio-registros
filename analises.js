@@ -1,805 +1,767 @@
 /* =========================================================
    ANÁLISES
-   RECORDATÓRIO
-   VERSÃO 0.2
-
-   CORREÇÃO:
-   - Funciona ao abrir a tela de Análises no celular
-   - Inicialização independente do app.js
-   - Renderização segura
-   - Compatível com localStorage do app
+   Versão completa para a tela analysisScreen
 ========================================================= */
 
+(function () {
 
-/* =========================================================
-   CONFIGURAÇÃO
-========================================================= */
-
-const ANALYSIS_STORAGE_KEY =
-  "recordatorio_registros_v01";
+  "use strict";
 
 
-/* =========================================================
-   ESTADO
-========================================================= */
+  /* =======================================================
+     FUNÇÕES AUXILIARES
+  ======================================================= */
 
-let analysisInitialized =
-  false;
+  function getAnalysisContainer() {
 
+    const screen =
+      document.getElementById("analysisScreen");
 
-/* =========================================================
-   CARREGAR BANCO
-========================================================= */
-
-function loadAnalysisDatabase() {
-
-  try {
-
-    const stored =
-      localStorage.getItem(
-        ANALYSIS_STORAGE_KEY
-      );
-
-    if (!stored) {
-
-      return {
-        records: [],
-        trash: []
-      };
+    if (!screen) {
+      return null;
     }
 
-    const parsed =
-      JSON.parse(stored);
+    /*
+      Criamos o container dinamicamente dentro da tela.
+      Isso evita depender de um ID que não existe no index.
+    */
 
-    return {
+    let container =
+      document.getElementById("analysisContent");
 
-      records:
-        Array.isArray(
-          parsed.records
-        )
-          ? parsed.records
-          : [],
+    if (!container) {
 
-      trash:
-        Array.isArray(
-          parsed.trash
-        )
-          ? parsed.trash
-          : []
-    };
+      const main =
+        screen.querySelector("main");
 
-  } catch (error) {
+      if (!main) {
+        return null;
+      }
 
-    console.error(
-      "Erro ao carregar dados para análise:",
-      error
-    );
+      container =
+        document.createElement("div");
 
-    return {
-      records: [],
-      trash: []
-    };
-  }
-}
+      container.id =
+        "analysisContent";
 
+      main.appendChild(container);
+    }
 
-/* =========================================================
-   DATA
-========================================================= */
-
-function analysisDateKey(
-  date
-) {
-
-  const year =
-    date.getFullYear();
-
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(2, "0");
-
-  const day =
-    String(
-      date.getDate()
-    ).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-
-/* =========================================================
-   FILTRAR REGISTROS
-========================================================= */
-
-function getAnalysisRecords() {
-
-  const database =
-    loadAnalysisDatabase();
-
-  return database.records
-    .filter(
-      record =>
-        record &&
-        typeof record === "object"
-    );
-}
-
-
-/* =========================================================
-   GLICEMIAS
-========================================================= */
-
-function getAnalysisGlucoseRecords(
-  records
-) {
-
-  return records
-    .filter(
-      record =>
-        record.type ===
-        "glucose"
-    )
-    .map(
-      record => ({
-
-        ...record,
-
-        numericValue:
-          Number(
-            record.value
-          )
-      })
-    )
-    .filter(
-      record =>
-        Number.isFinite(
-          record.numericValue
-        )
-    );
-}
-
-
-/* =========================================================
-   MÉDIA
-========================================================= */
-
-function calculateAverage(
-  values
-) {
-
-  if (
-    !Array.isArray(values) ||
-    values.length === 0
-  ) {
-
-    return 0;
+    return container;
   }
 
-  const total =
-    values.reduce(
-      (
-        sum,
-        value
-      ) =>
-        sum +
-        Number(value),
-      0
-    );
 
-  return total /
-    values.length;
-}
+  function escapeAnalysisHTML(value) {
 
+    if (typeof escapeHTML === "function") {
+      return escapeHTML(
+        value == null ? "" : String(value)
+      );
+    }
 
-/* =========================================================
-   MENOR VALOR
-========================================================= */
-
-function calculateMinimum(
-  values
-) {
-
-  if (
-    !Array.isArray(values) ||
-    values.length === 0
-  ) {
-
-    return 0;
+    return String(
+      value == null ? "" : value
+    )
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
-  return Math.min(
-    ...values.map(
-      Number
-    )
-  );
-}
 
+  function getRecordsForAnalysis() {
 
-/* =========================================================
-   MAIOR VALOR
-========================================================= */
+    if (
+      typeof database === "undefined" ||
+      !database ||
+      !Array.isArray(database.records)
+    ) {
+      return [];
+    }
 
-function calculateMaximum(
-  values
-) {
-
-  if (
-    !Array.isArray(values) ||
-    values.length === 0
-  ) {
-
-    return 0;
+    return database.records;
   }
 
-  return Math.max(
-    ...values.map(
-      Number
-    )
-  );
-}
 
+  function formatNumber(value, decimals = 0) {
 
-/* =========================================================
-   FORMATAÇÃO
-========================================================= */
+    const number =
+      Number(value);
 
-function formatAnalysisNumber(
-  value,
-  decimals = 0
-) {
+    if (!Number.isFinite(number)) {
+      return "0";
+    }
 
-  if (
-    !Number.isFinite(
-      Number(value)
-    )
-  ) {
-
-    return "-";
-  }
-
-  return Number(value)
-    .toLocaleString(
+    return number.toLocaleString(
       "pt-BR",
       {
-        minimumFractionDigits:
-          decimals,
-
-        maximumFractionDigits:
-          decimals
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
       }
     );
-}
+  }
 
 
-/* =========================================================
-   CRIAR RESUMO
-========================================================= */
+  /* =======================================================
+     CÁLCULOS
+  ======================================================= */
 
-function createAnalysisSummary(
-  records
-) {
+  function calculateAnalysis() {
 
-  const glucose =
-    getAnalysisGlucoseRecords(
-      records
-    );
-
-  const values =
-    glucose.map(
-      record =>
-        record.numericValue
-    );
+    const records =
+      getRecordsForAnalysis();
 
 
-  const average =
-    calculateAverage(
-      values
-    );
-
-  const minimum =
-    calculateMinimum(
-      values
-    );
-
-  const maximum =
-    calculateMaximum(
-      values
-    );
+    const meals =
+      records.filter(
+        r => r && r.type === "meal"
+      );
 
 
-  const meals =
-    records.filter(
-      record =>
-        record.type ===
-        "meal"
-    );
+    const glucose =
+      records.filter(
+        r => r && r.type === "glucose"
+      );
 
 
-  const insulin =
-    records.filter(
-      record =>
-        record.type ===
-        "insulin"
-    );
+    const insulin =
+      records.filter(
+        r => r && r.type === "insulin"
+      );
 
 
-  const activities =
-    records.filter(
-      record =>
-        record.type ===
-        "activity"
-    );
+    const activity =
+      records.filter(
+        r => r && r.type === "activity"
+      );
 
 
-  const medication =
-    records.filter(
-      record =>
-        record.type ===
-        "medication"
-    );
+    const medication =
+      records.filter(
+        r => r && r.type === "medication"
+      );
 
 
-  const activityMinutes =
-    activities.reduce(
-      (
-        total,
-        record
-      ) =>
-        total +
-        Number(
-          record.duration || 0
-        ),
-      0
+    let glucoseValues = [];
+
+
+    glucose.forEach(
+      record => {
+
+        const possibleValues = [
+          record.value,
+          record.glucose,
+          record.glucoseValue,
+          record.bloodGlucose,
+          record.mgdl
+        ];
+
+
+        for (
+          const value of possibleValues
+        ) {
+
+          const number =
+            Number(value);
+
+
+          if (
+            Number.isFinite(number) &&
+            number > 0
+          ) {
+
+            glucoseValues.push(number);
+
+            break;
+          }
+        }
+
+      }
     );
 
 
-  return {
+    const glucoseAverage =
+      glucoseValues.length
+        ? glucoseValues.reduce(
+            (sum, value) =>
+              sum + value,
+            0
+          ) / glucoseValues.length
+        : 0;
 
-    glucoseCount:
-      glucose.length,
 
-    glucoseAverage:
-      average,
+    const activityMinutes =
+      activity.reduce(
+        (total, record) => {
 
-    glucoseMinimum:
-      minimum,
+          const possibleValues = [
+            record.duration,
+            record.minutes,
+            record.durationMinutes
+          ];
 
-    glucoseMaximum:
-      maximum,
 
-    mealCount:
-      meals.length,
+          for (
+            const value of possibleValues
+          ) {
 
-    insulinCount:
-      insulin.length,
+            const number =
+              Number(value);
 
-    activityCount:
-      activities.length,
 
-    activityMinutes:
+            if (
+              Number.isFinite(number) &&
+              number >= 0
+            ) {
+
+              return total + number;
+            }
+
+          }
+
+
+          return total;
+
+        },
+        0
+      );
+
+
+    return {
+
+      total:
+        records.length,
+
+      meals:
+        meals.length,
+
+      glucose:
+        glucose.length,
+
+      insulin:
+        insulin.length,
+
+      activity:
+        activity.length,
+
       activityMinutes,
 
-    medicationCount:
-      medication.length
-  };
-}
+      medication:
+        medication.length,
 
+      glucoseValues,
 
-/* =========================================================
-   ATUALIZAR ELEMENTO
-========================================================= */
+      glucoseAverage
 
-function updateAnalysisElement(
-  id,
-  value
-) {
+    };
 
-  const element =
-    document.getElementById(
-      id
-    );
-
-  if (!element) {
-    return;
-  }
-
-  element.textContent =
-    value;
-}
-
-
-/* =========================================================
-   RENDERIZAR RESUMO
-========================================================= */
-
-function renderAnalysisSummary(
-  records
-) {
-
-  const summary =
-    createAnalysisSummary(
-      records
-    );
-
-
-  updateAnalysisElement(
-    "analysisGlucoseCount",
-    summary.glucoseCount
-  );
-
-
-  updateAnalysisElement(
-    "analysisGlucoseAverage",
-    summary.glucoseCount > 0
-      ? `${formatAnalysisNumber(
-          summary.glucoseAverage,
-          1
-        )} mg/dL`
-      : "-"
-  );
-
-
-  updateAnalysisElement(
-    "analysisGlucoseMinimum",
-    summary.glucoseCount > 0
-      ? `${formatAnalysisNumber(
-          summary.glucoseMinimum
-        )} mg/dL`
-      : "-"
-  );
-
-
-  updateAnalysisElement(
-    "analysisGlucoseMaximum",
-    summary.glucoseCount > 0
-      ? `${formatAnalysisNumber(
-          summary.glucoseMaximum
-        )} mg/dL`
-      : "-"
-  );
-
-
-  updateAnalysisElement(
-    "analysisMealCount",
-    summary.mealCount
-  );
-
-
-  updateAnalysisElement(
-    "analysisInsulinCount",
-    summary.insulinCount
-  );
-
-
-  updateAnalysisElement(
-    "analysisActivityCount",
-    summary.activityCount
-  );
-
-
-  updateAnalysisElement(
-    "analysisActivityMinutes",
-    `${summary.activityMinutes} min`
-  );
-
-
-  updateAnalysisElement(
-    "analysisMedicationCount",
-    summary.medicationCount
-  );
-}
-
-
-/* =========================================================
-   RENDERIZAR LISTA DE GLICEMIAS
-========================================================= */
-
-function renderAnalysisGlucoseList(
-  records
-) {
-
-  const container =
-    document.getElementById(
-      "analysisGlucoseList"
-    );
-
-  if (!container) {
-    return;
   }
 
 
-  const glucose =
-    getAnalysisGlucoseRecords(
-      records
-    )
-    .sort(
-      (a, b) => {
+  /* =======================================================
+     RENDERIZAÇÃO
+  ======================================================= */
 
-        const dateA =
-          `${a.date || ""} ${
-            a.time || ""
-          }`;
+  function renderAnalysis() {
 
-        const dateB =
-          `${b.date || ""} ${
-            b.time || ""
-          }`;
-
-        return dateB.localeCompare(
-          dateA
-        );
-      }
-    );
+    const container =
+      getAnalysisContainer();
 
 
-  if (
-    glucose.length === 0
-  ) {
+    if (!container) {
 
-    container.innerHTML = `
-      <div class="empty-state">
-        Nenhuma glicemia registrada.
-      </div>
-    `;
+      console.error(
+        "Análises: não foi possível encontrar analysisScreen/main."
+      );
 
-    return;
-  }
+      return;
+    }
 
 
-  container.innerHTML =
-    glucose
-      .map(
-        record => `
+    const data =
+      calculateAnalysis();
 
-          <div class="analysis-glucose-item">
 
-            <div class="analysis-glucose-value">
+    if (data.total === 0) {
 
-              ${formatAnalysisNumber(
-                record.numericValue
-              )}
-              mg/dL
+      container.innerHTML = `
 
-            </div>
+        <section class="card">
 
-            <div class="analysis-glucose-info">
+          <h3>
+            📊 Resumo dos registros
+          </h3>
 
-              <strong>
-                ${escapeAnalysisHTML(
-                  record.kind ||
-                  "Glicemia"
+          <div class="empty-state">
+
+            Ainda não existem registros suficientes
+            para gerar uma análise.
+
+          </div>
+
+        </section>
+
+        <section class="card">
+
+          <h3>
+            💡 Como funciona
+          </h3>
+
+          <p>
+            Conforme você registrar refeições,
+            glicemias, insulina, atividades e
+            medicamentos, os dados aparecerão
+            automaticamente nesta tela.
+          </p>
+
+        </section>
+
+      `;
+
+      return;
+    }
+
+
+    let glucoseSection = "";
+
+
+    if (data.glucoseValues.length > 0) {
+
+      glucoseSection = `
+
+        <section class="card">
+
+          <h3>
+            🩸 Glicemia
+          </h3>
+
+          <div
+            style="
+              display:grid;
+              grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+              gap:12px;
+              margin-top:12px;
+            "
+          >
+
+            <div
+              style="
+                padding:14px;
+                border-radius:14px;
+                background:#f8eeee;
+              "
+            >
+
+              <small>
+                Média
+              </small>
+
+              <strong
+                style="
+                  display:block;
+                  font-size:24px;
+                  margin-top:4px;
+                  color:#7f4444;
+                "
+              >
+                ${formatNumber(
+                  data.glucoseAverage,
+                  1
                 )}
               </strong>
 
-              <span>
-                ${escapeAnalysisHTML(
-                  record.date ||
-                  ""
-                )}
-                ${escapeAnalysisHTML(
-                  record.time ||
-                  ""
-                )}
-              </span>
+              <small>
+                mg/dL
+              </small>
+
+            </div>
+
+
+            <div
+              style="
+                padding:14px;
+                border-radius:14px;
+                background:#f8eeee;
+              "
+            >
+
+              <small>
+                Medições
+              </small>
+
+              <strong
+                style="
+                  display:block;
+                  font-size:24px;
+                  margin-top:4px;
+                  color:#7f4444;
+                "
+              >
+                ${data.glucoseValues.length}
+              </strong>
 
             </div>
 
           </div>
 
-        `
-      )
-      .join("");
-}
+        </section>
+
+      `;
+
+    } else {
+
+      glucoseSection = `
+
+        <section class="card">
+
+          <h3>
+            🩸 Glicemia
+          </h3>
+
+          <p>
+            Nenhuma medição de glicemia encontrada
+            nos registros.
+          </p>
+
+        </section>
+
+      `;
+
+    }
 
 
-/* =========================================================
-   SEGURANÇA
-========================================================= */
+    container.innerHTML = `
 
-function escapeAnalysisHTML(
-  value
-) {
+      <section class="card">
 
-  return String(
-    value ?? ""
-  )
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
+        <h3>
+          📊 Resumo
+        </h3>
+
+        <div
+          style="
+            display:grid;
+            grid-template-columns:
+              repeat(2, minmax(0, 1fr));
+            gap:12px;
+            margin-top:12px;
+          "
+        >
+
+          <div
+            style="
+              padding:14px;
+              border-radius:14px;
+              background:#f8eeee;
+            "
+          >
+
+            <small>
+              Total de registros
+            </small>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${data.total}
+            </strong>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:14px;
+              background:#f8eeee;
+            "
+          >
+
+            <small>
+              Refeições
+            </small>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${data.meals}
+            </strong>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:14px;
+              background:#f8eeee;
+            "
+          >
+
+            <small>
+              Glicemias
+            </small>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${data.glucose}
+            </strong>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:14px;
+              background:#f8eeee;
+            "
+          >
+
+            <small>
+              Insulinas
+            </small>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${data.insulin}
+            </strong>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:14px;
+              background:#f8eeee;
+            "
+          >
+
+            <small>
+              Atividades
+            </small>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${data.activity}
+            </strong>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:14px;
+              background:#f8eeee;
+            "
+          >
+
+            <small>
+              Medicamentos
+            </small>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${data.medication}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      ${glucoseSection}
+
+
+      <section class="card">
+
+        <h3>
+          🏋️ Atividade física
+        </h3>
+
+        <p>
+
+          Registros de atividade:
+          <strong>
+            ${data.activity}
+          </strong>
+
+        </p>
+
+        <p>
+
+          Tempo total:
+          <strong>
+            ${formatNumber(
+              data.activityMinutes
+            )} min
+          </strong>
+
+        </p>
+
+      </section>
+
+
+      <section class="card">
+
+        <h3>
+          💉 Insulina
+        </h3>
+
+        <p>
+
+          Registros de aplicação:
+          <strong>
+            ${data.insulin}
+          </strong>
+
+        </p>
+
+      </section>
+
+
+      <section class="card">
+
+        <h3>
+          🍽️ Refeições
+        </h3>
+
+        <p>
+
+          Refeições registradas:
+          <strong>
+            ${data.meals}
+          </strong>
+
+        </p>
+
+      </section>
+
+
+      <section class="card">
+
+        <h3>
+          💊 Medicamentos / Suplementos
+        </h3>
+
+        <p>
+
+          Registros:
+          <strong>
+            ${data.medication}
+          </strong>
+
+        </p>
+
+      </section>
+
+    `;
+
+  }
+
+
+  /* =======================================================
+     INICIALIZAÇÃO
+  ======================================================= */
+
+  function initAnalysis() {
+
+    /*
+      Pequeno atraso para garantir que o DOM e o
+      restante do aplicativo já estejam disponíveis
+      quando a tela for aberta.
+    */
+
+    setTimeout(
+      function () {
+
+        renderAnalysis();
+
+      },
+      0
     );
-}
+
+  }
 
 
-/* =========================================================
-   ANÁLISE POR PERÍODO
-========================================================= */
+  /* =======================================================
+     DISPONIBILIZAR GLOBALMENTE
+  ======================================================= */
 
-function getAnalysisPeriodRecords(
-  records,
-  days
-) {
-
-  const now =
-    new Date();
-
-  const start =
-    new Date(now);
-
-  start.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-  start.setDate(
-    start.getDate() -
-    (days - 1)
-  );
+  window.initAnalysis =
+    initAnalysis;
 
 
-  return records.filter(
-    record => {
+  window.renderAnalysis =
+    renderAnalysis;
 
-      if (!record.date) {
-        return false;
-      }
 
-      const date =
-        new Date(
-          `${record.date}T00:00:00`
+  /* =======================================================
+     PRIMEIRA TENTATIVA DE INICIALIZAÇÃO
+  ======================================================= */
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+      /*
+        Não força a abertura da tela.
+        Apenas deixa as funções disponíveis.
+      */
+
+      if (
+        document.getElementById(
+          "analysisScreen"
+        )
+      ) {
+
+        console.log(
+          "Módulo de Análises carregado."
         );
 
-      return (
-        date >= start &&
-        date <= now
-      );
+      }
+
     }
   );
-}
 
-
-/* =========================================================
-   RENDERIZAR PERÍODO
-========================================================= */
-
-function renderAnalysisPeriod(
-  days = 7
-) {
-
-  const records =
-    getAnalysisRecords();
-
-  const periodRecords =
-    getAnalysisPeriodRecords(
-      records,
-      days
-    );
-
-
-  renderAnalysisSummary(
-    periodRecords
-  );
-
-  renderAnalysisGlucoseList(
-    periodRecords
-  );
-
-
-  const periodElement =
-    document.getElementById(
-      "analysisPeriod"
-    );
-
-  if (periodElement) {
-
-    periodElement.textContent =
-      days === 7
-        ? "Últimos 7 dias"
-        : `Últimos ${days} dias`;
-  }
-}
-
-
-/* =========================================================
-   RENDER PRINCIPAL
-========================================================= */
-
-function renderAnalysis() {
-
-  try {
-
-    const records =
-      getAnalysisRecords();
-
-
-    renderAnalysisSummary(
-      records
-    );
-
-
-    renderAnalysisGlucoseList(
-      records
-    );
-
-
-    analysisInitialized =
-      true;
-
-  } catch (error) {
-
-    console.error(
-      "Erro ao renderizar análises:",
-      error
-    );
-  }
-}
-
-
-/* =========================================================
-   INICIALIZAÇÃO
-========================================================= */
-
-function initAnalysis() {
-
-  if (
-    analysisInitialized
-  ) {
-
-    renderAnalysis();
-
-    return;
-  }
-
-
-  analysisInitialized =
-    true;
-
-
-  renderAnalysis();
-}
-
-
-/* =========================================================
-   COMPATIBILIDADE
-========================================================= */
-
-window.initAnalysis =
-  initAnalysis;
-
-window.renderAnalysis =
-  renderAnalysis;
-
-window.renderAnalysisPeriod =
-  renderAnalysisPeriod;
-
-
-/* =========================================================
-   DOM READY
-========================================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    initAnalysis();
-
-  }
-);
+})();

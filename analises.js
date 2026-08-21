@@ -1,22 +1,34 @@
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
+   Versão com gráfico de linha de glicemias
 ========================================================= */
 
 (function () {
 
   "use strict";
 
+
   const STORAGE_KEY =
     "recordatorio_registros_v01";
 
+
   let analysisScreen = null;
+
   let periodSelect = null;
+
   let startDateInput = null;
+
   let endDateInput = null;
+
   let refreshButton = null;
+
   let content = null;
 
+
+  /* =====================================================
+     INICIALIZAÇÃO
+  ====================================================== */
 
   function initAnalysis() {
 
@@ -24,6 +36,7 @@
       document.getElementById(
         "analysisScreen"
       );
+
 
     if (!analysisScreen) {
 
@@ -35,13 +48,21 @@
 
     }
 
+
     createInterface();
+
     bindEvents();
+
     setDefaultPeriod();
+
     renderAnalysis();
 
   }
 
+
+  /* =====================================================
+     INTERFACE
+  ====================================================== */
 
   function createInterface() {
 
@@ -50,9 +71,13 @@
         "main"
       );
 
+
     if (!main) {
+
       return;
+
     }
+
 
     main.innerHTML = `
 
@@ -71,8 +96,9 @@
           "
         >
           Consulte um resumo dos seus registros
-          e visualize a evolução das glicemias.
+          e acompanhe a evolução das glicemias.
         </p>
+
 
         <div
           style="
@@ -126,6 +152,7 @@
 
         </div>
 
+
         <div
           id="analysisCustomDates"
           hidden
@@ -166,6 +193,7 @@
 
           </div>
 
+
           <div>
 
             <label
@@ -199,6 +227,7 @@
 
         </div>
 
+
         <button
           type="button"
           id="refreshAnalysisButton"
@@ -220,31 +249,37 @@
 
       </section>
 
+
       <div
         id="analysisContent"
       ></div>
 
     `;
 
+
     periodSelect =
       document.getElementById(
         "analysisPeriod"
       );
+
 
     startDateInput =
       document.getElementById(
         "analysisStartDate"
       );
 
+
     endDateInput =
       document.getElementById(
         "analysisEndDate"
       );
 
+
     refreshButton =
       document.getElementById(
         "refreshAnalysisButton"
       );
+
 
     content =
       document.getElementById(
@@ -253,6 +288,10 @@
 
   }
 
+
+  /* =====================================================
+     EVENTOS
+  ====================================================== */
 
   function bindEvents() {
 
@@ -267,13 +306,18 @@
               "analysisCustomDates"
             );
 
+
           if (!customDates) {
+
             return;
+
           }
+
 
           customDates.hidden =
             periodSelect.value !==
             "custom";
+
 
           if (
             periodSelect.value ===
@@ -284,12 +328,14 @@
 
           }
 
+
           renderAnalysis();
 
         }
       );
 
     }
+
 
     if (refreshButton) {
 
@@ -304,6 +350,7 @@
 
     }
 
+
     if (startDateInput) {
 
       startDateInput.addEventListener(
@@ -312,6 +359,7 @@
       );
 
     }
+
 
     if (endDateInput) {
 
@@ -325,12 +373,17 @@
   }
 
 
+  /* =====================================================
+     DATAS
+  ====================================================== */
+
   function dateToKey(
     date
   ) {
 
     const year =
       date.getFullYear();
+
 
     const month =
       String(
@@ -340,6 +393,7 @@
         "0"
       );
 
+
     const day =
       String(
         date.getDate()
@@ -347,6 +401,7 @@
         2,
         "0"
       );
+
 
     return (
       year +
@@ -364,12 +419,15 @@
     const end =
       new Date();
 
+
     const start =
       new Date();
+
 
     start.setDate(
       start.getDate() - 6
     );
+
 
     if (startDateInput) {
 
@@ -379,6 +437,7 @@
         );
 
     }
+
 
     if (endDateInput) {
 
@@ -395,11 +454,15 @@
   function setDefaultPeriod() {
 
     if (!periodSelect) {
+
       return;
+
     }
+
 
     periodSelect.value =
       "7";
+
 
     setDefaultCustomDates();
 
@@ -411,6 +474,7 @@
     const end =
       new Date();
 
+
     end.setHours(
       0,
       0,
@@ -418,10 +482,12 @@
       0
     );
 
+
     let start =
       new Date(
         end
       );
+
 
     if (
       periodSelect &&
@@ -434,10 +500,12 @@
           ? startDateInput.value
           : "";
 
+
       const customEnd =
         endDateInput
           ? endDateInput.value
           : "";
+
 
       if (
         !customStart ||
@@ -448,6 +516,7 @@
 
       }
 
+
       if (
         customStart >
         customEnd
@@ -456,6 +525,7 @@
         return null;
 
       }
+
 
       return {
 
@@ -469,6 +539,7 @@
 
     }
 
+
     const days =
       Number(
         periodSelect
@@ -476,12 +547,14 @@
           : 7
       );
 
+
     start.setDate(
       start.getDate() -
       (
         days - 1
       )
     );
+
 
     return {
 
@@ -500,6 +573,10 @@
   }
 
 
+  /* =====================================================
+     BANCO LOCAL
+  ====================================================== */
+
   function loadDatabase() {
 
     try {
@@ -508,6 +585,7 @@
         localStorage.getItem(
           STORAGE_KEY
         );
+
 
       if (!stored) {
 
@@ -521,10 +599,12 @@
 
       }
 
+
       const parsed =
         JSON.parse(
           stored
         );
+
 
       return {
 
@@ -551,6 +631,7 @@
         error
       );
 
+
       return {
 
         records: [],
@@ -569,14 +650,17 @@
     const database =
       loadDatabase();
 
+
     const range =
       getDateRange();
+
 
     if (!range) {
 
       return [];
 
     }
+
 
     return database.records.filter(
       function (record) {
@@ -586,6 +670,7 @@
             record.date ||
             ""
           );
+
 
         return (
           date >=
@@ -600,18 +685,26 @@
   }
 
 
+  /* =====================================================
+     FORMATAÇÕES
+  ====================================================== */
+
   function formatDate(
     value
   ) {
 
     if (!value) {
+
       return "";
+
     }
+
 
     const parts =
       String(
         value
       ).split("-");
+
 
     if (
       parts.length !==
@@ -621,6 +714,7 @@
       return value;
 
     }
+
 
     return (
       parts[2] +
@@ -664,6 +758,10 @@
 
   }
 
+
+  /* =====================================================
+     CONTAGENS
+  ====================================================== */
 
   function countType(
     records,
@@ -710,6 +808,7 @@
               record.duration
             );
 
+
           return (
             total +
             (
@@ -728,7 +827,7 @@
   }
 
 
-  function getGlucoseValues(
+  function getGlucoseRecords(
     records
   ) {
 
@@ -746,24 +845,60 @@
       .map(
         function (record) {
 
-          const value =
-            Number(
-              record.value
-            );
+          return {
 
-          return Number.isFinite(
-            value
-          )
-            ? value
-            : null;
+            date:
+              String(
+                record.date ||
+                ""
+              ),
+
+            time:
+              String(
+                record.time ||
+                ""
+              ),
+
+            value:
+              Number(
+                record.value
+              )
+
+          };
 
         }
       )
       .filter(
-        function (value) {
+        function (item) {
 
           return (
-            value !== null
+            Number.isFinite(
+              item.value
+            )
+          );
+
+        }
+      )
+      .sort(
+        function (
+          a,
+          b
+        ) {
+
+          const first =
+            a.date +
+            " " +
+            a.time;
+
+
+          const second =
+            b.date +
+            " " +
+            b.time;
+
+
+          return first.localeCompare(
+            second
           );
 
         }
@@ -783,6 +918,7 @@
       return null;
 
     }
+
 
     return (
       values.reduce(
@@ -836,7 +972,10 @@
 
           ];
 
-          let value = 0;
+
+          let value =
+            0;
+
 
           for (
             const candidate
@@ -847,6 +986,7 @@
               Number(
                 candidate
               );
+
 
             if (
               Number.isFinite(
@@ -863,6 +1003,7 @@
 
           }
 
+
           return (
             total +
             value
@@ -875,86 +1016,16 @@
   }
 
 
-  function buildGlucoseChart(
-    records
+  /* =====================================================
+     GRÁFICO DE LINHA
+  ====================================================== */
+
+  function buildGlucoseLineChart(
+    glucoseRecords
   ) {
 
-    const glucoseRecords =
-      records
-        .filter(
-          function (record) {
-
-            return (
-              record.type ===
-              "glucose"
-            );
-
-          }
-        )
-        .map(
-          function (record) {
-
-            return {
-
-              date:
-                String(
-                  record.date ||
-                  ""
-                ),
-
-              time:
-                String(
-                  record.time ||
-                  ""
-                ),
-
-              value:
-                Number(
-                  record.value
-                )
-
-            };
-
-          }
-        )
-        .filter(
-          function (item) {
-
-            return (
-              Number.isFinite(
-                item.value
-              )
-            );
-
-          }
-        )
-        .sort(
-          function (
-            a,
-            b
-          ) {
-
-            const first =
-              a.date +
-              " " +
-              a.time;
-
-            const second =
-              b.date +
-              " " +
-              b.time;
-
-            return first.localeCompare(
-              second
-            );
-
-          }
-        );
-
-
     if (
-      glucoseRecords.length ===
-      0
+      !glucoseRecords.length
     ) {
 
       return `
@@ -967,7 +1038,7 @@
         >
 
           <h2>
-            🩸 Glicemias
+            🩸 Evolução das glicemias
           </h2>
 
           <div class="empty-state">
@@ -984,7 +1055,9 @@
 
     const values =
       glucoseRecords.map(
-        function (item) {
+        function (
+          item
+        ) {
 
           return item.value;
 
@@ -992,24 +1065,429 @@
       );
 
 
-    const min =
+    const minValue =
       Math.min(
         ...values
       );
 
-    const max =
+
+    const maxValue =
       Math.max(
         ...values
       );
 
-    const range =
+
+    const averageValue =
+      average(
+        values
+      );
+
+
+    const paddingLeft =
+      42;
+
+
+    const paddingRight =
+      18;
+
+
+    const paddingTop =
+      24;
+
+
+    const paddingBottom =
+      48;
+
+
+    const width =
+      720;
+
+
+    const height =
+      340;
+
+
+    const plotWidth =
+      width -
+      paddingLeft -
+      paddingRight;
+
+
+    const plotHeight =
+      height -
+      paddingTop -
+      paddingBottom;
+
+
+    const valueRange =
       Math.max(
-        max - min,
+        maxValue -
+        minValue,
+        10
+      );
+
+
+    const chartMin =
+      minValue -
+      (
+        valueRange *
+        0.10
+      );
+
+
+    const chartMax =
+      maxValue +
+      (
+        valueRange *
+        0.10
+      );
+
+
+    const chartRange =
+      Math.max(
+        chartMax -
+        chartMin,
         1
       );
 
 
-    let chartHTML = `
+    function xFor(
+      index
+    ) {
+
+      if (
+        glucoseRecords.length ===
+        1
+      ) {
+
+        return (
+          paddingLeft +
+          (
+            plotWidth /
+            2
+          )
+        );
+
+      }
+
+
+      return (
+        paddingLeft +
+        (
+          index /
+          (
+            glucoseRecords.length -
+            1
+          )
+        ) *
+        plotWidth
+      );
+
+    }
+
+
+    function yFor(
+      value
+    ) {
+
+      return (
+        paddingTop +
+        (
+          (
+            chartMax -
+            value
+          ) /
+          chartRange
+        ) *
+        plotHeight
+      );
+
+    }
+
+
+    const points =
+      glucoseRecords.map(
+        function (
+          item,
+          index
+        ) {
+
+          return {
+
+            x:
+              xFor(
+                index
+              ),
+
+            y:
+              yFor(
+                item.value
+              ),
+
+            value:
+              item.value,
+
+            date:
+              item.date,
+
+            time:
+              item.time
+
+          };
+
+        }
+      );
+
+
+    const polylinePoints =
+      points
+        .map(
+          function (
+            point
+          ) {
+
+            return (
+              point.x +
+              "," +
+              point.y
+            );
+
+          }
+        )
+        .join(
+          " "
+        );
+
+
+    const gridValues = [
+
+      chartMax,
+
+      chartMin +
+        (
+          chartRange *
+          0.75
+        ),
+
+      chartMin +
+        (
+          chartRange *
+          0.50
+        ),
+
+      chartMin +
+        (
+          chartRange *
+          0.25
+        ),
+
+      chartMin
+
+    ];
+
+
+    let gridHTML =
+      "";
+
+
+    gridValues.forEach(
+      function (
+        value
+      ) {
+
+        const y =
+          yFor(
+            value
+          );
+
+
+        gridHTML += `
+
+          <line
+            x1="${paddingLeft}"
+            y1="${y}"
+            x2="${
+              width -
+              paddingRight
+            }"
+            y2="${y}"
+            stroke="#eeeeee"
+            stroke-width="1"
+          ></line>
+
+          <text
+            x="${
+              paddingLeft -
+              7
+            }"
+            y="${
+              y + 4
+            }"
+            text-anchor="end"
+            font-size="11"
+            fill="#777777"
+          >
+            ${
+              Math.round(
+                value
+              )
+            }
+          </text>
+
+        `;
+
+      }
+    );
+
+
+    let pointsHTML =
+      "";
+
+
+    points.forEach(
+      function (
+        point,
+        index
+      ) {
+
+        const shortDate =
+          formatDate(
+            point.date
+          );
+
+
+        const label =
+          shortDate +
+          (
+            point.time
+              ? " · " +
+                point.time
+              : ""
+          );
+
+
+        pointsHTML += `
+
+          <g>
+
+            <circle
+              cx="${point.x}"
+              cy="${point.y}"
+              r="6"
+              fill="#A85C5C"
+              stroke="#ffffff"
+              stroke-width="3"
+            >
+              <title>
+                ${
+                  escapeHTML(
+                    label
+                  )
+                } — ${
+                  point.value
+                } mg/dL
+              </title>
+            </circle>
+
+            <text
+              x="${point.x}"
+              y="${
+                Math.max(
+                  point.y - 12,
+                  16
+                )
+              }"
+              text-anchor="middle"
+              font-size="11"
+              font-weight="700"
+              fill="#7f4444"
+            >
+              ${point.value}
+            </text>
+
+          </g>
+
+        `;
+
+      }
+    );
+
+
+    let labelsHTML =
+      "";
+
+
+    const maxLabels =
+      7;
+
+
+    points.forEach(
+      function (
+        point,
+        index
+      ) {
+
+        if (
+          glucoseRecords.length >
+          maxLabels &&
+          index %
+            Math.ceil(
+              glucoseRecords.length /
+              maxLabels
+            ) !==
+            0 &&
+          index !==
+            glucoseRecords.length -
+            1
+        ) {
+
+          return;
+
+        }
+
+
+        const shortLabel =
+          formatDate(
+            point.date
+          ) +
+          (
+            point.time
+              ? "<br>" +
+                escapeHTML(
+                  point.time
+                )
+              : ""
+          );
+
+
+        labelsHTML += `
+
+          <text
+            x="${point.x}"
+            y="${
+              height -
+              20
+            }"
+            text-anchor="middle"
+            font-size="10"
+            fill="#777777"
+          >
+            ${shortLabel}
+          </text>
+
+        `;
+
+      }
+    );
+
+
+    const averageY =
+      yFor(
+        averageValue
+      );
+
+
+    return `
 
       <section
         class="card"
@@ -1022,135 +1500,219 @@
           🩸 Evolução das glicemias
         </h2>
 
-        <div
+
+        <p
           style="
-            font-size:13px;
+            margin-top:0;
             color:#777;
-            margin-bottom:14px;
+            font-size:13px;
+            line-height:1.5;
           "
         >
-          ${glucoseRecords.length}
-          medição(ões)
+          Cada ponto representa uma medição
+          registrada no período selecionado.
+        </p>
+
+
+        <div
+          style="
+            width:100%;
+            overflow-x:auto;
+            overflow-y:hidden;
+          "
+        >
+
+          <svg
+            viewBox="
+              0 0
+              ${width}
+              ${height}
+            "
+            width="100%"
+            role="img"
+            aria-label="Gráfico de evolução das glicemias"
+            style="
+              min-width:620px;
+              display:block;
+            "
+          >
+
+            ${gridHTML}
+
+
+            <line
+              x1="${paddingLeft}"
+              y1="${paddingTop}"
+              x2="${paddingLeft}"
+              y2="${
+                height -
+                paddingBottom
+              }"
+              stroke="#dddddd"
+              stroke-width="1"
+            ></line>
+
+
+            <line
+              x1="${paddingLeft}"
+              y1="${
+                height -
+                paddingBottom
+              }"
+              x2="${
+                width -
+                paddingRight
+              }"
+              y2="${
+                height -
+                paddingBottom
+              }"
+              stroke="#dddddd"
+              stroke-width="1"
+            ></line>
+
+
+            <line
+              x1="${paddingLeft}"
+              y1="${averageY}"
+              x2="${
+                width -
+                paddingRight
+              }"
+              y2="${averageY}"
+              stroke="#999999"
+              stroke-width="1"
+              stroke-dasharray="6 5"
+            ></line>
+
+
+            <polyline
+              points="${polylinePoints}"
+              fill="none"
+              stroke="#A85C5C"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></polyline>
+
+
+            ${pointsHTML}
+
+            ${labelsHTML}
+
+          </svg>
+
         </div>
 
+
         <div
           style="
-            display:flex;
-            flex-direction:column;
+            display:grid;
+            grid-template-columns:
+              repeat(3, minmax(0, 1fr));
             gap:10px;
+            margin-top:12px;
           "
         >
 
-    `;
-
-
-    glucoseRecords.forEach(
-      function (item) {
-
-        const percentage =
-          (
-            (
-              item.value -
-              min
-            ) /
-            range
-          ) *
-          75 +
-          25;
-
-
-        chartHTML += `
-
-          <div>
+          <div
+            style="
+              padding:12px;
+              background:#f8eeee;
+              border-radius:12px;
+              text-align:center;
+            "
+          >
 
             <div
               style="
-                display:flex;
-                justify-content:space-between;
-                gap:10px;
-                font-size:12px;
-                margin-bottom:4px;
-                color:#555;
+                font-size:11px;
+                color:#777;
               "
             >
-
-              <span>
-                ${escapeHTML(
-                  formatDate(
-                    item.date
-                  )
-                )}
-                ${
-                  item.time
-                    ? " · " +
-                      escapeHTML(
-                        item.time
-                      )
-                    : ""
-                }
-              </span>
-
-              <strong>
-                ${item.value}
-                mg/dL
-              </strong>
-
+              Média
             </div>
 
-            <div
+            <strong
               style="
-                width:100%;
-                height:12px;
-                background:#f0dddd;
-                border-radius:999px;
-                overflow:hidden;
+                display:block;
+                margin-top:4px;
+                color:#7f4444;
               "
             >
-
-              <div
-                style="
-                  width:${percentage}%;
-                  height:100%;
-                  background:#A85C5C;
-                  border-radius:999px;
-                "
-              ></div>
-
-            </div>
+              ${
+                Math.round(
+                  averageValue
+                )
+              }
+              mg/dL
+            </strong>
 
           </div>
 
-        `;
 
-      }
-    );
+          <div
+            style="
+              padding:12px;
+              background:#f8eeee;
+              border-radius:12px;
+              text-align:center;
+            "
+          >
+
+            <div
+              style="
+                font-size:11px;
+                color:#777;
+              "
+            >
+              Mínima
+            </div>
+
+            <strong
+              style="
+                display:block;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${minValue}
+              mg/dL
+            </strong>
+
+          </div>
 
 
-    chartHTML += `
+          <div
+            style="
+              padding:12px;
+              background:#f8eeee;
+              border-radius:12px;
+              text-align:center;
+            "
+          >
 
-        </div>
+            <div
+              style="
+                font-size:11px;
+                color:#777;
+              "
+            >
+              Máxima
+            </div>
 
-        <div
-          style="
-            margin-top:14px;
-            padding-top:12px;
-            border-top:1px solid #eee;
-            font-size:12px;
-            color:#777;
-          "
-        >
+            <strong
+              style="
+                display:block;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${maxValue}
+              mg/dL
+            </strong>
 
-          Menor:
-          <strong>
-            ${min} mg/dL
-          </strong>
-
-          &nbsp; · &nbsp;
-
-          Maior:
-          <strong>
-            ${max} mg/dL
-          </strong>
+          </div>
 
         </div>
 
@@ -1158,11 +1720,12 @@
 
     `;
 
-
-    return chartHTML;
-
   }
 
+
+  /* =====================================================
+     CARDS
+  ====================================================== */
 
   function summaryCard(
     icon,
@@ -1190,6 +1753,7 @@
           ${icon}
         </div>
 
+
         <div
           style="
             font-size:12px;
@@ -1198,6 +1762,7 @@
         >
           ${label}
         </div>
+
 
         <strong
           style="
@@ -1217,6 +1782,10 @@
   }
 
 
+  /* =====================================================
+     RENDERIZAÇÃO
+  ====================================================== */
+
   function renderAnalysis() {
 
     if (!content) {
@@ -1225,8 +1794,10 @@
 
     }
 
+
     const range =
       getDateRange();
+
 
     if (!range) {
 
@@ -1258,9 +1829,21 @@
       getFilteredRecords();
 
 
-    const glucoseValues =
-      getGlucoseValues(
+    const glucoseRecords =
+      getGlucoseRecords(
         records
+      );
+
+
+    const glucoseValues =
+      glucoseRecords.map(
+        function (
+          item
+        ) {
+
+          return item.value;
+
+        }
       );
 
 
@@ -1395,11 +1978,13 @@
             meals
           )}
 
+
           ${summaryCard(
             "🩸",
             "Glicemias",
             glucose
           )}
+
 
           ${summaryCard(
             "💉",
@@ -1407,17 +1992,20 @@
             insulin
           )}
 
+
           ${summaryCard(
             "🏋️",
             "Atividades",
             activity
           )}
 
+
           ${summaryCard(
             "💊",
             "Medicamentos",
             medication
           )}
+
 
           ${summaryCard(
             "🩺",
@@ -1440,6 +2028,7 @@
         <h2>
           📈 Resumo
         </h2>
+
 
         <div
           style="
@@ -1484,7 +2073,8 @@
 
             <strong>
               ${
-                glucoseAverage === null
+                glucoseAverage ===
+                null
                   ? "—"
                   : Math.round(
                       glucoseAverage
@@ -1511,7 +2101,8 @@
 
             <strong>
               ${
-                glucoseMin === null
+                glucoseMin ===
+                null
                   ? "—"
                   : glucoseMin +
                     " mg/dL"
@@ -1536,7 +2127,8 @@
 
             <strong>
               ${
-                glucoseMax === null
+                glucoseMax ===
+                null
                   ? "—"
                   : glucoseMax +
                     " mg/dL"
@@ -1595,14 +2187,44 @@
       </section>
 
 
-      ${buildGlucoseChart(
-        records
+      ${buildGlucoseLineChart(
+        glucoseRecords
       )}
+
+
+      ${
+        records.length ===
+        0
+          ? `
+
+            <section
+              class="card"
+              style="
+                margin-top:16px;
+              "
+            >
+
+              <div class="empty-state">
+
+                Nenhum registro encontrado
+                no período selecionado.
+
+              </div>
+
+            </section>
+
+          `
+          : ""
+      }
 
     `;
 
   }
 
+
+  /* =====================================================
+     ATUALIZAÇÃO APÓS SINCRONIZAÇÃO
+  ====================================================== */
 
   document.addEventListener(
     "recordatorioSyncComplete",
@@ -1613,6 +2235,10 @@
     }
   );
 
+
+  /* =====================================================
+     INICIAR
+  ====================================================== */
 
   if (
     document.readyState ===

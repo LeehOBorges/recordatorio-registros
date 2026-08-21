@@ -1,16 +1,16 @@
-```javascript
 /* =========================================================
    RECORDATÓRIO + REGISTROS
    SINCRONIZAÇÃO COM SUPABASE
-
    VERSÃO CORRIGIDA
 
-   - Reutiliza o cliente Supabase criado pelo index.html.
-   - Não cria uma segunda instância do GoTrueClient.
-   - Mantém o localStorage como cópia local.
-   - Usa o Supabase como banco central.
-   - Sincroniza por usuário autenticado.
-   - Mantém registros excluídos na lixeira.
+   - Mantém localStorage como cópia local
+   - Usa Supabase como banco central
+   - NÃO cria múltiplas instâncias do Supabase Auth
+   - Sincroniza após login
+   - Sincroniza ao salvar
+   - Sincroniza ao voltar para a página
+   - Sincroniza quando a internet retorna
+   - Sincroniza periodicamente
 ========================================================= */
 
 (function () {
@@ -22,51 +22,112 @@
      CONFIGURAÇÃO
   ====================================================== */
 
+  const SUPABASE_URL =
+    "https://gutbveorftpahuyjonnv.supabase.co";
+
+  const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_L8XMa2cXo2aWaGHHMdP1Tw_JtjABUQi";
+
   const STORAGE_KEY =
     "recordatorio_registros_v01";
 
 
   /* =====================================================
      CLIENTE SUPABASE
+     
+     IMPORTANTE:
+     Primeiro tenta reutilizar um cliente que já exista.
+     Só cria um novo se realmente não existir.
   ====================================================== */
 
-  /*
-   * O index.html já cria:
-   *
-   * window.supabaseClient
-   *
-   * Portanto NÃO criamos outro cliente aqui.
-   *
-   * Isso elimina:
-   *
-   * Multiple GoTrueClient instances detected
-   */
+  let syncClient = null;
 
-  let syncClient =
-    window.supabaseClient || null;
+  function getSupabaseClient() {
 
-
-  /*
-   * Caso o script seja executado antes de o index.html
-   * terminar de criar o cliente, tentamos encontrá-lo
-   * novamente quando necessário.
-   */
-
-  function getSyncClient() {
+    /*
+     * Se o app principal já disponibilizou um cliente,
+     * reutilizamos esse cliente.
+     */
 
     if (
       window.supabaseClient &&
-      typeof window.supabaseClient === "object"
+      typeof window.supabaseClient.auth?.getUser ===
+        "function"
     ) {
 
-      syncClient =
-        window.supabaseClient;
+      return window.supabaseClient;
 
     }
 
-    return syncClient;
+
+    /*
+     * Algumas versões do app podem usar outro nome.
+     */
+
+    if (
+      window.supabase &&
+      window.supabase.auth &&
+      typeof window.supabase.auth.getUser ===
+        "function"
+    ) {
+
+      return window.supabase;
+
+    }
+
+
+    /*
+     * Se window.supabase for a biblioteca, criamos
+     * uma instância apenas uma vez e guardamos globalmente.
+     */
+
+    if (
+      window.supabase &&
+      typeof window.supabase.createClient ===
+        "function"
+    ) {
+
+      if (
+        window.__recordatorioSupabaseClient
+      ) {
+
+        return window.__recordatorioSupabaseClient;
+
+      }
+
+
+      try {
+
+        window.__recordatorioSupabaseClient =
+          window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_PUBLISHABLE_KEY
+          );
+
+
+        return window.__recordatorioSupabaseClient;
+
+      } catch (error) {
+
+        console.error(
+          "Erro ao criar cliente Supabase:",
+          error
+        );
+
+        return null;
+
+      }
+
+    }
+
+
+    return null;
 
   }
+
+
+  syncClient =
+    getSupabaseClient();
 
 
   /* =====================================================
@@ -76,6 +137,8 @@
   let syncing = false;
 
   let syncTimer = null;
+
+  let authListenerInstalled = false;
 
   let saveHookInstalled = false;
 
@@ -94,8 +157,11 @@
   function getTimestamp(record) {
 
     if (!record) {
+
       return nowISO();
+
     }
+
 
     return (
       record.deletedAt ||
@@ -112,10 +178,8 @@
     const value =
       getTimestamp(record);
 
-
     const time =
       new Date(value).getTime();
-
 
     return Number.isFinite(time)
       ? time
@@ -124,50 +188,13 @@
   }
 
 
-  function cloneObject(object) {
-
-    if (
-      object === null ||
-      object === undefined
-    ) {
-
-      return object;
-
-    }
-
-
-    try {
-
-      return JSON.parse(
-        JSON.stringify(object)
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Erro ao copiar objeto:",
-        error
-      );
-
-
-      return {};
-
-    }
-
-  }
-
-
   /* =====================================================
-     LOCAL DATABASE
+     LOCALSTORAGE
   ====================================================== */
 
   function loadLocalDatabase() {
 
     try {
-
-      /*
-       * Tentamos primeiro a chave usada pelo app.
-       */
 
       const stored =
         localStorage.getItem(
@@ -213,7 +240,7 @@
     } catch (error) {
 
       console.error(
-        "Erro ao ler registros locais:",
+        "Erro ao ler banco local:",
         error
       );
 
@@ -260,18 +287,36 @@
 
     } catch (error) {
 
-      /*
-       * Não deixamos um problema de storage
-       * interromper a sincronização.
-       */
-
       console.error(
-        "Não foi possível salvar o banco local:",
+        "Erro ao salvar banco local:",
         error
       );
 
-
       return false;
+
+    }
+
+  }
+
+
+  function cloneObject(object) {
+
+    try {
+
+      return JSON.parse(
+        JSON.stringify(
+          object
+        )
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao copiar objeto:",
+        error
+      );
+
+      return {};
 
     }
 
@@ -285,7 +330,7 @@
   function localToCloudRow(
     record,
     userId,
-    excluded = false
+    excluded
   ) {
 
     return {
@@ -335,10 +380,13 @@
     const original =
       row &&
       row.dados &&
-      typeof row.dados === "object"
+      typeof row.dados ===
+        "object"
+
         ? cloneObject(
             row.dados
           )
+
         : {};
 
 
@@ -366,9 +414,13 @@
 
 
     if (
-      row.atualizado_em &&
-      !original.updatedAt
+      row.atualizado_em
     ) {
+
+      /*
+       * O timestamp da nuvem deve representar
+       * a última atualização.
+       */
 
       original.updatedAt =
         row.atualizado_em;
@@ -382,21 +434,20 @@
 
 
   /* =====================================================
-     USUÁRIO ATUAL
+     USUÁRIO LOGADO
   ====================================================== */
 
   async function getCurrentUser() {
 
-    const client =
-      getSyncClient();
+    if (!syncClient) {
+
+      syncClient =
+        getSupabaseClient();
+
+    }
 
 
-    if (!client) {
-
-      console.warn(
-        "Cliente Supabase não disponível."
-      );
-
+    if (!syncClient) {
 
       return null;
 
@@ -406,18 +457,18 @@
     try {
 
       const result =
-        await client.auth.getUser();
+        await syncClient.auth.getUser();
 
 
       if (
+        result &&
         result.error
       ) {
 
         console.warn(
-          "Não foi possível identificar o usuário:",
+          "Erro ao obter usuário Supabase:",
           result.error
         );
-
 
         return null;
 
@@ -425,19 +476,19 @@
 
 
       return (
+        result &&
         result.data &&
         result.data.user
-          ? result.data.user
-          : null
-      );
+      )
+        ? result.data.user
+        : null;
 
     } catch (error) {
 
       console.error(
-        "Erro ao identificar usuário:",
+        "Erro ao obter usuário:",
         error
       );
-
 
       return null;
 
@@ -458,39 +509,17 @@
       new Map();
 
 
-    if (!database) {
-
-      return map;
-
-    }
-
-
-    const records =
-      Array.isArray(
-        database.records
-      )
-        ? database.records
-        : [];
-
-
-    const trash =
-      Array.isArray(
-        database.trash
-      )
-        ? database.trash
-        : [];
-
-
     /*
-     * REGISTROS ATIVOS
+     * Registros ativos
      */
 
-    records.forEach(
+    database.records.forEach(
       function (record) {
 
         if (
           !record ||
-          !record.id
+          record.id === undefined ||
+          record.id === null
         ) {
 
           return;
@@ -543,15 +572,16 @@
 
 
     /*
-     * LIXEIRA
+     * Lixeira
      */
 
-    trash.forEach(
+    database.trash.forEach(
       function (record) {
 
         if (
           !record ||
-          !record.id
+          record.id === undefined ||
+          record.id === null
         ) {
 
           return;
@@ -565,6 +595,10 @@
           );
 
 
+        const existing =
+          map.get(id);
+
+
         const item = {
 
           record:
@@ -576,10 +610,6 @@
             true
 
         };
-
-
-        const existing =
-          map.get(id);
 
 
         if (
@@ -609,31 +639,15 @@
 
 
   /* =====================================================
-     BUSCAR NUVEM
+     BUSCAR SUPABASE
   ====================================================== */
 
   async function loadCloudRows(
     userId
   ) {
 
-    const client =
-      getSyncClient();
-
-
-    if (!client) {
-
-      throw new Error(
-        "Cliente Supabase não disponível."
-      );
-
-    }
-
-
-    const {
-      data,
-      error
-    } =
-      await client
+    const result =
+      await syncClient
         .from("registros")
         .select(
           "user_id, local_id, data, tipo, dados, excluido, atualizado_em"
@@ -644,24 +658,26 @@
         );
 
 
-    if (error) {
+    if (
+      result.error
+    ) {
 
-      throw error;
+      throw result.error;
 
     }
 
 
     return Array.isArray(
-      data
+      result.data
     )
-      ? data
+      ? result.data
       : [];
 
   }
 
 
   /* =====================================================
-     MERGE LOCAL + NUVEM
+     MESCLAR LOCAL + NUVEM
   ====================================================== */
 
   function mergeData(
@@ -675,23 +691,13 @@
       );
 
 
-    if (
-      !Array.isArray(
-        cloudRows
-      )
-    ) {
-
-      return merged;
-
-    }
-
-
     cloudRows.forEach(
       function (row) {
 
         if (
           !row ||
-          !row.local_id
+          row.local_id === undefined ||
+          row.local_id === null
         ) {
 
           return;
@@ -729,7 +735,8 @@
 
 
         /*
-         * Só existe na nuvem.
+         * Não existe localmente:
+         * usa o registro da nuvem.
          */
 
         if (!existing) {
@@ -738,7 +745,6 @@
             id,
             cloudItem
           );
-
 
           return;
 
@@ -762,12 +768,14 @@
 
 
         /*
-         * Nuvem mais recente.
+         * Se a data da nuvem for inválida,
+         * não substituímos o local.
          */
 
         if (
+          Number.isFinite(cloudTime) &&
           cloudTime >
-          localTime
+            localTime
         ) {
 
           merged.set(
@@ -787,7 +795,7 @@
 
 
   /* =====================================================
-     MAPA → DATABASE
+     MAPA → BANCO LOCAL
   ====================================================== */
 
   function buildLocalDatabase(
@@ -838,10 +846,6 @@
     );
 
 
-    /*
-     * Ordenação dos registros.
-     */
-
     records.sort(
       function (a, b) {
 
@@ -849,7 +853,6 @@
           String(
             a.date || ""
           );
-
 
         const dateB =
           String(
@@ -880,10 +883,6 @@
       }
     );
 
-
-    /*
-     * Lixeira mais recente primeiro.
-     */
 
     trash.sort(
       function (a, b) {
@@ -924,19 +923,6 @@
     userId
   ) {
 
-    const client =
-      getSyncClient();
-
-
-    if (!client) {
-
-      throw new Error(
-        "Cliente Supabase não disponível."
-      );
-
-    }
-
-
     const rows = [];
 
 
@@ -945,8 +931,19 @@
 
         if (
           !item ||
-          !item.record ||
-          !item.record.id
+          !item.record
+        ) {
+
+          return;
+
+        }
+
+
+        if (
+          item.record.id ===
+          undefined ||
+          item.record.id ===
+          null
         ) {
 
           return;
@@ -975,10 +972,8 @@
     }
 
 
-    const {
-      error
-    } =
-      await client
+    const result =
+      await syncClient
         .from("registros")
         .upsert(
           rows,
@@ -989,9 +984,11 @@
         );
 
 
-    if (error) {
+    if (
+      result.error
+    ) {
 
-      throw error;
+      throw result.error;
 
     }
 
@@ -999,120 +996,120 @@
 
 
   /* =====================================================
-     ATUALIZAR ESTADO DO APP
+     ATUALIZAR INTERFACE
   ====================================================== */
 
   function refreshApplication() {
 
-    /*
-     * O app.js pode manter seu próprio objeto database
-     * em memória. Por isso tentamos usar uma função de
-     * carregamento existente antes de apenas renderizar.
-     */
-
-    const reloadFunctions = [
-
-      "loadDatabase",
-
-      "loadData",
-
-      "loadRecords",
-
-      "initializeDatabase",
-
-      "initDatabase",
-
-      "loadAppData"
-
-    ];
-
-
-    for (
-      let i = 0;
-      i < reloadFunctions.length;
-      i++
-    ) {
-
-      const functionName =
-        reloadFunctions[i];
-
+    try {
 
       if (
-        typeof window[
-          functionName
-        ] === "function"
+        typeof window.renderDashboard ===
+        "function"
       ) {
 
-        try {
-
-          window[
-            functionName
-          ]();
-
-
-        } catch (error) {
-
-          console.warn(
-            "Não foi possível executar " +
-            functionName +
-            ":",
-            error
-          );
-
-        }
+        window.renderDashboard();
 
       }
+
+    } catch (error) {
+
+      console.warn(
+        "Erro ao atualizar dashboard:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        typeof window.renderDiary ===
+        "function"
+      ) {
+
+        window.renderDiary();
+
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "Erro ao atualizar diário:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        typeof window.renderConsultations ===
+        "function"
+      ) {
+
+        window.renderConsultations();
+
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "Erro ao atualizar consultas:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        typeof window.renderTrash ===
+        "function"
+      ) {
+
+        window.renderTrash();
+
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "Erro ao atualizar lixeira:",
+        error
+      );
 
     }
 
 
     /*
-     * Renderizações conhecidas do aplicativo.
+     * Alguns app.js definem as funções apenas
+     * no escopo global da página. Se existirem,
+     * também atualizamos o painel de medicamentos.
      */
 
-    const renderFunctions = [
+    try {
 
-      "renderDashboard",
+      if (
+        typeof window.renderMedicationHome ===
+        "function"
+      ) {
 
-      "renderDiary",
-
-      "renderConsultations",
-
-      "renderTrash"
-
-    ];
-
-
-    renderFunctions.forEach(
-      function (functionName) {
-
-        if (
-          typeof window[
-            functionName
-          ] === "function"
-        ) {
-
-          try {
-
-            window[
-              functionName
-            ]();
-
-          } catch (error) {
-
-            console.warn(
-              "Erro ao atualizar " +
-              functionName +
-              ":",
-              error
-            );
-
-          }
-
-        }
+        window.renderMedicationHome();
 
       }
-    );
+
+    } catch (error) {
+
+      console.warn(
+        "Erro ao atualizar medicamentos:",
+        error
+      );
+
+    }
 
   }
 
@@ -1140,22 +1137,24 @@
         "Sincronização ignorada: sem internet."
       );
 
-
       return;
 
     }
 
 
-    const client =
-      getSyncClient();
+    if (!syncClient) {
+
+      syncClient =
+        getSupabaseClient();
+
+    }
 
 
-    if (!client) {
+    if (!syncClient) {
 
       console.warn(
         "Cliente Supabase não disponível."
       );
-
 
       return;
 
@@ -1174,19 +1173,13 @@
       if (!user) {
 
         console.log(
-          "Nenhum usuário autenticado. " +
-          "Sincronização aguardando login."
+          "Nenhum usuário autenticado. Sincronização aguardando login."
         );
-
 
         return;
 
       }
 
-
-      /*
-       * 1. Ler banco local.
-       */
 
       const localDatabase =
         loadLocalDatabase();
@@ -1198,19 +1191,11 @@
         );
 
 
-      /*
-       * 2. Ler banco central.
-       */
-
       const cloudRows =
         await loadCloudRows(
           user.id
         );
 
-
-      /*
-       * 3. Unificar.
-       */
 
       const merged =
         mergeData(
@@ -1219,10 +1204,6 @@
         );
 
 
-      /*
-       * 4. Reconstruir banco local.
-       */
-
       const mergedDatabase =
         buildLocalDatabase(
           merged
@@ -1230,7 +1211,7 @@
 
 
       /*
-       * 5. Salvar a união localmente.
+       * Atualiza primeiro o banco local.
        */
 
       saveLocalDatabase(
@@ -1240,7 +1221,7 @@
 
 
       /*
-       * 6. Enviar a união para o Supabase.
+       * Depois envia a união para a nuvem.
        */
 
       await uploadMergedData(
@@ -1249,51 +1230,46 @@
       );
 
 
-      /*
-       * 7. Log detalhado.
-       */
-
-      const result = {
-
-        motivo:
-          reason,
-
-        registros:
-          mergedDatabase.records.length,
-
-        lixeira:
-          mergedDatabase.trash.length,
-
-        nuvemAntes:
-          cloudRows.length
-
-      };
-
-
       console.log(
         "Sincronização concluída:",
-        result
+        {
+          motivo:
+            reason,
+
+          registros:
+            mergedDatabase.records.length,
+
+          lixeira:
+            mergedDatabase.trash.length
+        }
       );
 
 
       /*
-       * 8. Evento público.
+       * Evento público.
        */
 
       document.dispatchEvent(
         new CustomEvent(
           "recordatorioSyncComplete",
           {
-            detail:
-              result
+            detail: {
+
+              motivo:
+                reason,
+
+              registros:
+                mergedDatabase.records.length,
+
+              lixeira:
+                mergedDatabase.trash.length
+
+            }
+
           }
         )
       );
 
-
-      /*
-       * 9. Atualizar aplicação.
-       */
 
       refreshApplication();
 
@@ -1325,14 +1301,17 @@
 
 
   /* =====================================================
-     INTERCEPTAR SAVE DATABASE
+     INTERCEPTAR saveDatabase
   ====================================================== */
 
   function installSaveHook() {
 
     if (
-      saveHookInstalled
+      saveHookInstalled ||
+      window.__recordatorioSaveHookInstalled
     ) {
+
+      saveHookInstalled = true;
 
       return true;
 
@@ -1349,34 +1328,38 @@
     }
 
 
-    /*
-     * Guardamos a função original.
-     */
-
     const originalSaveDatabase =
       window.saveDatabase;
 
 
-    /*
-     * Criamos o wrapper.
-     */
-
     window.saveDatabase =
       function () {
 
-        /*
-         * Primeiro deixa o app salvar normalmente.
-         */
+        let result;
 
-        const result =
-          originalSaveDatabase.apply(
-            this,
-            arguments
+
+        try {
+
+          result =
+            originalSaveDatabase.apply(
+              this,
+              arguments
+            );
+
+        } catch (error) {
+
+          console.error(
+            "Erro ao executar saveDatabase:",
+            error
           );
 
+          throw error;
+
+        }
+
 
         /*
-         * Depois sincroniza em segundo plano.
+         * Sincronização em segundo plano.
          */
 
         setTimeout(
@@ -1399,14 +1382,8 @@
     window.__recordatorioSaveHookInstalled =
       true;
 
-
     saveHookInstalled =
       true;
-
-
-    console.log(
-      "Hook de sincronização instalado."
-    );
 
 
     return true;
@@ -1415,7 +1392,7 @@
 
 
   /* =====================================================
-     TENTAR INSTALAR SAVE HOOK
+     TENTAR INSTALAR HOOK
   ====================================================== */
 
   function tryInstallSaveHook() {
@@ -1438,44 +1415,62 @@
 
 
   /* =====================================================
-     AUTH LISTENER
+     AUTENTICAÇÃO
   ====================================================== */
 
   function installAuthListener() {
 
-    const client =
-      getSyncClient();
-
-
-    if (!client) {
-
-      console.warn(
-        "Não foi possível instalar listener do Auth."
-      );
-
+    if (
+      authListenerInstalled
+    ) {
 
       return;
 
     }
 
 
-    /*
-     * Importante:
-     *
-     * O index.html já possui um onAuthStateChange.
-     * Aqui não criamos outro cliente.
-     *
-     * Ter listeners no mesmo cliente é permitido.
-     */
+    if (!syncClient) {
 
-    client.auth.onAuthStateChange(
+      syncClient =
+        getSupabaseClient();
+
+    }
+
+
+    if (!syncClient) {
+
+      console.warn(
+        "Não foi possível instalar listener do Supabase."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      !syncClient.auth ||
+      typeof syncClient.auth.onAuthStateChange !==
+        "function"
+    ) {
+
+      return;
+
+    }
+
+
+    authListenerInstalled =
+      true;
+
+
+    syncClient.auth.onAuthStateChange(
       function (
         event,
         session
       ) {
 
         console.log(
-          "Sincronização Auth:",
+          "Supabase Auth:",
           event
         );
 
@@ -1500,8 +1495,28 @@
 
           }
 
+        }
 
-          return;
+
+        if (
+          event ===
+          "INITIAL_SESSION"
+        ) {
+
+          if (session) {
+
+            setTimeout(
+              function () {
+
+                syncNow(
+                  "sessao_inicial"
+                );
+
+              },
+              500
+            );
+
+          }
 
         }
 
@@ -1522,8 +1537,17 @@
             0
           );
 
+        }
 
-          return;
+
+        if (
+          event ===
+          "SIGNED_OUT"
+        ) {
+
+          console.log(
+            "Usuário saiu. Sincronização pausada."
+          );
 
         }
 
@@ -1617,65 +1641,6 @@
 
 
   /* =====================================================
-     PRIMEIRA EXECUÇÃO
-  ====================================================== */
-
-  function init() {
-
-    /*
-     * O cliente já deve ter sido criado pelo index.html.
-     */
-
-    getSyncClient();
-
-
-    /*
-     * Hook do save.
-     */
-
-    tryInstallSaveHook();
-
-
-    /*
-     * Auth.
-     */
-
-    installAuthListener();
-
-
-    /*
-     * Eventos da página.
-     */
-
-    installVisibilityListener();
-
-
-    /*
-     * Sincronização periódica.
-     */
-
-    installPeriodicSync();
-
-
-    /*
-     * Primeira sincronização.
-     */
-
-    setTimeout(
-      function () {
-
-        syncNow(
-          "inicializacao"
-        );
-
-      },
-      1500
-    );
-
-  }
-
-
-  /* =====================================================
      API PÚBLICA
   ====================================================== */
 
@@ -1689,19 +1654,10 @@
     };
 
 
-  /*
-   * Disponibiliza também uma função de diagnóstico.
-   */
-
-  window.recordatorioSyncStatus =
+  window.recordatorioGetSyncStatus =
     function () {
 
       return {
-
-        client:
-          Boolean(
-            getSyncClient()
-          ),
 
         syncing:
           syncing,
@@ -1709,12 +1665,64 @@
         online:
           navigator.onLine,
 
-        saveHook:
-          saveHookInstalled
+        supabase:
+          Boolean(
+            syncClient
+          )
 
       };
 
     };
+
+
+  /* =====================================================
+     INICIALIZAÇÃO
+  ====================================================== */
+
+  function init() {
+
+    /*
+     * Espera o app principal terminar de criar
+     * suas funções/cliente.
+     */
+
+    tryInstallSaveHook();
+
+    installAuthListener();
+
+    installVisibilityListener();
+
+    installPeriodicSync();
+
+
+    setTimeout(
+      function () {
+
+        /*
+         * Tentamos novamente porque o cliente Supabase
+         * ou a sessão podem ter sido inicializados
+         * depois deste arquivo.
+         */
+
+        if (!syncClient) {
+
+          syncClient =
+            getSupabaseClient();
+
+        }
+
+
+        installAuthListener();
+
+        syncNow(
+          "inicializacao"
+        );
+
+      },
+      1500
+    );
+
+  }
 
 
   /* =====================================================
@@ -1728,7 +1736,10 @@
 
     document.addEventListener(
       "DOMContentLoaded",
-      init
+      init,
+      {
+        once: true
+      }
     );
 
   } else {
@@ -1738,4 +1749,3 @@
   }
 
 })();
-```

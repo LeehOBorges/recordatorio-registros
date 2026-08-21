@@ -2,21 +2,38 @@
    RECORDATÓRIO + REGISTROS
    MÓDULO DE ANÁLISES
 
-   Versão corrigida:
-   - Inicialização robusta em celular
-   - Funciona quando a tela é criada depois do carregamento
+   VERSÃO PARA DESKTOP + CELULAR
+
+   Recursos:
+   - Inicialização robusta
+   - Funciona com telas criadas dinamicamente
+   - Funciona após navegação interna
+   - Detecta abertura da tela de Análises
    - Resumo geral
-   - Gráfico de linha das glicemias
-   - Identificação visual de glicemia em jejum
+   - Gráfico de glicemias
+   - Identificação de glicemia em jejum
    - Análise por período do dia
+   - Período de 7, 30, 90 dias ou personalizado
+   - Atualização após sincronização
+   - Compatível com toque em celular
 ========================================================= */
 
 (function () {
 
   "use strict";
 
+
+  /* =====================================================
+     CONFIGURAÇÃO
+  ====================================================== */
+
   const STORAGE_KEY =
     "recordatorio_registros_v01";
+
+
+  /* =====================================================
+     VARIÁVEIS
+  ====================================================== */
 
   let analysisScreen = null;
   let periodSelect = null;
@@ -28,66 +45,436 @@
   let initialized = false;
   let retryTimer = null;
 
+  let observerStarted = false;
+
+
+  /* =====================================================
+     LOCALIZAR TELA
+  ====================================================== */
+
+  function findAnalysisScreen() {
+
+    const possibleIds = [
+      "analysisScreen",
+      "analiseScreen",
+      "analysesScreen",
+      "analisesScreen"
+    ];
+
+    for (
+      const id of possibleIds
+    ) {
+
+      const element =
+        document.getElementById(id);
+
+      if (element) {
+
+        analysisScreen =
+          element;
+
+        return true;
+
+      }
+
+    }
+
+    return false;
+
+  }
+
+
+  /* =====================================================
+     LOCALIZAR BOTÃO DE ANÁLISE
+  ====================================================== */
+
+  function findAnalysisButtons() {
+
+    const ids = [
+
+      "analysisButton",
+      "analiseButton",
+      "analysesButton",
+      "analisesButton",
+      "analysisTab",
+      "analiseTab",
+      "analysesTab",
+      "analisesTab",
+      "btnAnalysis",
+      "btnAnalise"
+
+    ];
+
+
+    const buttons = [];
+
+
+    ids.forEach(
+      function (id) {
+
+        const element =
+          document.getElementById(id);
+
+        if (element) {
+
+          buttons.push(element);
+
+        }
+
+      }
+    );
+
+
+    return buttons;
+
+  }
+
+
+  /* =====================================================
+     TENTAR ABRIR A TELA
+  ====================================================== */
+
+  function openAnalysisScreen() {
+
+    if (!findAnalysisScreen()) {
+
+      console.warn(
+        "Tela analysisScreen não encontrada."
+      );
+
+      return false;
+
+    }
+
+
+    /*
+     * Algumas aplicações usam classes como
+     * .screen, .page ou .view.
+     *
+     * Removemos estados comuns de ocultação.
+     */
+
+    analysisScreen.hidden =
+      false;
+
+
+    analysisScreen.style.display =
+      "";
+
+
+    analysisScreen.classList.remove(
+      "hidden"
+    );
+
+
+    analysisScreen.classList.remove(
+      "d-none"
+    );
+
+
+    analysisScreen.classList.add(
+      "active"
+    );
+
+
+    /*
+     * Caso exista uma função global de navegação,
+     * tentamos utilizá-la somente se ela estiver
+     * disponível.
+     */
+
+    try {
+
+      if (
+        typeof window.showScreen ===
+        "function"
+      ) {
+
+        window.showScreen(
+          "analysisScreen"
+        );
+
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "showScreen não pôde ser executada:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        typeof window.navigateTo ===
+        "function"
+      ) {
+
+        window.navigateTo(
+          "analysisScreen"
+        );
+
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "navigateTo não pôde ser executada:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        typeof window.showPage ===
+        "function"
+      ) {
+
+        window.showPage(
+          "analysisScreen"
+        );
+
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "showPage não pôde ser executada:",
+        error
+      );
+
+    }
+
+
+    initAnalysis();
+
+    renderAnalysis();
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     CLIQUE/TOQUE NO BOTÃO DE ANÁLISE
+  ====================================================== */
+
+  function bindAnalysisButtons() {
+
+    const buttons =
+      findAnalysisButtons();
+
+
+    buttons.forEach(
+      function (button) {
+
+        if (
+          button.dataset.analysisBound ===
+          "true"
+        ) {
+
+          return;
+
+        }
+
+
+        button.dataset.analysisBound =
+          "true";
+
+
+        /*
+         * click funciona tanto com mouse
+         * quanto com toque em celular.
+         */
+
+        button.addEventListener(
+          "click",
+          function (event) {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            openAnalysisScreen();
+
+          },
+          false
+        );
+
+
+        /*
+         * Alguns navegadores móveis podem
+         * trabalhar com pointerup.
+         */
+
+        button.addEventListener(
+          "pointerup",
+          function () {
+
+            setTimeout(
+              function () {
+
+                if (
+                  !analysisScreen ||
+                  !analysisScreen.classList.contains(
+                    "active"
+                  )
+                ) {
+
+                  openAnalysisScreen();
+
+                }
+
+              },
+              0
+            );
+
+          },
+          false
+        );
+
+      }
+    );
+
+  }
+
 
   /* =====================================================
      INICIALIZAÇÃO
   ====================================================== */
 
-  function findAnalysisScreen() {
-
-    analysisScreen =
-      document.getElementById("analysisScreen");
-
-    return !!analysisScreen;
-  }
-
-
   function initAnalysis() {
 
-    if (initialized) {
-      return true;
-    }
-
     if (!findAnalysisScreen()) {
+
       return false;
+
     }
 
-    createInterface();
 
-    if (!periodSelect || !content) {
+    const main =
+      analysisScreen.querySelector(
+        "main"
+      );
+
+
+    if (!main) {
+
+      console.warn(
+        "analysisScreen encontrada, mas <main> não existe."
+      );
+
       return false;
+
     }
 
-    bindEvents();
 
-    setDefaultPeriod();
+    /*
+     * Se a interface já existe, não recriamos.
+     */
+
+    const existingPeriod =
+      document.getElementById(
+        "analysisPeriod"
+      );
+
+
+    if (!existingPeriod) {
+
+      createInterface();
+
+    }
+
+
+    periodSelect =
+      document.getElementById(
+        "analysisPeriod"
+      );
+
+
+    startDateInput =
+      document.getElementById(
+        "analysisStartDate"
+      );
+
+
+    endDateInput =
+      document.getElementById(
+        "analysisEndDate"
+      );
+
+
+    refreshButton =
+      document.getElementById(
+        "refreshAnalysisButton"
+      );
+
+
+    content =
+      document.getElementById(
+        "analysisContent"
+      );
+
+
+    if (
+      !periodSelect ||
+      !content
+    ) {
+
+      return false;
+
+    }
+
+
+    if (!initialized) {
+
+      bindEvents();
+
+      setDefaultPeriod();
+
+      initialized = true;
+
+    }
+
 
     renderAnalysis();
 
-    initialized = true;
-
-    console.log(
-      "Módulo de análises inicializado."
-    );
 
     return true;
+
   }
 
 
-  /*
-   * Em celulares, a tela pode ser criada depois
-   * do DOMContentLoaded. Por isso fazemos algumas
-   * tentativas adicionais.
-   */
+  /* =====================================================
+     INICIAR MÓDULO
+  ====================================================== */
+
   function startAnalysisModule() {
 
+    bindAnalysisButtons();
+
+
     if (initAnalysis()) {
+
       return;
+
     }
+
 
     let attempts = 0;
 
-    clearInterval(retryTimer);
+
+    clearInterval(
+      retryTimer
+    );
+
 
     retryTimer =
       setInterval(
@@ -95,7 +482,13 @@
 
           attempts++;
 
-          if (initAnalysis()) {
+
+          bindAnalysisButtons();
+
+
+          if (
+            initAnalysis()
+          ) {
 
             clearInterval(
               retryTimer
@@ -107,7 +500,10 @@
 
           }
 
-          if (attempts >= 30) {
+
+          if (
+            attempts >= 40
+          ) {
 
             clearInterval(
               retryTimer
@@ -116,7 +512,7 @@
             retryTimer = null;
 
             console.warn(
-              "Não foi possível localizar a tela de análises."
+              "Não foi possível inicializar o módulo de análises."
             );
 
           }
@@ -129,10 +525,19 @@
 
 
   /* =====================================================
-     OBSERVADOR PARA TELAS CRIADAS DINAMICAMENTE
+     OBSERVADOR
   ====================================================== */
 
   function observePageChanges() {
+
+    if (
+      observerStarted
+    ) {
+
+      return;
+
+    }
+
 
     if (
       typeof MutationObserver ===
@@ -143,18 +548,37 @@
 
     }
 
+
+    if (!document.body) {
+
+      return;
+
+    }
+
+
+    observerStarted = true;
+
+
     const observer =
       new MutationObserver(
         function () {
+
+          bindAnalysisButtons();
+
 
           if (!initialized) {
 
             initAnalysis();
 
+          } else {
+
+            findAnalysisScreen();
+
           }
 
         }
       );
+
 
     observer.observe(
       document.body,
@@ -173,12 +597,25 @@
 
   function createInterface() {
 
+    if (!analysisScreen) {
+
+      return;
+
+    }
+
+
     const main =
-      analysisScreen.querySelector("main");
+      analysisScreen.querySelector(
+        "main"
+      );
+
 
     if (!main) {
+
       return;
+
     }
+
 
     main.innerHTML = `
 
@@ -187,6 +624,7 @@
         <h2>
           📊 Análises
         </h2>
+
 
         <p
           style="
@@ -220,6 +658,7 @@
             Período
           </label>
 
+
           <select
             id="analysisPeriod"
             style="
@@ -230,6 +669,9 @@
               border-radius:12px;
               font-size:16px;
               background:#fff;
+              min-height:48px;
+              -webkit-appearance:none;
+              appearance:none;
             "
           >
 
@@ -278,6 +720,7 @@
               Data inicial
             </label>
 
+
             <input
               id="analysisStartDate"
               type="date"
@@ -289,6 +732,7 @@
                 border-radius:12px;
                 font-size:16px;
                 background:#fff;
+                min-height:48px;
               "
             >
 
@@ -310,6 +754,7 @@
               Data final
             </label>
 
+
             <input
               id="analysisEndDate"
               type="date"
@@ -321,6 +766,7 @@
                 border-radius:12px;
                 font-size:16px;
                 background:#fff;
+                min-height:48px;
               "
             >
 
@@ -343,6 +789,9 @@
             font-size:16px;
             font-weight:700;
             cursor:pointer;
+            min-height:48px;
+            touch-action:manipulation;
+            -webkit-tap-highlight-color:transparent;
           "
         >
           🔄 Atualizar análise
@@ -354,32 +803,6 @@
       <div id="analysisContent"></div>
 
     `;
-
-
-    periodSelect =
-      document.getElementById(
-        "analysisPeriod"
-      );
-
-    startDateInput =
-      document.getElementById(
-        "analysisStartDate"
-      );
-
-    endDateInput =
-      document.getElementById(
-        "analysisEndDate"
-      );
-
-    refreshButton =
-      document.getElementById(
-        "refreshAnalysisButton"
-      );
-
-    content =
-      document.getElementById(
-        "analysisContent"
-      );
 
   }
 
@@ -401,12 +824,18 @@
               "analysisCustomDates"
             );
 
+
           if (!customDates) {
+
             return;
+
           }
 
+
           customDates.hidden =
-            periodSelect.value !== "custom";
+            periodSelect.value !==
+            "custom";
+
 
           if (
             periodSelect.value ===
@@ -416,6 +845,7 @@
             setDefaultCustomDates();
 
           }
+
 
           renderAnalysis();
 
@@ -429,7 +859,9 @@
 
       refreshButton.addEventListener(
         "click",
-        function () {
+        function (event) {
+
+          event.preventDefault();
 
           renderAnalysis();
 
@@ -470,15 +902,24 @@
     const year =
       date.getFullYear();
 
+
     const month =
       String(
         date.getMonth() + 1
-      ).padStart(2, "0");
+      ).padStart(
+        2,
+        "0"
+      );
+
 
     const day =
       String(
         date.getDate()
-      ).padStart(2, "0");
+      ).padStart(
+        2,
+        "0"
+      );
+
 
     return (
       year +
@@ -496,12 +937,15 @@
     const end =
       new Date();
 
+
     const start =
       new Date();
+
 
     start.setDate(
       start.getDate() - 6
     );
+
 
     if (startDateInput) {
 
@@ -509,6 +953,7 @@
         dateToKey(start);
 
     }
+
 
     if (endDateInput) {
 
@@ -523,11 +968,15 @@
   function setDefaultPeriod() {
 
     if (!periodSelect) {
+
       return;
+
     }
+
 
     periodSelect.value =
       "7";
+
 
     setDefaultCustomDates();
 
@@ -539,12 +988,14 @@
     const end =
       new Date();
 
+
     end.setHours(
       0,
       0,
       0,
       0
     );
+
 
     const start =
       new Date(end);
@@ -561,10 +1012,12 @@
           ? startDateInput.value
           : "";
 
+
       const customEnd =
         endDateInput
           ? endDateInput.value
           : "";
+
 
       if (
         !customStart ||
@@ -575,6 +1028,7 @@
 
       }
 
+
       if (
         customStart >
         customEnd
@@ -583,6 +1037,7 @@
         return null;
 
       }
+
 
       return {
 
@@ -604,10 +1059,12 @@
           : 7
       );
 
+
     start.setDate(
       start.getDate() -
       (days - 1)
     );
+
 
     return {
 
@@ -635,6 +1092,7 @@
           STORAGE_KEY
         );
 
+
       if (!stored) {
 
         return {
@@ -644,8 +1102,10 @@
 
       }
 
+
       const parsed =
         JSON.parse(stored);
+
 
       return {
 
@@ -668,9 +1128,10 @@
     } catch (error) {
 
       console.error(
-        "Erro ao carregar dados das análises:",
+        "Erro ao carregar dados:",
         error
       );
+
 
       return {
         records: [],
@@ -687,12 +1148,17 @@
     const database =
       loadDatabase();
 
+
     const range =
       getDateRange();
 
+
     if (!range) {
+
       return [];
+
     }
+
 
     return database.records.filter(
       function (record) {
@@ -702,6 +1168,7 @@
             record.date ||
             ""
           );
+
 
         return (
           date >= range.start &&
@@ -721,11 +1188,15 @@
   function formatDate(value) {
 
     if (!value) {
+
       return "";
+
     }
+
 
     const parts =
       String(value).split("-");
+
 
     if (
       parts.length !== 3
@@ -734,6 +1205,7 @@
       return value;
 
     }
+
 
     return (
       parts[2] +
@@ -751,17 +1223,32 @@
     return String(
       value ?? ""
     )
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
 
   }
 
 
   /* =====================================================
-     RESUMOS
+     CONTADORES
   ====================================================== */
 
   function countType(
@@ -809,10 +1296,13 @@
               record.duration
             );
 
+
           return (
             total +
             (
-              Number.isFinite(value)
+              Number.isFinite(
+                value
+              )
                 ? value
                 : 0
             )
@@ -824,6 +1314,82 @@
 
   }
 
+
+  function getInsulinUnits(
+    records
+  ) {
+
+    return records
+      .filter(
+        function (record) {
+
+          return (
+            record.type ===
+            "insulin"
+          );
+
+        }
+      )
+      .reduce(
+        function (
+          total,
+          record
+        ) {
+
+          const candidates = [
+
+            record.dose,
+
+            record.units,
+
+            record.insulinDose
+
+          ];
+
+
+          let value = 0;
+
+
+          for (
+            const candidate
+            of candidates
+          ) {
+
+            const parsed =
+              Number(candidate);
+
+
+            if (
+              Number.isFinite(
+                parsed
+              )
+            ) {
+
+              value =
+                parsed;
+
+              break;
+
+            }
+
+          }
+
+
+          return (
+            total +
+            value
+          );
+
+        },
+        0
+      );
+
+  }
+
+
+  /* =====================================================
+     GLICEMIAS
+  ====================================================== */
 
   function getGlucoseRecords(
     records
@@ -892,10 +1458,12 @@
             " " +
             a.time;
 
+
           const second =
             b.date +
             " " +
             b.time;
+
 
           return first.localeCompare(
             second
@@ -909,9 +1477,14 @@
 
   function average(values) {
 
-    if (!values.length) {
+    if (
+      !values.length
+    ) {
+
       return null;
+
     }
+
 
     return (
       values.reduce(
@@ -920,72 +1493,16 @@
           value
         ) {
 
-          return total + value;
+          return (
+            total +
+            value
+          );
 
         },
         0
       ) /
       values.length
     );
-
-  }
-
-
-  function getInsulinUnits(
-    records
-  ) {
-
-    return records
-      .filter(
-        function (record) {
-
-          return (
-            record.type ===
-            "insulin"
-          );
-
-        }
-      )
-      .reduce(
-        function (
-          total,
-          record
-        ) {
-
-          const candidates = [
-            record.dose,
-            record.units,
-            record.insulinDose
-          ];
-
-          let value = 0;
-
-          for (
-            const candidate
-            of candidates
-          ) {
-
-            const parsed =
-              Number(candidate);
-
-            if (
-              Number.isFinite(
-                parsed
-              )
-            ) {
-
-              value = parsed;
-              break;
-
-            }
-
-          }
-
-          return total + value;
-
-        },
-        0
-      );
 
   }
 
@@ -1018,22 +1535,32 @@
   function getDayPeriod(time) {
 
     if (!time) {
+
       return "unknown";
+
     }
+
 
     const parts =
       String(time).split(":");
 
+
     const hour =
-      Number(parts[0]);
+      Number(
+        parts[0]
+      );
+
 
     if (
-      !Number.isFinite(hour)
+      !Number.isFinite(
+        hour
+      )
     ) {
 
       return "unknown";
 
     }
+
 
     if (
       hour >= 5 &&
@@ -1044,6 +1571,7 @@
 
     }
 
+
     if (
       hour >= 12 &&
       hour < 18
@@ -1052,6 +1580,7 @@
       return "afternoon";
 
     }
+
 
     return "night";
 
@@ -1076,6 +1605,7 @@
 
     };
 
+
     return (
       labels[period] ||
       labels.unknown
@@ -1095,9 +1625,13 @@
     const periods = {
 
       fasting: [],
+
       morning: [],
+
       afternoon: [],
+
       night: [],
+
       unknown: []
 
     };
@@ -1120,12 +1654,16 @@
 
         }
 
+
         const period =
           getDayPeriod(
             record.time
           );
 
-        periods[period].push(
+
+        periods[
+          period
+        ].push(
           record.value
         );
 
@@ -1134,11 +1672,17 @@
 
 
     const order = [
+
       "fasting",
+
       "morning",
+
       "afternoon",
+
       "night",
+
       "unknown"
+
     ];
 
 
@@ -1155,6 +1699,7 @@
           🕐 Glicemias por período
         </h2>
 
+
         <p
           style="
             margin-top:0;
@@ -1166,6 +1711,7 @@
           As glicemias em jejum são separadas
           das demais medições da manhã.
         </p>
+
 
         <div
           style="
@@ -1184,6 +1730,7 @@
         const values =
           periods[period];
 
+
         if (
           period === "unknown" &&
           values.length === 0
@@ -1193,18 +1740,26 @@
 
         }
 
+
         const avg =
           average(values);
 
+
         const min =
           values.length
-            ? Math.min(...values)
+            ? Math.min(
+                ...values
+              )
             : null;
+
 
         const max =
           values.length
-            ? Math.max(...values)
+            ? Math.max(
+                ...values
+              )
             : null;
+
 
         const label =
           period === "fasting"
@@ -1244,6 +1799,7 @@
                 ${label}
               </strong>
 
+
               <span
                 style="
                   font-size:12px;
@@ -1265,7 +1821,7 @@
               style="
                 display:grid;
                 grid-template-columns:
-                  repeat(3, minmax(0, 1fr));
+                  repeat(3,minmax(0,1fr));
                 gap:8px;
               "
             >
@@ -1287,6 +1843,7 @@
                 >
                   Média
                 </div>
+
 
                 <strong
                   style="
@@ -1324,6 +1881,7 @@
                   Mínima
                 </div>
 
+
                 <strong
                   style="
                     display:block;
@@ -1359,6 +1917,7 @@
                 >
                   Máxima
                 </div>
+
 
                 <strong
                   style="
@@ -1426,9 +1985,12 @@
             🩸 Evolução das glicemias
           </h2>
 
+
           <div class="empty-state">
+
             Não há glicemias registradas
             no período selecionado.
+
           </div>
 
         </section>
@@ -1441,62 +2003,95 @@
     const values =
       glucoseRecords.map(
         function (item) {
+
           return item.value;
+
         }
       );
 
 
     const minValue =
-      Math.min(...values);
+      Math.min(
+        ...values
+      );
+
 
     const maxValue =
-      Math.max(...values);
+      Math.max(
+        ...values
+      );
+
 
     const averageValue =
       average(values);
 
 
-    const chartWidth = 760;
-    const chartHeight = 360;
+    const chartWidth =
+      760;
 
-    const left = 58;
-    const right = 22;
-    const top = 34;
-    const bottom = 60;
+
+    const chartHeight =
+      360;
+
+
+    const left =
+      58;
+
+
+    const right =
+      22;
+
+
+    const top =
+      34;
+
+
+    const bottom =
+      60;
+
 
     const plotWidth =
       chartWidth -
       left -
       right;
 
+
     const plotHeight =
       chartHeight -
       top -
       bottom;
 
+
     const valueRange =
       Math.max(
-        maxValue - minValue,
+        maxValue -
+        minValue,
         20
       );
+
 
     const chartMin =
       minValue -
       Math.max(
-        valueRange * 0.12,
+        valueRange *
+        0.12,
         5
       );
+
 
     const chartMax =
       maxValue +
       Math.max(
-        valueRange * 0.12,
+        valueRange *
+        0.12,
         5
       );
 
+
     const chartRange =
       Math.max(
-        chartMax - chartMin,
+        chartMax -
+        chartMin,
         1
       );
 
@@ -1504,7 +2099,8 @@
     function xFor(index) {
 
       if (
-        glucoseRecords.length === 1
+        glucoseRecords.length ===
+        1
       ) {
 
         return (
@@ -1513,6 +2109,7 @@
         );
 
       }
+
 
       return (
         left +
@@ -1559,7 +2156,9 @@
               xFor(index),
 
             y:
-              yFor(item.value),
+              yFor(
+                item.value
+              ),
 
             value:
               item.value,
@@ -1606,11 +2205,15 @@
 
     let gridHTML = "";
 
-    const numberOfGridLines = 5;
+
+    const numberOfGridLines =
+      5;
+
 
     for (
       let index = 0;
-      index < numberOfGridLines;
+      index <
+      numberOfGridLines;
       index++
     ) {
 
@@ -1621,6 +2224,7 @@
           1
         );
 
+
       const value =
         chartMax -
         (
@@ -1628,8 +2232,10 @@
           chartRange
         );
 
+
       const y =
         yFor(value);
+
 
       gridHTML += `
 
@@ -1641,6 +2247,7 @@
           stroke="#eeeeee"
           stroke-width="1"
         ></line>
+
 
         <text
           x="${left - 8}"
@@ -1658,7 +2265,9 @@
 
 
     const averageY =
-      yFor(averageValue);
+      yFor(
+        averageValue
+      );
 
 
     /* =================================================
@@ -1672,7 +2281,9 @@
       function (point) {
 
         const label =
-          formatDate(point.date) +
+          formatDate(
+            point.date
+          ) +
           (
             point.time
               ? " · " +
@@ -1686,9 +2297,13 @@
           );
 
 
-        if (point.fasting) {
+        if (
+          point.fasting
+        ) {
 
-          const size = 8;
+          const size =
+            8;
+
 
           const diamondPoints = [
 
@@ -1733,7 +2348,9 @@
             >
 
               <title>
-                ${escapeHTML(label)}
+                ${escapeHTML(
+                  label
+                )}
                 — ${point.value} mg/dL
               </title>
 
@@ -1767,7 +2384,9 @@
             >
 
               <title>
-                ${escapeHTML(label)}
+                ${escapeHTML(
+                  label
+                )}
                 — ${point.value} mg/dL
               </title>
 
@@ -1794,12 +2413,15 @@
 
 
     /* =================================================
-       EIXO HORIZONTAL
+       RÓTULOS
     ================================================== */
 
     let labelsHTML = "";
 
-    const maximumLabels = 6;
+
+    const maximumLabels =
+      6;
+
 
     let labelIndexes = [];
 
@@ -1833,6 +2455,7 @@
           1
         );
 
+
       for (
         let index = 0;
         index < maximumLabels;
@@ -1841,7 +2464,8 @@
 
         labelIndexes.push(
           Math.round(
-            index * step
+            index *
+            step
           )
         );
 
@@ -1864,8 +2488,11 @@
         const point =
           points[index];
 
+
         if (!point) {
+
           return;
+
         }
 
 
@@ -1878,7 +2505,9 @@
             font-size="10"
             fill="#777"
           >
-            ${formatDate(point.date)}
+            ${formatDate(
+              point.date
+            )}
           </text>
 
           ${
@@ -1912,9 +2541,11 @@
     const firstValue =
       glucoseRecords[0].value;
 
+
     const lastValue =
       glucoseRecords[
-        glucoseRecords.length - 1
+        glucoseRecords.length -
+        1
       ].value;
 
 
@@ -1981,6 +2612,7 @@
             overflow-x:auto;
             overflow-y:hidden;
             margin-top:8px;
+            -webkit-overflow-scrolling:touch;
           "
         >
 
@@ -2056,6 +2688,7 @@
 
             ${pointsHTML}
 
+
             ${labelsHTML}
 
           </svg>
@@ -2087,7 +2720,6 @@
           >
 
             <span
-              aria-hidden="true"
               style="
                 width:12px;
                 height:12px;
@@ -2111,7 +2743,6 @@
           >
 
             <span
-              aria-hidden="true"
               style="
                 width:10px;
                 height:10px;
@@ -2133,7 +2764,7 @@
           style="
             display:grid;
             grid-template-columns:
-              repeat(2, minmax(0, 1fr));
+              repeat(2,minmax(0,1fr));
             gap:10px;
             margin-top:12px;
           "
@@ -2155,6 +2786,7 @@
             >
               Média
             </div>
+
 
             <strong
               style="
@@ -2189,6 +2821,7 @@
               Tendência
             </div>
 
+
             <strong
               style="
                 display:block;
@@ -2219,6 +2852,7 @@
             >
               Mínima
             </div>
+
 
             <strong
               style="
@@ -2251,6 +2885,7 @@
               Máxima
             </div>
 
+
             <strong
               style="
                 display:block;
@@ -2276,8 +2911,8 @@
           "
         >
           Os losangos representam glicemias em jejum.
-          Toque ou passe o cursor sobre um marcador
-          para ver os detalhes da medição.
+          No celular, deslize horizontalmente o gráfico
+          quando necessário.
         </p>
 
       </section>
@@ -2288,7 +2923,7 @@
 
 
   /* =====================================================
-     CARDS DE RESUMO
+     CARD DE RESUMO
   ====================================================== */
 
   function summaryCard(
@@ -2352,16 +2987,9 @@
 
   function renderAnalysis() {
 
-    /*
-     * Se a tela ainda não existir, não fazemos nada.
-     * O MutationObserver / retryTimer cuidará disso.
-     */
-
     if (!content) {
 
-      if (!initialized) {
-        initAnalysis();
-      }
+      initAnalysis();
 
       return;
 
@@ -2384,7 +3012,9 @@
         >
 
           <div class="empty-state">
+
             Confira as datas selecionadas.
+
           </div>
 
         </section>
@@ -2409,7 +3039,9 @@
     const glucoseValues =
       glucoseRecords.map(
         function (item) {
+
           return item.value;
+
         }
       );
 
@@ -2422,13 +3054,17 @@
 
     const glucoseMin =
       glucoseValues.length
-        ? Math.min(...glucoseValues)
+        ? Math.min(
+            ...glucoseValues
+          )
         : null;
 
 
     const glucoseMax =
       glucoseValues.length
-        ? Math.max(...glucoseValues)
+        ? Math.max(
+            ...glucoseValues
+          )
         : null;
 
 
@@ -2530,7 +3166,7 @@
           style="
             display:grid;
             grid-template-columns:
-              repeat(2, minmax(0, 1fr));
+              repeat(2,minmax(0,1fr));
             gap:12px;
           "
         >
@@ -2541,11 +3177,13 @@
             meals
           )}
 
+
           ${summaryCard(
             "🩸",
             "Glicemias",
             glucose
           )}
+
 
           ${summaryCard(
             "💉",
@@ -2553,17 +3191,20 @@
             insulin
           )}
 
+
           ${summaryCard(
             "🏋️",
             "Atividades",
             activity
           )}
 
+
           ${summaryCard(
             "💊",
             "Medicamentos",
             medication
           )}
+
 
           ${summaryCard(
             "🩺",
@@ -2609,6 +3250,7 @@
               Total de registros
             </span>
 
+
             <strong>
               ${records.length}
             </strong>
@@ -2628,6 +3270,7 @@
             <span>
               Média das glicemias
             </span>
+
 
             <strong>
               ${
@@ -2656,6 +3299,7 @@
               Menor glicemia
             </span>
 
+
             <strong>
               ${
                 glucoseMin === null
@@ -2680,6 +3324,7 @@
             <span>
               Maior glicemia
             </span>
+
 
             <strong>
               ${
@@ -2706,6 +3351,7 @@
               Atividade
             </span>
 
+
             <strong>
               ${activityMinutes} min
             </strong>
@@ -2725,10 +3371,12 @@
               Insulina
             </span>
 
+
             <strong>
               ${
                 insulinUnits
-                  ? insulinUnits + " U"
+                  ? insulinUnits +
+                    " U"
                   : "—"
               }
             </strong>
@@ -2758,9 +3406,12 @@
                 🩸 Evolução das glicemias
               </h2>
 
+
               <div class="empty-state">
+
                 Não há glicemias registradas
                 no período selecionado.
+
               </div>
 
             </section>
@@ -2804,34 +3455,21 @@
 
 
   /* =====================================================
-     ATUALIZAÇÃO APÓS SINCRONIZAÇÃO
+     SINCRONIZAÇÃO
   ====================================================== */
 
   document.addEventListener(
     "recordatorioSyncComplete",
     function () {
 
-      /*
-       * Caso o evento aconteça antes da tela
-       * de análises existir, tentamos inicializar.
-       */
-
-      if (!initialized) {
-
-        startAnalysisModule();
-
-        return;
-
-      }
-
-      renderAnalysis();
+      startAnalysisModule();
 
     }
   );
 
 
   /* =====================================================
-     VISIBILIDADE DA PÁGINA
+     VISIBILIDADE
   ====================================================== */
 
   document.addEventListener(
@@ -2843,19 +3481,132 @@
         "visible"
       ) {
 
-        if (!initialized) {
-
-          startAnalysisModule();
-
-        } else {
-
-          renderAnalysis();
-
-        }
+        startAnalysisModule();
 
       }
 
     }
+  );
+
+
+  /* =====================================================
+     CLIQUE DELEGADO
+     AJUDA EM BOTÕES CRIADOS DEPOIS
+  ====================================================== */
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      const target =
+        event.target;
+
+
+      if (!target) {
+
+        return;
+
+      }
+
+
+      const button =
+        target.closest
+          ? target.closest(
+              "button,a,[role='button']"
+            )
+          : null;
+
+
+      if (!button) {
+
+        return;
+
+      }
+
+
+      const id =
+        String(
+          button.id ||
+          ""
+        ).toLowerCase();
+
+
+      const text =
+        String(
+          button.textContent ||
+          ""
+        )
+          .trim()
+          .toLowerCase();
+
+
+      const looksLikeAnalysis =
+        id.includes(
+          "analysis"
+        ) ||
+        id.includes(
+          "analise"
+        ) ||
+        text ===
+          "análise" ||
+        text ===
+          "analise" ||
+        text.includes(
+          "análises"
+        ) ||
+        text.includes(
+          "analises"
+        );
+
+
+      if (
+        !looksLikeAnalysis
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+       * Não interfere no botão de atualizar
+       * dentro da própria tela.
+       */
+
+      if (
+        id ===
+        "refreshAnalysisButton"
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+       * Evita capturar o botão enquanto
+       * já estamos dentro da tela.
+       */
+
+      if (
+        analysisScreen &&
+        analysisScreen.contains(
+          button
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      event.preventDefault();
+
+
+      openAnalysisScreen();
+
+    },
+    true
   );
 
 
@@ -2883,11 +3634,22 @@
 
     startAnalysisModule();
 
-    if (document.body) {
-      observePageChanges();
-    }
+    observePageChanges();
 
   }
+
+
+  /* =====================================================
+     DISPONIBILIZAR FUNÇÃO GLOBAL
+     PARA O RESTANTE DO APLICATIVO
+  ====================================================== */
+
+  window.openRecordatorioAnalysis =
+    function () {
+
+      return openAnalysisScreen();
+
+    };
 
 
 })();

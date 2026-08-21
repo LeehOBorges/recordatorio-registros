@@ -58,6 +58,10 @@
 
   <style>
 
+    /* =====================================================
+       LOGIN
+    ====================================================== */
+
     #loginScreen {
 
       min-height: 100vh;
@@ -80,12 +84,14 @@
 
     }
 
+
     .login-container {
 
       width: 100%;
       max-width: 420px;
 
     }
+
 
     .login-card {
 
@@ -103,6 +109,7 @@
 
     }
 
+
     .login-brand {
 
       text-align: center;
@@ -110,6 +117,7 @@
       margin-bottom: 28px;
 
     }
+
 
     .login-cover-image {
 
@@ -130,6 +138,7 @@
 
     }
 
+
     .login-brand-title {
 
       margin: 0;
@@ -141,6 +150,7 @@
       font-weight: 700;
 
     }
+
 
     .login-brand-subtitle {
 
@@ -154,11 +164,13 @@
 
     }
 
+
     .login-form-group {
 
       margin-bottom: 16px;
 
     }
+
 
     .login-form-group label {
 
@@ -173,6 +185,7 @@
       color: #444;
 
     }
+
 
     .login-form-group input {
 
@@ -194,6 +207,7 @@
 
     }
 
+
     .login-form-group input:focus {
 
       border-color: #A85C5C;
@@ -203,6 +217,7 @@
         rgba(168, 92, 92, 0.10);
 
     }
+
 
     .login-button {
 
@@ -228,6 +243,7 @@
 
     }
 
+
     .login-button:disabled {
 
       opacity: 0.65;
@@ -235,6 +251,7 @@
       cursor: wait;
 
     }
+
 
     .forgot-password-button {
 
@@ -258,6 +275,7 @@
 
     }
 
+
     .login-message {
 
       min-height: 20px;
@@ -272,13 +290,24 @@
 
     }
 
+
     .login-message.error {
+
       color: #a33f3f;
+
     }
 
+
     .login-message.success {
+
       color: #42724b;
+
     }
+
+
+    /* =====================================================
+       RECUPERAÇÃO DE SENHA
+    ====================================================== */
 
     #resetPasswordPanel {
 
@@ -292,9 +321,13 @@
 
     }
 
+
     #resetPasswordPanel.visible {
+
       display: block;
+
     }
+
 
     .reset-title {
 
@@ -305,6 +338,7 @@
       font-size: 18px;
 
     }
+
 
     .reset-description {
 
@@ -317,6 +351,7 @@
       line-height: 1.5;
 
     }
+
 
     .reset-button {
 
@@ -340,6 +375,7 @@
 
     }
 
+
     .back-login-button {
 
       display: block;
@@ -359,6 +395,11 @@
       cursor: pointer;
 
     }
+
+
+    /* =====================================================
+       ALTERAÇÃO DE SENHA
+    ====================================================== */
 
     #changePasswordScreen {
 
@@ -385,9 +426,13 @@
 
     }
 
+
     #changePasswordScreen.visible {
+
       display: flex;
+
     }
+
 
     .change-password-container {
 
@@ -396,6 +441,7 @@
       max-width: 420px;
 
     }
+
 
     .change-password-card {
 
@@ -411,6 +457,7 @@
 
     }
 
+
     .change-password-card h2 {
 
       margin-top: 0;
@@ -418,6 +465,7 @@
       color: #7f4444;
 
     }
+
 
     .change-password-card p {
 
@@ -428,6 +476,7 @@
       font-size: 14px;
 
     }
+
 
     .change-password-card label {
 
@@ -444,6 +493,7 @@
 
     }
 
+
     .change-password-card input {
 
       width: 100%;
@@ -459,6 +509,7 @@
       font-size: 16px;
 
     }
+
 
     .change-password-button {
 
@@ -484,11 +535,17 @@
 
     }
 
+
+    /* =====================================================
+       RELATÓRIOS
+    ====================================================== */
+
     #reportsScreen {
 
       padding-bottom: 100px;
 
     }
+
 
     .reports-intro {
 
@@ -502,11 +559,13 @@
 
     }
 
+
     .report-field {
 
       margin-bottom: 18px;
 
     }
+
 
     .report-field label {
 
@@ -521,6 +580,7 @@
       color: #444;
 
     }
+
 
     .report-field input,
     .report-field select {
@@ -540,6 +600,7 @@
       background: #fff;
 
     }
+
 
     .report-button {
 
@@ -561,6 +622,7 @@
 
     }
 
+
     .report-button.primary {
 
       background: #A85C5C;
@@ -568,6 +630,7 @@
       color: white;
 
     }
+
 
     .report-button.secondary {
 
@@ -577,6 +640,7 @@
 
     }
 
+
     .report-button:disabled {
 
       opacity: 0.65;
@@ -584,6 +648,7 @@
       cursor: wait;
 
     }
+
 
     .report-preview {
 
@@ -593,6 +658,7 @@
 
     }
 
+
     .report-preview h3 {
 
       color: #7f4444;
@@ -600,6 +666,7 @@
       margin-top: 0;
 
     }
+
 
     .report-preview-item {
 
@@ -617,9 +684,13 @@
 
 </head>
 
+
 <body>
 
-  <!-- LOGIN -->
+
+  <!-- =====================================================
+       TELA DE LOGIN
+  ====================================================== -->
 
   <section id="loginScreen">
 
@@ -645,6 +716,7 @@
 
         </div>
 
+
         <form id="loginForm">
 
           <div class="login-form-group">
@@ -663,6 +735,7 @@
 
           </div>
 
+
           <div class="login-form-group">
 
             <label for="loginPassword">
@@ -679,6 +752,7 @@
 
           </div>
 
+
           <button
             id="loginButton"
             type="submit"
@@ -686,6 +760,7 @@
           >
             Entrar
           </button>
+
 
           <button
             id="forgotPasswordButton"
@@ -695,6 +770,7 @@
             Esqueci minha senha
           </button>
 
+
           <div
             id="loginMessage"
             class="login-message"
@@ -703,16 +779,19 @@
 
         </form>
 
+
         <div id="resetPasswordPanel">
 
           <h2 class="reset-title">
             Recuperar senha
           </h2>
 
+
           <p class="reset-description">
             Digite seu e-mail. Enviaremos um link para você
             criar uma nova senha.
           </p>
+
 
           <div class="login-form-group">
 
@@ -729,6 +808,7 @@
 
           </div>
 
+
           <button
             id="sendResetButton"
             type="button"
@@ -737,6 +817,7 @@
             Enviar link para redefinir senha
           </button>
 
+
           <button
             id="backToLoginButton"
             type="button"
@@ -744,6 +825,7 @@
           >
             Voltar para o login
           </button>
+
 
           <div
             id="resetMessage"
@@ -759,7 +841,10 @@
 
   </section>
 
-  <!-- ALTERAÇÃO DE SENHA -->
+
+  <!-- =====================================================
+       TELA DE ALTERAÇÃO DE SENHA
+  ====================================================== -->
 
   <section id="changePasswordScreen">
 
@@ -771,9 +856,11 @@
           Criar nova senha
         </h2>
 
+
         <p>
           Digite sua nova senha abaixo.
         </p>
+
 
         <form id="changePasswordForm">
 
@@ -789,6 +876,7 @@
             required
           >
 
+
           <label for="confirmNewPassword">
             Confirmar nova senha
           </label>
@@ -801,12 +889,14 @@
             required
           >
 
+
           <button
             type="submit"
             class="change-password-button"
           >
             Salvar nova senha
           </button>
+
 
           <div
             id="changePasswordMessage"
@@ -822,11 +912,17 @@
 
   </section>
 
-  <!-- APLICATIVO -->
+
+  <!-- =====================================================
+       APLICATIVO
+  ====================================================== -->
 
   <div id="appContent" hidden>
 
-    <!-- HOJE -->
+
+    <!-- ===================================================
+         HOJE
+    ==================================================== -->
 
     <section
       id="todayScreen"
@@ -847,6 +943,7 @@
 
         </div>
 
+
         <button
           class="icon-button"
           id="backupButton"
@@ -859,7 +956,9 @@
 
       </header>
 
+
       <main>
+
 
         <section class="date-card card">
 
@@ -872,6 +971,7 @@
             ‹
           </button>
 
+
           <div>
 
             <strong id="currentDate">
@@ -879,6 +979,7 @@
             </strong>
 
           </div>
+
 
           <button
             id="nextDay"
@@ -891,7 +992,9 @@
 
         </section>
 
+
         <section class="summary-grid">
+
 
           <article class="card summary-card">
 
@@ -905,6 +1008,7 @@
 
           </article>
 
+
           <article class="card summary-card">
 
             <span>
@@ -917,6 +1021,7 @@
 
           </article>
 
+
           <article class="card summary-card">
 
             <span>
@@ -928,6 +1033,7 @@
             </strong>
 
           </article>
+
 
           <article class="card summary-card">
 
@@ -943,7 +1049,9 @@
 
         </section>
 
+
         <section class="quick-actions">
+
 
           <button
             class="quick-button"
@@ -951,11 +1059,14 @@
             data-record-type="meal"
           >
 
-            <span>🍽️</span>
+            <span>
+              🍽️
+            </span>
 
             Refeição
 
           </button>
+
 
           <button
             class="quick-button"
@@ -963,11 +1074,14 @@
             data-record-type="glucose"
           >
 
-            <span>🩸</span>
+            <span>
+              🩸
+            </span>
 
             Glicemia
 
           </button>
+
 
           <button
             class="quick-button"
@@ -975,11 +1089,14 @@
             data-record-type="insulin"
           >
 
-            <span>💉</span>
+            <span>
+              💉
+            </span>
 
             Insulina
 
           </button>
+
 
           <button
             class="quick-button"
@@ -987,11 +1104,14 @@
             data-record-type="activity"
           >
 
-            <span>🏋️</span>
+            <span>
+              🏋️
+            </span>
 
             Atividade
 
           </button>
+
 
           <button
             class="quick-button"
@@ -999,11 +1119,14 @@
             id="medicationsButton"
           >
 
-            <span>💊</span>
+            <span>
+              💊
+            </span>
 
             Medicamentos / Suplementos e Vitaminas
 
           </button>
+
 
           <button
             class="quick-button"
@@ -1011,13 +1134,16 @@
             id="consultationQuickButton"
           >
 
-            <span>🩺</span>
+            <span>
+              🩺
+            </span>
 
             Consultas
 
           </button>
 
         </section>
+
 
         <section class="card timeline-card">
 
@@ -1029,9 +1155,11 @@
 
           </div>
 
+
           <div id="timeline"></div>
 
         </section>
+
 
         <section
           id="medicationsPanel"
@@ -1047,9 +1175,11 @@
 
           </div>
 
+
           <p>
             Marque cada item conforme você tomar.
           </p>
+
 
           <div
             id="medicationsList"
@@ -1066,6 +1196,7 @@
             </div>
 
           </div>
+
 
           <button
             type="button"
@@ -1084,7 +1215,10 @@
 
     </section>
 
-    <!-- DIÁRIO -->
+
+    <!-- ===================================================
+         DIÁRIO
+    ==================================================== -->
 
     <section
       id="diaryScreen"
@@ -1108,6 +1242,7 @@
 
       </header>
 
+
       <main>
 
         <section class="card">
@@ -1115,6 +1250,7 @@
           <h2>
             Histórico
           </h2>
+
 
           <div id="diaryContent">
 
@@ -1130,7 +1266,10 @@
 
     </section>
 
-    <!-- ANÁLISES -->
+
+    <!-- ===================================================
+         ANÁLISES
+    ==================================================== -->
 
     <section
       id="analysisScreen"
@@ -1154,6 +1293,7 @@
 
       </header>
 
+
       <main>
 
         <section class="card">
@@ -1162,9 +1302,8 @@
             📊 Análises
           </h2>
 
-          <div
-            class="empty-state"
-          >
+
+          <div class="empty-state">
             Carregando análises...
           </div>
 
@@ -1174,7 +1313,10 @@
 
     </section>
 
-    <!-- CONSULTAS -->
+
+    <!-- ===================================================
+         CONSULTAS
+    ==================================================== -->
 
     <section
       id="consultationScreen"
@@ -1198,6 +1340,7 @@
 
       </header>
 
+
       <main>
 
         <section class="card">
@@ -1205,6 +1348,7 @@
           <h2>
             🩺 Consultas
           </h2>
+
 
           <div id="consultationsContent"></div>
 
@@ -1214,7 +1358,10 @@
 
     </section>
 
-    <!-- MAIS -->
+
+    <!-- ===================================================
+         MAIS
+    ==================================================== -->
 
     <section
       id="moreScreen"
@@ -1238,13 +1385,16 @@
 
       </header>
 
+
       <main>
+
 
         <section class="card">
 
           <h2>
             Opções
           </h2>
+
 
           <button
             type="button"
@@ -1254,6 +1404,7 @@
             🗑️ Lixeira
           </button>
 
+
           <button
             type="button"
             id="settingsButton"
@@ -1261,6 +1412,7 @@
           >
             ⚙️ Configurações
           </button>
+
 
           <button
             type="button"
@@ -1271,6 +1423,7 @@
           </button>
 
         </section>
+
 
         <section
           id="trashPanel"
@@ -1286,6 +1439,7 @@
 
           </div>
 
+
           <div id="trashContent">
 
             <div class="empty-state">
@@ -1295,6 +1449,7 @@
           </div>
 
         </section>
+
 
         <section
           id="settingsPanel"
@@ -1310,6 +1465,7 @@
 
           </div>
 
+
           <div class="empty-state">
             Esta área será desenvolvida nas próximas etapas.
           </div>
@@ -1320,7 +1476,10 @@
 
     </section>
 
-    <!-- RELATÓRIOS -->
+
+    <!-- ===================================================
+         RELATÓRIOS
+    ==================================================== -->
 
     <section
       id="reportsScreen"
@@ -1344,7 +1503,9 @@
 
       </header>
 
+
       <main>
+
 
         <section class="card">
 
@@ -1352,9 +1513,11 @@
             📊 Gerar relatório
           </h2>
 
+
           <p class="reports-intro">
             Escolha o período e o tipo de informação que deseja consultar.
           </p>
+
 
           <div class="report-field">
 
@@ -1369,6 +1532,7 @@
 
           </div>
 
+
           <div class="report-field">
 
             <label for="reportEndDate">
@@ -1382,11 +1546,13 @@
 
           </div>
 
+
           <div class="report-field">
 
             <label for="reportType">
               Tipo de relatório
             </label>
+
 
             <select id="reportType">
 
@@ -1422,6 +1588,7 @@
 
           </div>
 
+
           <button
             type="button"
             id="previewReportButton"
@@ -1429,6 +1596,7 @@
           >
             👁️ Visualizar relatório
           </button>
+
 
           <button
             type="button"
@@ -1440,6 +1608,7 @@
 
         </section>
 
+
         <section
           id="reportPreview"
           class="card report-preview"
@@ -1448,6 +1617,7 @@
           <h3>
             Prévia do relatório
           </h3>
+
 
           <div
             id="reportPreviewContent"
@@ -1463,9 +1633,13 @@
 
     </section>
 
-    <!-- NAVEGAÇÃO -->
+
+    <!-- ===================================================
+         NAVEGAÇÃO
+    ==================================================== -->
 
     <nav class="bottom-navigation">
+
 
       <button
         class="navigation-item active"
@@ -1483,6 +1657,7 @@
 
       </button>
 
+
       <button
         class="navigation-item"
         type="button"
@@ -1499,6 +1674,7 @@
 
       </button>
 
+
       <button
         class="navigation-item"
         type="button"
@@ -1514,6 +1690,7 @@
         </small>
 
       </button>
+
 
       <button
         class="navigation-item"
@@ -1535,7 +1712,10 @@
 
   </div>
 
-  <!-- MODAL -->
+
+  <!-- =====================================================
+       MODAL DE REGISTRO
+  ====================================================== -->
 
   <dialog id="recordModal">
 
@@ -1550,6 +1730,7 @@
           Novo registro
         </h2>
 
+
         <button
           type="button"
           id="closeModal"
@@ -1561,9 +1742,12 @@
 
       </div>
 
+
       <div id="formFields"></div>
 
+
       <div class="modal-actions">
+
 
         <button
           type="button"
@@ -1572,6 +1756,7 @@
         >
           Cancelar
         </button>
+
 
         <button
           type="submit"
@@ -1587,21 +1772,26 @@
   </dialog>
 
 
-  <!-- SUPABASE -->
+  <!-- =====================================================
+       SUPABASE AUTH
+  ====================================================== -->
 
   <script>
 
     const SUPABASE_URL =
       "https://gutbveorftpahuyjonnv.supabase.co";
 
+
     const SUPABASE_PUBLISHABLE_KEY =
       "sb_publishable_L8XMa2cXo2aWaGHHMdP1Tw_JtjABUQi";
+
 
     const supabaseClient =
       window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY
       );
+
 
     window.supabaseClient =
       supabaseClient;
@@ -1612,85 +1802,102 @@
         "loginScreen"
       );
 
+
     const changePasswordScreen =
       document.getElementById(
         "changePasswordScreen"
       );
+
 
     const appContent =
       document.getElementById(
         "appContent"
       );
 
+
     const loginForm =
       document.getElementById(
         "loginForm"
       );
+
 
     const loginEmail =
       document.getElementById(
         "loginEmail"
       );
 
+
     const loginPassword =
       document.getElementById(
         "loginPassword"
       );
+
 
     const loginButton =
       document.getElementById(
         "loginButton"
       );
 
+
     const loginMessage =
       document.getElementById(
         "loginMessage"
       );
+
 
     const forgotPasswordButton =
       document.getElementById(
         "forgotPasswordButton"
       );
 
+
     const resetPasswordPanel =
       document.getElementById(
         "resetPasswordPanel"
       );
+
 
     const resetEmail =
       document.getElementById(
         "resetEmail"
       );
 
+
     const sendResetButton =
       document.getElementById(
         "sendResetButton"
       );
+
 
     const backToLoginButton =
       document.getElementById(
         "backToLoginButton"
       );
 
+
     const resetMessage =
       document.getElementById(
         "resetMessage"
       );
+
 
     const changePasswordForm =
       document.getElementById(
         "changePasswordForm"
       );
 
+
     const newPassword =
       document.getElementById(
         "newPassword"
       );
 
+
     const confirmNewPassword =
       document.getElementById(
         "confirmNewPassword"
       );
+
 
     const changePasswordMessage =
       document.getElementById(
@@ -1705,6 +1912,7 @@
 
       loginMessage.textContent =
         message;
+
 
       loginMessage.className =
         "login-message" +
@@ -1725,6 +1933,7 @@
       resetMessage.textContent =
         message;
 
+
       resetMessage.className =
         "login-message" +
         (
@@ -1744,6 +1953,7 @@
       changePasswordMessage.textContent =
         message;
 
+
       changePasswordMessage.className =
         "login-message" +
         (
@@ -1760,9 +1970,11 @@
       loginScreen.style.display =
         "flex";
 
+
       changePasswordScreen.classList.remove(
         "visible"
       );
+
 
       appContent.hidden =
         true;
@@ -1775,12 +1987,15 @@
       loginScreen.style.display =
         "none";
 
+
       changePasswordScreen.classList.remove(
         "visible"
       );
 
+
       appContent.hidden =
         false;
+
 
       if (
         typeof showScreen ===
@@ -1801,8 +2016,10 @@
       loginScreen.style.display =
         "none";
 
+
       appContent.hidden =
         true;
+
 
       changePasswordScreen.classList.add(
         "visible"
@@ -1827,7 +2044,9 @@
           error
         );
 
+
         showLogin();
+
 
         return;
 
@@ -1857,6 +2076,7 @@
         const email =
           loginEmail.value.trim();
 
+
         const password =
           loginPassword.value;
 
@@ -1871,6 +2091,7 @@
             "error"
           );
 
+
           return;
 
         }
@@ -1879,8 +2100,10 @@
         loginButton.disabled =
           true;
 
+
         loginButton.textContent =
           "Entrando...";
+
 
         setLoginMessage("");
 
@@ -1899,6 +2122,7 @@
         loginButton.disabled =
           false;
 
+
         loginButton.textContent =
           "Entrar";
 
@@ -1910,10 +2134,12 @@
             error
           );
 
+
           setLoginMessage(
             "E-mail ou senha incorretos.",
             "error"
           );
+
 
           return;
 
@@ -1926,6 +2152,7 @@
             "Login realizado.",
             "success"
           );
+
 
           showApp();
 
@@ -1970,6 +2197,7 @@
           "visible"
         );
 
+
         setResetMessage("");
 
       }
@@ -1991,6 +2219,7 @@
             "error"
           );
 
+
           return;
 
         }
@@ -1998,6 +2227,7 @@
 
         sendResetButton.disabled =
           true;
+
 
         sendResetButton.textContent =
           "Enviando...";
@@ -2026,6 +2256,7 @@
         sendResetButton.disabled =
           false;
 
+
         sendResetButton.textContent =
           "Enviar link para redefinir senha";
 
@@ -2042,6 +2273,7 @@
             "Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.",
             "error"
           );
+
 
           return;
 
@@ -2067,6 +2299,7 @@
         const password =
           newPassword.value;
 
+
         const confirmation =
           confirmNewPassword.value;
 
@@ -2079,6 +2312,7 @@
             "A senha deve ter pelo menos 6 caracteres.",
             "error"
           );
+
 
           return;
 
@@ -2094,6 +2328,7 @@
             "As senhas não são iguais.",
             "error"
           );
+
 
           return;
 
@@ -2126,6 +2361,7 @@
             "Não foi possível alterar a senha. Solicite um novo link de recuperação.",
             "error"
           );
+
 
           return;
 
@@ -2170,6 +2406,7 @@
 
           showChangePassword();
 
+
           return;
 
         }
@@ -2182,6 +2419,7 @@
         ) {
 
           showApp();
+
 
           return;
 
@@ -2206,24 +2444,37 @@
   </script>
 
 
-  <!-- JAVASCRIPT PRINCIPAL -->
+  <!-- =====================================================
+       JAVASCRIPT PRINCIPAL
+  ====================================================== -->
 
   <script src="app.js"></script>
 
-  <!-- RELATÓRIOS -->
+
+  <!-- =====================================================
+       RELATÓRIOS E PDF
+  ====================================================== -->
 
   <script src="relatorios.js"></script>
 
-  <!-- ANÁLISES -->
+
+  <!-- =====================================================
+       ANÁLISES
+  ====================================================== -->
 
   <script src="analises.js"></script>
 
-  <!-- SINCRONIZAÇÃO -->
+
+  <!-- =====================================================
+       SINCRONIZAÇÃO
+  ====================================================== -->
 
   <script src="sincronizacao.js"></script>
 
 
-  <!-- SERVICE WORKER -->
+  <!-- =====================================================
+       SERVICE WORKER
+  ====================================================== -->
 
   <script>
 
@@ -2237,7 +2488,9 @@
         () => {
 
           navigator.serviceWorker
-            .register("./sw.js")
+            .register(
+              "./sw.js"
+            )
             .then(
               registration => {
 

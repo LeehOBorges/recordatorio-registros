@@ -1,6 +1,6 @@
 /* =========================================================
    ANÁLISES
-   Versão completa para a tela analysisScreen
+   Versão corrigida e completa
 ========================================================= */
 
 (function () {
@@ -9,7 +9,7 @@
 
 
   /* =======================================================
-     FUNÇÕES AUXILIARES
+     OBTER CONTAINER DA ANÁLISE
   ======================================================= */
 
   function getAnalysisContainer() {
@@ -18,16 +18,17 @@
       document.getElementById("analysisScreen");
 
     if (!screen) {
+      console.error(
+        "ANÁLISES: analysisScreen não encontrado."
+      );
+
       return null;
     }
 
-    /*
-      Criamos o container dinamicamente dentro da tela.
-      Isso evita depender de um ID que não existe no index.
-    */
 
     let container =
       document.getElementById("analysisContent");
+
 
     if (!container) {
 
@@ -35,8 +36,26 @@
         screen.querySelector("main");
 
       if (!main) {
+        console.error(
+          "ANÁLISES: <main> não encontrado."
+        );
+
         return null;
       }
+
+
+      /*
+        Remove somente o conteúdo inicial
+        da área de análise.
+      */
+
+      const initialEmptyState =
+        main.querySelector(".empty-state");
+
+      if (initialEmptyState) {
+        initialEmptyState.remove();
+      }
+
 
       container =
         document.createElement("div");
@@ -44,62 +63,187 @@
       container.id =
         "analysisContent";
 
-      main.appendChild(container);
+      main.appendChild(
+        container
+      );
+
     }
 
+
     return container;
+
   }
 
+
+  /* =======================================================
+     ESCAPE HTML
+  ======================================================= */
 
   function escapeAnalysisHTML(value) {
 
-    if (typeof escapeHTML === "function") {
-      return escapeHTML(
-        value == null ? "" : String(value)
+    if (
+      typeof window.escapeHTML ===
+      "function"
+    ) {
+
+      return window.escapeHTML(
+        value == null
+          ? ""
+          : String(value)
       );
+
     }
 
+
     return String(
-      value == null ? "" : value
+      value == null
+        ? ""
+        : value
     )
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /'/g,
+        "&#039;"
+      );
+
   }
 
+
+  /* =======================================================
+     OBTER BANCO DE DADOS
+  ======================================================= */
 
   function getRecordsForAnalysis() {
 
+    /*
+      O app principal pode disponibilizar
+      database de formas diferentes.
+    */
+
     if (
-      typeof database === "undefined" ||
-      !database ||
-      !Array.isArray(database.records)
+      typeof window.database !==
+      "undefined" &&
+      window.database &&
+      Array.isArray(
+        window.database.records
+      )
     ) {
-      return [];
+
+      return window.database.records;
+
     }
 
-    return database.records;
+
+    if (
+      typeof database !==
+      "undefined" &&
+      database &&
+      Array.isArray(
+        database.records
+      )
+    ) {
+
+      return database.records;
+
+    }
+
+
+    console.warn(
+      "ANÁLISES: database.records ainda não disponível."
+    );
+
+
+    return [];
+
   }
 
 
-  function formatNumber(value, decimals = 0) {
+  /* =======================================================
+     CONVERTER NÚMERO
+  ======================================================= */
+
+  function numberValue(value) {
+
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+
+      return null;
+
+    }
+
+
+    const number =
+      Number(
+        String(value)
+          .replace(",", ".")
+      );
+
+
+    if (
+      !Number.isFinite(number)
+    ) {
+
+      return null;
+
+    }
+
+
+    return number;
+
+  }
+
+
+  /* =======================================================
+     FORMATAR NÚMERO
+  ======================================================= */
+
+  function formatNumber(
+    value,
+    decimals = 0
+  ) {
 
     const number =
       Number(value);
 
-    if (!Number.isFinite(number)) {
+
+    if (
+      !Number.isFinite(number)
+    ) {
+
       return "0";
+
     }
+
 
     return number.toLocaleString(
       "pt-BR",
       {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals
+        minimumFractionDigits:
+          decimals,
+
+        maximumFractionDigits:
+          decimals
       }
     );
+
   }
 
 
@@ -113,125 +257,217 @@
       getRecordsForAnalysis();
 
 
-    const meals =
+    const validRecords =
       records.filter(
-        r => r && r.type === "meal"
+        record =>
+          record &&
+          typeof record ===
+          "object"
+      );
+
+
+    const meals =
+      validRecords.filter(
+        record =>
+          record.type === "meal"
       );
 
 
     const glucose =
-      records.filter(
-        r => r && r.type === "glucose"
+      validRecords.filter(
+        record =>
+          record.type === "glucose"
       );
 
 
     const insulin =
-      records.filter(
-        r => r && r.type === "insulin"
+      validRecords.filter(
+        record =>
+          record.type === "insulin"
       );
 
 
     const activity =
-      records.filter(
-        r => r && r.type === "activity"
+      validRecords.filter(
+        record =>
+          record.type === "activity"
       );
 
 
     const medication =
-      records.filter(
-        r => r && r.type === "medication"
+      validRecords.filter(
+        record =>
+          record.type === "medication"
       );
 
 
-    let glucoseValues = [];
+    const consultations =
+      validRecords.filter(
+        record =>
+          record.type === "consultation"
+      );
+
+
+    /* =====================================================
+       GLICEMIAS
+    ===================================================== */
+
+    const glucoseValues = [];
 
 
     glucose.forEach(
       record => {
 
         const possibleValues = [
+
           record.value,
+
           record.glucose,
+
           record.glucoseValue,
+
           record.bloodGlucose,
-          record.mgdl
+
+          record.mgdl,
+
+          record.mgDl,
+
+          record.glycemia,
+
+          record.glicemia,
+
+          record.glicemiaValue
+
         ];
 
 
         for (
-          const value of possibleValues
+          const value of
+          possibleValues
         ) {
 
           const number =
-            Number(value);
+            numberValue(value);
 
 
           if (
-            Number.isFinite(number) &&
+            number !== null &&
             number > 0
           ) {
 
-            glucoseValues.push(number);
+            glucoseValues.push(
+              number
+            );
 
             break;
+
           }
+
         }
 
       }
     );
 
 
-    const glucoseAverage =
-      glucoseValues.length
-        ? glucoseValues.reduce(
-            (sum, value) =>
-              sum + value,
-            0
-          ) / glucoseValues.length
-        : 0;
+    let glucoseAverage = 0;
 
 
-    const activityMinutes =
-      activity.reduce(
-        (total, record) => {
+    if (
+      glucoseValues.length > 0
+    ) {
 
-          const possibleValues = [
-            record.duration,
-            record.minutes,
-            record.durationMinutes
-          ];
+      glucoseAverage =
+        glucoseValues.reduce(
+          (
+            total,
+            value
+          ) =>
+            total + value,
+          0
+        ) /
+        glucoseValues.length;
+
+    }
 
 
-          for (
-            const value of possibleValues
+    let glucoseMinimum = 0;
+    let glucoseMaximum = 0;
+
+
+    if (
+      glucoseValues.length > 0
+    ) {
+
+      glucoseMinimum =
+        Math.min(
+          ...glucoseValues
+        );
+
+
+      glucoseMaximum =
+        Math.max(
+          ...glucoseValues
+        );
+
+    }
+
+
+    /* =====================================================
+       ATIVIDADES
+    ===================================================== */
+
+    let activityMinutes = 0;
+
+
+    activity.forEach(
+      record => {
+
+        const possibleValues = [
+
+          record.duration,
+
+          record.minutes,
+
+          record.durationMinutes,
+
+          record.tempo,
+
+          record.tempoMinutos
+
+        ];
+
+
+        for (
+          const value of
+          possibleValues
+        ) {
+
+          const number =
+            numberValue(value);
+
+
+          if (
+            number !== null &&
+            number >= 0
           ) {
 
-            const number =
-              Number(value);
+            activityMinutes +=
+              number;
 
-
-            if (
-              Number.isFinite(number) &&
-              number >= 0
-            ) {
-
-              return total + number;
-            }
+            break;
 
           }
 
+        }
 
-          return total;
-
-        },
-        0
-      );
+      }
+    );
 
 
     return {
 
       total:
-        records.length,
+        validRecords.length,
 
       meals:
         meals.length,
@@ -250,9 +486,16 @@
       medication:
         medication.length,
 
+      consultations:
+        consultations.length,
+
       glucoseValues,
 
-      glucoseAverage
+      glucoseAverage,
+
+      glucoseMinimum,
+
+      glucoseMaximum
 
     };
 
@@ -260,21 +503,21 @@
 
 
   /* =======================================================
-     RENDERIZAÇÃO
+     RENDERIZAR ANÁLISE
   ======================================================= */
 
   function renderAnalysis() {
+
+    console.log(
+      "ANÁLISES: renderAnalysis() executado."
+    );
+
 
     const container =
       getAnalysisContainer();
 
 
     if (!container) {
-
-      console.error(
-        "Análises: não foi possível encontrar analysisScreen/main."
-      );
-
       return;
     }
 
@@ -283,50 +526,29 @@
       calculateAnalysis();
 
 
-    if (data.total === 0) {
+    console.log(
+      "ANÁLISES: dados encontrados:",
+      data
+    );
 
-      container.innerHTML = `
 
-        <section class="card">
+    /*
+      IMPORTANTE:
 
-          <h3>
-            📊 Resumo dos registros
-          </h3>
+      Mesmo que ainda não existam registros,
+      mostramos a tela de análise funcionando.
 
-          <div class="empty-state">
-
-            Ainda não existem registros suficientes
-            para gerar uma análise.
-
-          </div>
-
-        </section>
-
-        <section class="card">
-
-          <h3>
-            💡 Como funciona
-          </h3>
-
-          <p>
-            Conforme você registrar refeições,
-            glicemias, insulina, atividades e
-            medicamentos, os dados aparecerão
-            automaticamente nesta tela.
-          </p>
-
-        </section>
-
-      `;
-
-      return;
-    }
+      Isso evita que ela fique presa na mensagem
+      "Carregando análises...".
+    */
 
 
     let glucoseSection = "";
 
 
-    if (data.glucoseValues.length > 0) {
+    if (
+      data.glucoseValues.length > 0
+    ) {
 
       glucoseSection = `
 
@@ -340,7 +562,7 @@
             style="
               display:grid;
               grid-template-columns:
-                repeat(2, minmax(0, 1fr));
+                repeat(2,minmax(0,1fr));
               gap:12px;
               margin-top:12px;
             "
@@ -404,6 +626,70 @@
 
             </div>
 
+
+            <div
+              style="
+                padding:14px;
+                border-radius:14px;
+                background:#f8eeee;
+              "
+            >
+
+              <small>
+                Menor valor
+              </small>
+
+              <strong
+                style="
+                  display:block;
+                  font-size:24px;
+                  margin-top:4px;
+                  color:#7f4444;
+                "
+              >
+                ${formatNumber(
+                  data.glucoseMinimum
+                )}
+              </strong>
+
+              <small>
+                mg/dL
+              </small>
+
+            </div>
+
+
+            <div
+              style="
+                padding:14px;
+                border-radius:14px;
+                background:#f8eeee;
+              "
+            >
+
+              <small>
+                Maior valor
+              </small>
+
+              <strong
+                style="
+                  display:block;
+                  font-size:24px;
+                  margin-top:4px;
+                  color:#7f4444;
+                "
+              >
+                ${formatNumber(
+                  data.glucoseMaximum
+                )}
+              </strong>
+
+              <small>
+                mg/dL
+              </small>
+
+            </div>
+
           </div>
 
         </section>
@@ -421,8 +707,8 @@
           </h3>
 
           <p>
-            Nenhuma medição de glicemia encontrada
-            nos registros.
+            Ainda não existem medições de glicemia
+            com valor numérico para analisar.
           </p>
 
         </section>
@@ -432,19 +718,60 @@
     }
 
 
+    /* =====================================================
+       MENSAGEM QUANDO NÃO HÁ REGISTROS
+    ===================================================== */
+
+    const noRecordsMessage =
+      data.total === 0
+        ? `
+
+          <section class="card">
+
+            <h3>
+              💡 Como funciona a análise
+            </h3>
+
+            <p>
+              Quando você registrar refeições,
+              glicemias, insulina, atividades e
+              medicamentos, os dados serão
+              analisados automaticamente aqui.
+            </p>
+
+            <p>
+              No momento ainda não há registros
+              suficientes para calcular médias
+              ou tendências.
+            </p>
+
+          </section>
+
+        `
+        : "";
+
+
+    /* =====================================================
+       CONTEÚDO PRINCIPAL
+    ===================================================== */
+
     container.innerHTML = `
+
+      ${noRecordsMessage}
+
 
       <section class="card">
 
         <h3>
-          📊 Resumo
+          📊 Resumo dos registros
         </h3>
+
 
         <div
           style="
             display:grid;
             grid-template-columns:
-              repeat(2, minmax(0, 1fr));
+              repeat(2,minmax(0,1fr));
             gap:12px;
             margin-top:12px;
           "
@@ -459,7 +786,7 @@
           >
 
             <small>
-              Total de registros
+              Total
             </small>
 
             <strong
@@ -485,7 +812,7 @@
           >
 
             <small>
-              Refeições
+              🍽️ Refeições
             </small>
 
             <strong
@@ -511,7 +838,7 @@
           >
 
             <small>
-              Glicemias
+              🩸 Glicemias
             </small>
 
             <strong
@@ -537,7 +864,7 @@
           >
 
             <small>
-              Insulinas
+              💉 Insulinas
             </small>
 
             <strong
@@ -563,7 +890,7 @@
           >
 
             <small>
-              Atividades
+              🏋️ Atividades
             </small>
 
             <strong
@@ -589,7 +916,7 @@
           >
 
             <small>
-              Medicamentos
+              💊 Medicamentos
             </small>
 
             <strong
@@ -602,6 +929,64 @@
             >
               ${data.medication}
             </strong>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:14px;
+              background:#f8eeee;
+            "
+          >
+
+            <small>
+              🩺 Consultas
+            </small>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${data.consultations}
+            </strong>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:14px;
+              background:#f8eeee;
+            "
+          >
+
+            <small>
+              ⏱️ Atividade
+            </small>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                margin-top:4px;
+                color:#7f4444;
+              "
+            >
+              ${formatNumber(
+                data.activityMinutes
+              )}
+            </strong>
+
+            <small>
+              minutos
+            </small>
 
           </div>
 
@@ -620,23 +1005,20 @@
         </h3>
 
         <p>
-
-          Registros de atividade:
+          Registros:
           <strong>
             ${data.activity}
           </strong>
-
         </p>
 
         <p>
-
           Tempo total:
           <strong>
             ${formatNumber(
               data.activityMinutes
-            )} min
+            )}
+            min
           </strong>
-
         </p>
 
       </section>
@@ -649,12 +1031,10 @@
         </h3>
 
         <p>
-
-          Registros de aplicação:
+          Aplicações registradas:
           <strong>
             ${data.insulin}
           </strong>
-
         </p>
 
       </section>
@@ -667,12 +1047,10 @@
         </h3>
 
         <p>
-
           Refeições registradas:
           <strong>
             ${data.meals}
           </strong>
-
         </p>
 
       </section>
@@ -685,12 +1063,26 @@
         </h3>
 
         <p>
-
           Registros:
           <strong>
             ${data.medication}
           </strong>
+        </p>
 
+      </section>
+
+
+      <section class="card">
+
+        <h3>
+          🩺 Consultas
+        </h3>
+
+        <p>
+          Consultas registradas:
+          <strong>
+            ${data.consultations}
+          </strong>
         </p>
 
       </section>
@@ -707,9 +1099,8 @@
   function initAnalysis() {
 
     /*
-      Pequeno atraso para garantir que o DOM e o
-      restante do aplicativo já estejam disponíveis
-      quando a tela for aberta.
+      Pequeno atraso para permitir que o app
+      termine de carregar os dados.
     */
 
     setTimeout(
@@ -718,14 +1109,14 @@
         renderAnalysis();
 
       },
-      0
+      100
     );
 
   }
 
 
   /* =======================================================
-     DISPONIBILIZAR GLOBALMENTE
+     DISPONIBILIZAR FUNÇÕES GLOBALMENTE
   ======================================================= */
 
   window.initAnalysis =
@@ -737,31 +1128,142 @@
 
 
   /* =======================================================
-     PRIMEIRA TENTATIVA DE INICIALIZAÇÃO
+     DETECTAR ABERTURA DA TELA DE ANÁLISES
+  ======================================================= */
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      const button =
+        event.target.closest(
+          '[data-screen="analysisScreen"]'
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      console.log(
+        "ANÁLISES: tela aberta."
+      );
+
+
+      setTimeout(
+        function () {
+
+          renderAnalysis();
+
+        },
+        150
+      );
+
+    }
+  );
+
+
+  /* =======================================================
+     OBSERVAR MUDANÇA DE TELA
+  ======================================================= */
+
+  function watchAnalysisScreen() {
+
+    const screen =
+      document.getElementById(
+        "analysisScreen"
+      );
+
+
+    if (!screen) {
+      return;
+    }
+
+
+    let lastHidden =
+      screen.hidden;
+
+
+    setInterval(
+      function () {
+
+        const currentHidden =
+          screen.hidden;
+
+
+        /*
+          A tela acabou de ficar visível.
+        */
+
+        if (
+          lastHidden === true &&
+          currentHidden === false
+        ) {
+
+          console.log(
+            "ANÁLISES: tela ficou visível."
+          );
+
+
+          renderAnalysis();
+
+        }
+
+
+        lastHidden =
+          currentHidden;
+
+      },
+      300
+    );
+
+  }
+
+
+  /* =======================================================
+     DOM READY
   ======================================================= */
 
   document.addEventListener(
     "DOMContentLoaded",
     function () {
 
+      console.log(
+        "ANÁLISES: módulo carregado."
+      );
+
+
       /*
-        Não força a abertura da tela.
-        Apenas deixa as funções disponíveis.
+        Não mostramos a tela automaticamente.
+        Apenas preparamos o módulo.
       */
 
-      if (
-        document.getElementById(
-          "analysisScreen"
-        )
-      ) {
-
-        console.log(
-          "Módulo de Análises carregado."
-        );
-
-      }
+      watchAnalysisScreen();
 
     }
   );
+
+
+  /* =======================================================
+     TENTATIVA DE INICIALIZAÇÃO CASO O SCRIPT
+     SEJA CARREGADO DEPOIS DO DOM
+  ======================================================= */
+
+  if (
+    document.readyState !==
+    "loading"
+  ) {
+
+    setTimeout(
+      function () {
+
+        watchAnalysisScreen();
+
+      },
+      100
+    );
+
+  }
 
 })();

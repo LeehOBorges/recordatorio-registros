@@ -2348,147 +2348,72 @@ function deleteRecord(
 function renderConsultationsHome() {
 
   let container =
-    document.getElementById(
-      "consultationsHomePanel"
-    );
-
+    document.getElementById("consultationsHomePanel");
 
   if (!container) {
 
     const timeline =
-      document.getElementById(
-        "timeline"
-      );
+      document.getElementById("timeline");
 
+    if (!timeline) return;
 
-    if (!timeline) {
-      return;
-    }
+    container = document.createElement("div");
+    container.id = "consultationsHomePanel";
+    container.className = "home-panel";
 
-
-    container =
-      document.createElement(
-        "div"
-      );
-
-    container.id =
-      "consultationsHomePanel";
-
-    container.className =
-      "home-panel";
-
-
-    if (
-      timeline.parentNode
-    ) {
-
-      timeline.parentNode.insertBefore(
-        container,
-        timeline.nextSibling
-      );
-    }
+    timeline.parentNode.insertBefore(
+      container,
+      timeline.nextSibling
+    );
   }
 
-
   const dateKey =
-    formatDateKey(
-      selectedDate
-    );
-
+    formatDateKey(selectedDate);
 
   const todayConsultations =
-    database.records
-      .filter(
-        record =>
-          record.type ===
-            "consultation" &&
-          record.date ===
-            dateKey
-      )
-      .sort(
-        (a, b) =>
-          String(
-            a.time || ""
-          ).localeCompare(
-            String(
-              b.time || ""
-            )
-          )
-      );
+    database.records.filter(
+      r =>
+        r.type === "consultation" &&
+        r.date === dateKey
+    );
 
+  if (todayConsultations.length === 0) {
 
-  if (
-    todayConsultations.length ===
-    0
-  ) {
-
-    container.innerHTML =
-      "";
+    container.innerHTML = "";
 
     return;
   }
 
-
   container.innerHTML = `
-
     <div class="panel-header">
-
-      <h3>
-        🩺 Consultas do Dia
-      </h3>
-
+      <h3>🩺 Consultas do Dia</h3>
     </div>
 
     <div class="panel-content">
 
-      ${
-        todayConsultations
-          .map(
-            consultation => `
+      ${todayConsultations.map(c => `
 
-              <div class="consultation-card">
+        <div class="consultation-card">
 
-                <strong>
+          <strong>
+            ${escapeHTML(c.time || "")}
+            -
+            ${escapeHTML(c.specialty || "Consulta")}
+          </strong>
 
-                  ${escapeHTML(
-                    consultation.time
-                  )}
+          <p>
+            ${escapeHTML(c.professional || "")}
+          </p>
 
-                  -
+          ${
+            c.location
+              ? `<small>📍 ${escapeHTML(c.location)}</small>`
+              : ""
+          }
 
-                  ${escapeHTML(
-                    consultation.specialty ||
-                    "Consulta"
-                  )}
+        </div>
 
-                </strong>
-
-                <p>
-                  ${escapeHTML(
-                    consultation.professional ||
-                    ""
-                  )}
-                </p>
-
-                ${
-                  consultation.location
-                    ? `
-                      <small>
-                        📍
-                        ${escapeHTML(
-                          consultation.location
-                        )}
-                      </small>
-                    `
-                    : ""
-                }
-
-              </div>
-
-            `
-          )
-          .join("")
-      }
+      `).join("")}
 
     </div>
   `;
@@ -2501,237 +2426,166 @@ function renderConsultationsHome() {
 
 function renderConsultations() {
 
+  /*
+   * IMPORTANTE:
+   * O HTML usa consultationsList.
+   */
+
   const container =
-    document.getElementById(
-      "consultationsList"
-    );
+    document.getElementById("consultationsList");
 
-
-  if (!container) {
-    return;
-  }
-
+  if (!container) return;
 
   const consultations =
     database.records
-
       .filter(
-        record =>
-          record.type ===
-          "consultation"
+        r => r.type === "consultation"
       )
-
       .sort(
         (a, b) =>
           (
-            String(
-              b.date || ""
-            ) +
-            String(
-              b.time || ""
-            )
+            (b.date || "") +
+            (b.time || "")
           ).localeCompare(
-            String(
-              a.date || ""
-            ) +
-            String(
-              a.time || ""
-            )
+            (a.date || "") +
+            (a.time || "")
           )
       );
 
-
-  if (
-    consultations.length ===
-    0
-  ) {
+  if (consultations.length === 0) {
 
     container.innerHTML = `
-
       <div class="empty-state">
-
-        Nenhuma consulta
-        agendada ou registrada.
-
+        Nenhuma consulta agendada ou registrada.
       </div>
-
     `;
 
     return;
   }
 
-
   container.innerHTML =
-    consultations
-      .map(
-        consultation => `
+    consultations.map(c => `
 
-          <div class="card">
+      <div class="card">
 
-            <div class="card-header">
+        <div class="card-header">
 
-              <strong>
+          <strong>
+            ${escapeHTML(c.date || "")}
+            às
+            ${escapeHTML(c.time || "")}
+          </strong>
 
-                ${escapeHTML(
-                  consultation.date
-                )}
+          <span>
+            ${escapeHTML(c.specialty || "Consulta")}
+          </span>
 
-                às
-
-                ${escapeHTML(
-                  consultation.time
-                )}
-
-              </strong>
-
-              <span>
-
-                ${escapeHTML(
-                  consultation.specialty ||
-                  "Consulta"
-                )}
-
-              </span>
-
-            </div>
+        </div>
 
 
-            <div class="card-body">
+        <div class="card-body">
 
-              <p>
+          ${
+            c.professional
+              ? `
+                <p>
+                  <strong>Profissional:</strong>
+                  ${escapeHTML(c.professional)}
+                </p>
+              `
+              : ""
+          }
 
-                <strong>
-                  Profissional:
-                </strong>
+          ${
+            c.location
+              ? `
+                <p>
+                  <strong>Local:</strong>
+                  ${escapeHTML(c.location)}
+                </p>
+              `
+              : ""
+          }
 
-                ${escapeHTML(
-                  consultation.professional ||
-                  ""
-                )}
+          ${
+            c.reason
+              ? `
+                <p>
+                  <strong>Motivo:</strong>
+                  ${escapeHTML(c.reason)}
+                </p>
+              `
+              : ""
+          }
 
-              </p>
+          ${
+            c.note
+              ? `
+                <p>
+                  <strong>Obs:</strong>
+                  ${escapeHTML(c.note)}
+                </p>
+              `
+              : ""
+          }
 
-
-              ${
-                consultation.location
-                  ? `
-                    <p>
-
-                      <strong>
-                        Local:
-                      </strong>
-
-                      ${escapeHTML(
-                        consultation.location
-                      )}
-
-                    </p>
-                  `
-                  : ""
-              }
-
-
-              ${
-                consultation.reason
-                  ? `
-                    <p>
-
-                      <strong>
-                        Motivo:
-                      </strong>
-
-                      ${escapeHTML(
-                        consultation.reason
-                      )}
-
-                    </p>
-                  `
-                  : ""
-              }
+        </div>
 
 
-              ${
-                consultation.note
-                  ? `
-                    <p>
+        <div class="card-actions">
 
-                      <strong>
-                        Obs:
-                      </strong>
-
-                      ${escapeHTML(
-                        consultation.note
-                      )}
-
-                    </p>
-                  `
-                  : ""
-              }
-
-            </div>
+          <button
+            type="button"
+            onclick="editRecord('${escapeHTML(c.id)}')"
+          >
+            ✏️ Editar
+          </button>
 
 
-            <div class="card-actions">
+          <button
+            type="button"
+            onclick="deleteRecord('${escapeHTML(c.id)}')"
+          >
+            🗑️ Excluir
+          </button>
 
-              <button
-                type="button"
-                onclick="editRecord('${escapeHTML(
-                  consultation.id
-                )}')"
-              >
-                ✏️ Editar
-              </button>
+        </div>
 
+      </div>
 
-              <button
-                type="button"
-                onclick="deleteRecord('${escapeHTML(
-                  consultation.id
-                )}')"
-              >
-                🗑️ Excluir
-              </button>
-
-            </div>
-
-          </div>
-
-        `
-      )
-      .join("");
+    `).join("");
 }
 
 
 /* =========================================================
-   MEDICAMENTOS NA HOME
+   MEDICAMENTOS / SUPLEMENTOS / VITAMINAS — HOME
 ========================================================= */
 
 function renderMedicationHome() {
 
+  /*
+   * O HTML atual possui:
+   *
+   * <div id="medicationsList">
+   *
+   * Portanto usamos esse elemento diretamente.
+   */
+
   const container =
-    document.getElementById(
-      "medicationHomePanel"
-    );
+    document.getElementById("medicationsList");
 
-
-  if (!container) {
-    return;
-  }
+  if (!container) return;
 
 
   if (
-    medications.length ===
-    0
+    !Array.isArray(medications) ||
+    medications.length === 0
   ) {
 
     container.innerHTML = `
-
       <div class="empty-state">
-
-        Nenhum medicamento cadastrado.
-
+        Nenhum medicamento ou vitamina cadastrado.
       </div>
-
     `;
 
     return;
@@ -2739,88 +2593,70 @@ function renderMedicationHome() {
 
 
   const dateKey =
-    formatDateKey(
-      selectedDate
-    );
+    formatDateKey(selectedDate);
 
 
   const todayMedRecords =
     database.records.filter(
-      record =>
-        record.type ===
-          "medication" &&
-        record.date ===
-          dateKey
+      r =>
+        r.type === "medication" &&
+        r.date === dateKey
     );
 
 
   container.innerHTML =
-    medications
-      .map(
-        medication => {
+    medications.map(med => {
 
-          const taken =
-            todayMedRecords.some(
-              record =>
-                record.medicationId ===
-                medication.id
-            );
+      const taken =
+        todayMedRecords.some(
+          r =>
+            r.medicationId === med.id
+        );
 
 
-          return `
+      return `
 
-            <div
-              class="med-item ${
-                taken
-                  ? "taken"
-                  : ""
-              }"
-            >
+        <div
+          class="med-item ${taken ? "taken" : ""}"
+        >
 
-              <div>
+          <div>
 
-                <strong>
+            <strong>
+              ${escapeHTML(med.name || "Medicamento")}
+            </strong>
 
-                  ${escapeHTML(
-                    medication.name ||
-                    "Medicamento"
-                  )}
+            ${
+              med.dosage
+                ? `
+                  <small>
+                    ${escapeHTML(med.dosage)}
+                  </small>
+                `
+                : ""
+            }
 
-                </strong>
-
-                <small>
-
-                  ${escapeHTML(
-                    medication.dosage ||
-                    ""
-                  )}
-
-                </small>
-
-              </div>
+          </div>
 
 
-              <button
-                type="button"
-                onclick="toggleMedicationTaken('${escapeHTML(
-                  medication.id
-                )}')"
-              >
+          <button
+            type="button"
+            onclick="toggleMedicationTaken('${escapeHTML(med.id)}')"
+          >
 
-                ${
-                  taken
-                    ? "✅ Tomado"
-                    : "⚪ Tomar"
-                }
+            ${
+              taken
+                ? "✅ Tomado"
+                : "⚪ Tomar"
+            }
 
-              </button>
+          </button>
 
-            </div>
+        </div>
 
-          `;
-        }
-      )
-      .join("");
+      `;
+
+    }).join("");
 }
 
 
@@ -2828,60 +2664,45 @@ function renderMedicationHome() {
    MARCAR MEDICAMENTO COMO TOMADO
 ========================================================= */
 
-function toggleMedicationTaken(
-  medId
-) {
+function toggleMedicationTaken(medId) {
 
   const dateKey =
-    formatDateKey(
-      selectedDate
-    );
+    formatDateKey(selectedDate);
 
 
   const existingIndex =
     database.records.findIndex(
-      record =>
-        record.type ===
-          "medication" &&
-        record.date ===
-          dateKey &&
-        record.medicationId ===
-          medId
+      r =>
+        r.type === "medication" &&
+        r.date === dateKey &&
+        r.medicationId === medId
     );
 
 
-  if (
-    existingIndex !==
-    -1
-  ) {
+  /*
+   * Se já existe registro:
+   * remove.
+   */
 
-    const existing =
-      database.records[
-        existingIndex
-      ];
-
-
-    database.trash.push({
-
-      ...existing,
-
-      deletedAt:
-        new Date().toISOString()
-    });
-
+  if (existingIndex !== -1) {
 
     database.records.splice(
       existingIndex,
       1
     );
 
-  } else {
+  }
 
-    const medication =
+  /*
+   * Caso ainda não exista:
+   * cria o registro.
+   */
+
+  else {
+
+    const med =
       medications.find(
-        item =>
-          item.id ===
-          medId
+        m => m.id === medId
       );
 
 
@@ -2897,8 +2718,8 @@ function toggleMedicationTaken(
         medId,
 
       medicationName:
-        medication
-          ? medication.name
+        med
+          ? med.name
           : "Medicamento",
 
       date:
@@ -2909,16 +2730,28 @@ function toggleMedicationTaken(
 
       createdAt:
         new Date().toISOString()
+
     });
+
   }
 
 
   saveDatabase();
 
 
+  /*
+   * Atualiza a tela inteira.
+   */
+
   renderDashboard();
 
-  renderDiary();
+
+  /*
+   * Garante que a lista de medicamentos
+   * também seja atualizada.
+   */
+
+  renderMedicationHome();
 }
 
 
@@ -2928,35 +2761,26 @@ function toggleMedicationTaken(
 
 function renderDiary() {
 
+  /*
+   * O HTML agora usa diaryList.
+   */
+
   const container =
-    document.getElementById(
-      "diaryList"
-    );
+    document.getElementById("diaryList");
 
-
-  if (!container) {
-    return;
-  }
+  if (!container) return;
 
 
   const records =
     getTodayRecords();
 
 
-  if (
-    records.length ===
-    0
-  ) {
+  if (records.length === 0) {
 
     container.innerHTML = `
-
       <div class="empty-state">
-
-        Sem registros para o
-        dia selecionado.
-
+        Sem registros para o dia selecionado.
       </div>
-
     `;
 
     return;
@@ -2965,9 +2789,7 @@ function renderDiary() {
 
   container.innerHTML =
     records
-      .map(
-        createTimelineItem
-      )
+      .map(createTimelineItem)
       .join("");
 }
 
@@ -2979,6 +2801,7 @@ function renderDiary() {
 function renderMoreScreen() {
 
   renderTrash();
+
 }
 
 
@@ -2989,29 +2812,20 @@ function renderMoreScreen() {
 function renderTrash() {
 
   const container =
-    document.getElementById(
-      "trashList"
-    );
+    document.getElementById("trashContent");
 
-
-  if (!container) {
-    return;
-  }
+  if (!container) return;
 
 
   if (
-    database.trash.length ===
-    0
+    !database.trash ||
+    database.trash.length === 0
   ) {
 
     container.innerHTML = `
-
       <div class="empty-state">
-
-        Lixeira vazia.
-
+        A lixeira está vazia.
       </div>
-
     `;
 
     return;
@@ -3019,60 +2833,42 @@ function renderTrash() {
 
 
   container.innerHTML =
-    database.trash
-      .map(
-        item => `
+    database.trash.map(item => `
 
-          <div class="trash-item">
+      <div class="trash-item">
 
-            <div>
+        <div>
 
-              <strong>
+          <strong>
+            ${escapeHTML(item.type || "")}
+            -
+            ${escapeHTML(item.date || "")}
+          </strong>
 
-                ${escapeHTML(
-                  item.type
-                )}
+          <small>
+            Excluído em:
+            ${
+              item.deletedAt
+                ? new Date(
+                    item.deletedAt
+                  ).toLocaleString("pt-BR")
+                : ""
+            }
+          </small>
 
-                -
-
-                ${escapeHTML(
-                  item.date
-                )}
-
-              </strong>
-
-
-              <small>
-
-                Excluído em:
-
-                ${new Date(
-                  item.deletedAt
-                ).toLocaleString(
-                  "pt-BR"
-                )}
-
-              </small>
-
-            </div>
+        </div>
 
 
-            <button
-              type="button"
-              onclick="restoreFromTrash('${escapeHTML(
-                item.id
-              )}')"
-            >
+        <button
+          type="button"
+          onclick="restoreFromTrash('${escapeHTML(item.id)}')"
+        >
+          🔄 Restaurar
+        </button>
 
-              🔄 Restaurar
+      </div>
 
-            </button>
-
-          </div>
-
-        `
-      )
-      .join("");
+    `).join("");
 }
 
 
@@ -3080,39 +2876,43 @@ function renderTrash() {
    RESTAURAR DA LIXEIRA
 ========================================================= */
 
-function restoreFromTrash(
-  id
-) {
-
-  const itemIndex =
-    database.trash.findIndex(
-      item =>
-        item.id === id
-    );
-
+function restoreFromTrash(id) {
 
   if (
-    itemIndex ===
-    -1
+    !database.trash ||
+    !Array.isArray(database.trash)
   ) {
-
     return;
   }
 
 
-  const item =
+  const itemIndex =
+    database.trash.findIndex(
+      t => t.id === id
+    );
+
+
+  if (itemIndex === -1) {
+    return;
+  }
+
+
+  const [item] =
     database.trash.splice(
       itemIndex,
       1
-    )[0];
+    );
 
 
   delete item.deletedAt;
 
 
-  database.records.push(
-    item
-  );
+  if (!Array.isArray(database.records)) {
+    database.records = [];
+  }
+
+
+  database.records.push(item);
 
 
   saveDatabase();
@@ -3120,47 +2920,9 @@ function restoreFromTrash(
 
   renderDashboard();
 
-  renderDiary();
 
   renderTrash();
 
-  renderConsultations();
-}
-
-
-/* =========================================================
-   ESVAZIAR LIXEIRA
-========================================================= */
-
-function emptyTrash() {
-
-  if (
-    database.trash.length ===
-    0
-  ) {
-
-    return;
-  }
-
-
-  const confirmed =
-    confirm(
-      "Tem certeza que deseja apagar permanentemente todos os itens da lixeira?"
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  database.trash = [];
-
-
-  saveDatabase();
-
-
-  renderTrash();
 }
 
 
@@ -3172,21 +2934,15 @@ function exportBackup() {
 
   const data = {
 
-    database:
+    database,
 
-      database,
+    glucoseSettings,
 
-    glucoseSettings:
-
-      glucoseSettings,
-
-    medications:
-
-      medications,
+    medications,
 
     exportedAt:
-
       new Date().toISOString()
+
   };
 
 
@@ -3207,15 +2963,11 @@ function exportBackup() {
 
 
   const url =
-    URL.createObjectURL(
-      blob
-    );
+    URL.createObjectURL(blob);
 
 
   const a =
-    document.createElement(
-      "a"
-    );
+    document.createElement("a");
 
 
   a.href =
@@ -3228,57 +2980,31 @@ function exportBackup() {
     )}.json`;
 
 
-  document.body.appendChild(
-    a
-  );
+  document.body.appendChild(a);
 
 
   a.click();
 
 
-  document.body.removeChild(
-    a
-  );
+  a.remove();
 
 
-  setTimeout(
-    () => {
+  URL.revokeObjectURL(url);
 
-      URL.revokeObjectURL(
-        url
-      );
-
-    },
-    1000
-  );
 }
 
 
 /* =========================================================
-   RESTAURAR BACKUP
+   RESTAURAÇÃO DO BACKUP
 ========================================================= */
 
-function importBackup(
-  event
-) {
-
-  if (
-    !event ||
-    !event.target
-  ) {
-
-    return;
-  }
-
+function importBackup(event) {
 
   const file =
-    event.target.files &&
     event.target.files[0];
 
 
-  if (!file) {
-    return;
-  }
+  if (!file) return;
 
 
   const reader =
@@ -3296,49 +3022,46 @@ function importBackup(
           );
 
 
-        if (
-          data.database &&
-          typeof data.database ===
-            "object"
-        ) {
+        if (data.database) {
 
-          database = {
+          database =
+            data.database;
 
-            records:
-              Array.isArray(
-                data.database.records
-              )
-                ? data.database.records
-                : [],
+          /*
+           * Garante que a estrutura
+           * mínima exista.
+           */
 
-            trash:
-              Array.isArray(
-                data.database.trash
-              )
-                ? data.database.trash
-                : []
-          };
+          if (
+            !Array.isArray(
+              database.records
+            )
+          ) {
+            database.records = [];
+          }
+
+
+          if (
+            !Array.isArray(
+              database.trash
+            )
+          ) {
+            database.trash = [];
+          }
 
 
           saveDatabase();
+
         }
 
 
-        if (
-          data.glucoseSettings &&
-          typeof data.glucoseSettings ===
-            "object"
-        ) {
+        if (data.glucoseSettings) {
 
-          glucoseSettings = {
-
-            ...defaultGlucoseOptions,
-
-            ...data.glucoseSettings
-          };
-
+          glucoseSettings =
+            data.glucoseSettings;
 
           saveGlucoseSettings();
+
         }
 
 
@@ -3352,6 +3075,7 @@ function importBackup(
             data.medications;
 
           saveMedications();
+
         }
 
 
@@ -3362,14 +3086,22 @@ function importBackup(
 
         renderDashboard();
 
-        renderDiary();
+
+        renderMedicationHome();
+
 
         renderConsultations();
 
+
+        renderDiary();
+
+
         renderTrash();
 
+      }
 
-      } catch (error) {
+
+      catch (err) {
 
         alert(
           "Erro ao importar o arquivo de backup."
@@ -3377,214 +3109,103 @@ function importBackup(
 
 
         console.error(
-          "Erro no backup:",
-          error
+          err
         );
+
       }
 
-
-      event.target.value =
-        "";
     };
 
 
-  reader.onerror =
-    function(error) {
+  reader.readAsText(file);
 
-      console.error(
-        "Erro ao ler arquivo:",
-        error
-      );
-
-
-      alert(
-        "Não foi possível ler o arquivo de backup."
-      );
-
-
-      event.target.value =
-        "";
-    };
-
-
-  reader.readAsText(
-    file
-  );
 }
 
 
 /* =========================================================
-   NAVEGAÇÃO DE DATA
-========================================================= */
-
-function changeSelectedDate(
-  days
-) {
-
-  selectedDate =
-    new Date(
-      selectedDate
-    );
-
-
-  selectedDate.setDate(
-    selectedDate.getDate() +
-    Number(days || 0)
-  );
-
-
-  renderDashboard();
-
-  renderDiary();
-}
-
-
-function goToToday() {
-
-  selectedDate =
-    new Date();
-
-
-  renderDashboard();
-
-  renderDiary();
-}
-
-
-/* =========================================================
-   FUNÇÕES DE CONVENIÊNCIA
-========================================================= */
-
-function previousDay() {
-
-  changeSelectedDate(
-    -1
-  );
-}
-
-
-function nextDay() {
-
-  changeSelectedDate(
-    1
-  );
-}
-
-
-/* =========================================================
-   EVENTOS DE NAVEGAÇÃO
-========================================================= */
-
-function initializeNavigation() {
-
-  const navigationItems =
-    document.querySelectorAll(
-      ".navigation-item"
-    );
-
-
-  navigationItems.forEach(
-    item => {
-
-      item.addEventListener(
-        "click",
-        function() {
-
-          const target =
-            item.dataset.screen;
-
-
-          if (target) {
-
-            showScreen(
-              target
-            );
-          }
-        }
-      );
-    }
-  );
-}
-
-
-/* =========================================================
-   EXPOR FUNÇÕES PARA O HTML
-   NECESSÁRIO QUANDO O HTML USA onclick=""
-========================================================= */
-
-window.showScreen =
-  showScreen;
-
-window.openRecordForm =
-  openRecordForm;
-
-window.openConsultationsScreen =
-  openConsultationsScreen;
-
-window.editRecord =
-  editRecord;
-
-window.deleteRecord =
-  deleteRecord;
-
-window.toggleMedicationTaken =
-  toggleMedicationTaken;
-
-window.restoreFromTrash =
-  restoreFromTrash;
-
-window.emptyTrash =
-  emptyTrash;
-
-window.exportBackup =
-  exportBackup;
-
-window.importBackup =
-  importBackup;
-
-window.changeSelectedDate =
-  changeSelectedDate;
-
-window.previousDay =
-  previousDay;
-
-window.nextDay =
-  nextDay;
-
-window.goToToday =
-  goToToday;
-
-window.renderDashboard =
-  renderDashboard;
-
-window.renderDiary =
-  renderDiary;
-
-window.renderConsultations =
-  renderConsultations;
-
-
-/* =========================================================
-   INICIALIZAÇÃO
+   BOTÃO DE CONSULTAS
 ========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
   function() {
 
-    initializeElements();
+    const consultationButton =
+      document.getElementById(
+        "consultationQuickButton"
+      );
 
-    initializeForm();
 
-    initializeNavigation();
+    if (consultationButton) {
+
+      consultationButton.addEventListener(
+        "click",
+        function() {
+
+          if (
+            typeof showScreen ===
+            "function"
+          ) {
+
+            showScreen(
+              "consultationScreen"
+            );
+
+          }
+
+
+          renderConsultations();
+
+        }
+      );
+
+    }
+
+
+    /*
+     * Garante que o botão de medicamentos
+     * abra o painel correto.
+     */
+
+    const medicationsButton =
+      document.getElementById(
+        "medicationsButton"
+      );
+
+
+    const medicationsPanel =
+      document.getElementById(
+        "medicationsPanel"
+      );
+
+
+    if (medicationsButton) {
+
+      medicationsButton.addEventListener(
+        "click",
+        function() {
+
+          if (medicationsPanel) {
+
+            medicationsPanel.hidden =
+              !medicationsPanel.hidden;
+
+          }
+
+
+          renderMedicationHome();
+
+        }
+      );
+
+    }
+
+
+    /*
+     * Inicialização.
+     */
 
     renderDashboard();
-
-    renderDiary();
-
-    renderConsultations();
-
-    renderMoreScreen();
 
   }
 );
